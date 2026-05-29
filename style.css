@@ -990,3 +990,87 @@ tr:hover td {
 .toast-error {
     background-color: var(--danger);
 }
+
+/* ==========================================================================
+   RESPONSIVIDADE (MOBILE) - TELAS MENORES QUE 768PX
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* 1. Ajuste Geral da Tela */
+    body {
+        padding: 10px;
+    }
+
+    .container, main {
+        padding: 10px;
+        width: 100%;
+    }
+
+    /* 2. Cabeçalho (Header) */
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* 3. Empilhar os Cards de Resumo (Entradas, Saídas, Saldo) */
+    .summary-cards, .cards-grid, .dashboard-cards {
+        display: grid;
+        grid-template-columns: 1fr !important; /* Força 1 card por linha */
+        gap: 15px;
+    }
+
+    /* 4. Empilhar os Gráficos */
+    .charts-container, .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+    }
+
+    /* 5. Tabela de Transações com Scroll Horizontal */
+    .transactions-table-wrapper, .table-container, .transactions-list {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Deixa o scroll suave no iPhone */
+        margin-bottom: 20px;
+        border-radius: var(--radius-md);
+    }
+
+    table {
+        min-width: 500px; /* Garante que a tabela não fique espremida */
+    }
+
+    /* 6. Modal de Nova Transação */
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .transaction-types {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .type-btn-income, .type-btn-expense {
+        width: 100%;
+    }
+
+    /* 7. Tela de Login Adaptada */
+    .login-card {
+        width: 90%;
+        padding: 30px 20px;
+    }
+    
+    #toast-container {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+        align-items: center;
+    }
+}
