@@ -1,24 +1,24 @@
-import { 
-    getCurrentUser, 
-    loginWithGoogle, 
-    logout, 
-    fetchTransactions, 
-    insertTransaction, 
-    isDemoMode, 
+import {
+    getCurrentUser,
+    loginWithGoogle,
+    logout,
+    fetchTransactions,
+    insertTransaction,
+    isDemoMode,
     setDemoActive,
     supabase
 } from './db.js';
 
-import { 
-    showLoginScreen, 
-    showDashboardScreen, 
-    initTheme, 
-    toggleTheme, 
-    openModal, 
-    closeModal, 
-    updateDashboardUI, 
+import {
+    showLoginScreen,
+    showDashboardScreen,
+    initTheme,
+    toggleTheme,
+    openModal,
+    closeModal,
+    updateDashboardUI,
     filterAndRenderTransactions,
-    showToast 
+    showToast
 } from './ui.js';
 
 // ----------------------------------------------------
@@ -202,22 +202,29 @@ function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inicializa o Tema (Claro/Escuro) salvo
     initTheme();
-    
+
     // 2. Configura todos os Event Listeners
     setupEventListeners();
-    
+
     // 3. Monitora autenticação real no Supabase (se disponível)
+    // No seu app.js, dentro do DOMContentLoaded
     if (supabase) {
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Supabase Auth Evento:", event);
-            // Se houver alteração de login no Supabase e não estivermos no modo demo, reavalia a sessão
-            if (!isDemoMode()) {
-                if (session) {
-                    showDashboardScreen(session.user, false);
-                    await loadDashboardData();
-                } else {
-                    showLoginScreen();
-                }
+        // 1. Verifica se já existe uma sessão ativa ao abrir a página
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                showDashboardScreen(session.user, false);
+                loadDashboardData();
+            }
+        });
+
+        // 2. Escuta mudanças (incluindo o retorno do Google)
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Evento Auth detectado:", event);
+            if (event === 'SIGNED_IN' && session) {
+                showDashboardScreen(session.user, false);
+                loadDashboardData();
+            } else if (event === 'SIGNED_OUT') {
+                showLoginScreen();
             }
         });
     }
