@@ -1,141 +1,718 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-/* ==========================================================================\
-   DESIGN SYSTEM - MODERN NEON
+/* ==========================================================================
+   DESIGN SYSTEM - VARIAVEIS E TOKENS (MODO CLARO E ESCURO)
    ========================================================================== */
 :root {
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    /* Cores Base (Roxo Neon Harmonizado) */
     --hue: 250;
     --primary: hsl(var(--hue), 72%, 56%);
     --primary-hover: hsl(var(--hue), 72%, 48%);
-    --primary-glow: hsla(var(--hue), 72%, 56%, 0.4);
+    --primary-light: hsl(var(--hue), 72%, 94%);
     
     --success: hsl(145, 63%, 42%);
+    --success-light: hsl(145, 63%, 95%);
     --danger: hsl(355, 78%, 56%);
+    --danger-light: hsl(355, 78%, 95%);
     
-    --bg-app: #f8fafc;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
+    --bg-app: hsl(220, 20%, 97%);
+    --bg-card: hsl(0, 0%, 100%);
+    --bg-input: hsl(220, 20%, 95%);
     
-    --border: rgba(0,0,0,0.1);
+    --border: hsl(220, 15%, 90%);
+    --border-hover: hsl(var(--hue), 30%, 80%);
+    
+    --text-main: hsl(220, 35%, 15%);
+    --text-muted: hsl(220, 15%, 45%);
+    --text-on-primary: hsl(0, 0%, 100%);
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 20px 50px rgba(var(--hue), 30%, 15%, 0.08);
+    --shadow-glow: 0 0 20px hsla(var(--hue), 72%, 56%, 0.35);
+
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    
+    --radius-sm: 10px;
     --radius-md: 16px;
     --radius-lg: 24px;
+    
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset e Base */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-    font-family: var(--font-body); 
-    background-color: var(--bg-app); 
+:root.dark {
+    --bg-app: hsl(220, 25%, 7%);
+    --bg-card: hsl(220, 25%, 11%);
+    --bg-input: hsl(220, 25%, 15%);
+    
+    --border: hsl(220, 20%, 18%);
+    --border-hover: hsl(var(--hue), 40%, 30%);
+    
+    --text-main: hsl(220, 20%, 94%);
+    --text-muted: hsl(220, 10%, 65%);
+    
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 12px 40px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+    
+    --primary-light: hsl(var(--hue), 40%, 16%);
+    --success-light: hsl(145, 60%, 12%);
+    --danger-light: hsl(355, 60%, 14%);
+
+    --glass-bg: rgba(20, 24, 33, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+/* ==========================================================================
+   RESET E BASE
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-app);
     color: var(--text-main);
-    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    transition: var(--transition);
 }
 
-/* Glassmorphism Global */
+button, input, select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    border: none;
+    outline: none;
+}
+
+/* ==========================================================================
+   ANIMAÇÕES E EFEITOS
+   ========================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade {
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
 }
 
-/* Títulos */
-h1, h2, h3 { font-family: var(--font-heading); color: #0f172a; }
+/* ==========================================================================
+   TELA DE LOGIN
+   ========================================================================== */
+#login-screen {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg, var(--bg-app) 0%, hsl(var(--hue), 30%, 92%) 100%);
+    transition: var(--transition);
+}
 
-/* Inputs Modernos */
+:root.dark #login-screen {
+    background: linear-gradient(135deg, var(--bg-app) 0%, hsl(var(--hue), 30%, 4%) 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: var(--radius-lg);
+    padding: 40px 32px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.login-card h1 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.login-card p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+/* Organização dos Inputs e Botões do Login */
+.login-options {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.login-options .form-input {
+    width: 100%;
+    text-align: center;
+}
+
+.login-options .btn-primary,
+.login-options .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+}
+
+/* ==========================================================================
+   COMPONENTES GERAIS (BOTÕES E INPUTS)
+   ========================================================================== */
 .form-input {
     width: 100%;
     padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #ffffff;
-    transition: all 0.3s ease;
-    font-size: 15px;
+    transition: var(--transition);
 }
 
 .form-input:focus {
-    outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px var(--primary-glow);
+    background-color: var(--bg-card);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-/* Botões */
 .btn-primary {
-    background: var(--primary);
-    color: white;
     padding: 12px 24px;
-    border-radius: 12px;
-    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary);
+    color: white;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover);
-    box-shadow: 0 0 15px var(--primary-glow);
-    transform: translateY(-2px);
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow);
 }
 
 .btn-secondary {
-    background: transparent;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-input);
     border: 1px solid var(--border);
-    color: var(--text-muted);
-    padding: 12px 24px;
-    border-radius: 12px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
 }
 
 .btn-secondary:hover {
-    background: rgba(0,0,0,0.05);
+    background-color: var(--border);
+}
+
+/* ==========================================================================
+   DASHBOARD E LAYOUT PRINCIPAL
+   ========================================================================== */
+#dashboard-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    gap: 24px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-brand-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 20px;
+}
+
+.header-brand h2 {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.theme-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-main);
 }
 
-/* Cards e Widgets */
-.widget-card {
-    padding: 24px;
-    border-radius: var(--radius-md);
-    background: white;
+.theme-toggle .sun-icon { display: none; }
+.theme-toggle .moon-icon { display: block; }
+:root.dark .theme-toggle .sun-icon { display: block; }
+:root.dark .theme-toggle .moon-icon { display: none; }
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    border-radius: 30px;
+    background-color: var(--bg-input);
     border: 1px solid var(--border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.widget-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-/* Efeito Neon em Elementos Específicos */
-.login-card {
-    padding: 40px;
-    max-width: 400px;
+.logout-btn {
+    background: transparent;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.logout-btn:hover {
+    background-color: var(--danger-light);
+}
+
+/* Widgets */
+.summary-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.widget-card {
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.widget-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.widget-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.widget-label {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.widget-value {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.widget-balance { border-left: 5px solid var(--primary); }
+.widget-balance .widget-icon { background-color: var(--primary-light); color: var(--primary); }
+
+.widget-income { border-left: 5px solid var(--success); }
+.widget-income .widget-icon { background-color: var(--success-light); color: var(--success); }
+.widget-income .widget-value { color: var(--success); }
+
+.widget-expense { border-left: 5px solid var(--danger); }
+.widget-expense .widget-icon { background-color: var(--danger-light); color: var(--danger); }
+.widget-expense .widget-value { color: var(--danger); }
+
+/* Gráficos */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.chart-card {
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-canvas-container {
+    position: relative;
+    height: 300px;
     width: 100%;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-    .charts-grid { grid-template-columns: 1fr; }
-    .transactions-toolbar { flex-direction: column; }
+/* Tabela e Toolbar */
+.transactions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* Toast (Notificações) */
-.toast-container {
+.transactions-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.search-filter-box {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-input {
+    padding-left: 42px;
+}
+
+.filter-select {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+.transactions-card {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    padding: 16px 24px;
+    background-color: var(--bg-input);
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.td-description { font-weight: 600; }
+.td-category {
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: var(--bg-input);
+}
+
+.amount-income { color: var(--success); font-weight: 700; }
+.amount-expense { color: var(--danger); font-weight: 700; }
+
+.btn-delete {
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Modais */
+.modal-overlay {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
-.toast {
-    padding: 12px 24px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    color: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
 }
+
+.modal-container {
+    width: 100%;
+    max-width: 480px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-body { padding: 24px; }
+.type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.type-btn { padding: 12px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; border-radius: var(--radius-sm); }
+.type-btn-expense.active { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+.type-btn-income.active { background: var(--success-light); border-color: var(--success); color: var(--success); }
+
+.modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+/* Toasts */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+.toast { padding: 16px 20px; border-radius: var(--radius-sm); color: white; display: flex; gap: 12px; }
 .toast-success { background: var(--success); }
 .toast-error { background: var(--danger); }
+
+/* Responsividade Geral */
+@media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 12px; }
+    .transactions-toolbar { flex-direction: column; }
+    #login-screen .login-card { width: 95%; padding: 24px; }
+}
+
+/* Correção da Toolbar e Busca */
+.transactions-toolbar {
+    display: flex;
+    align-items: center; /* Alinha verticalmente os botões e busca */
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.search-filter-box {
+    display: flex;
+    gap: 12px;
+    flex: 2; /* Dá mais espaço para a busca */
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 12px 12px 42px !important; /* Espaço para o ícone de lupa */
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border);
+}
+
+/* Estilo para o botão de editar na tabela */
+.btn-edit {
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+    transition: var(--transition);
+}
+
+.btn-edit:hover {
+    transform: scale(1.2);
+}
+
+/* ==========================================================================
+   ESTILOS PREMIUM PARA A NOVA TELA DE LOGIN
+   ========================================================================== */
+.login-header {
+    margin-bottom: 28px;
+}
+
+.login-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+:root.dark .login-icon {
+    background: rgba(255,255,255,0.05);
+}
+
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.input-group i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 18px;
+    z-index: 2;
+}
+
+.input-group .form-input {
+    padding-left: 46px !important;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+}
+
+.divider span {
+    padding: 0 12px;
+}
+
+/* ==========================================================================
+   CORREÇÕES: ESPAÇAMENTO, CONTRASTE (MODO ESCURO) E AVATAR
+   ========================================================================== */
+
+/* 1. Efeito de clique no Avatar */
+#user-avatar {
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+#user-avatar:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+/* 2. Espaçamento dos campos no Modal (Desembolar) */
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* 3. Contraste Total no Modo Escuro */
+:root.dark .modal-content, 
+:root.dark .login-card {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+}
+
+:root.dark .form-input, 
+:root.dark select, 
+:root.dark option {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+:root.dark .form-input::placeholder {
+    color: var(--text-muted);
+}
+
+:root.dark .form-label, 
+:root.dark td, 
+:root.dark .td-description, 
+:root.dark .td-category {
+    color: var(--text-main);
+}
+
+:root.dark tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
