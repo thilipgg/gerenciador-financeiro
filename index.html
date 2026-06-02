@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças Premium - Seu Painel de Controle Financeiro</title>
-    <meta name="description" content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
-    
+    <meta name="description"
+        content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
+
     <!-- Estilos de Ícones Premium (Remix Icon) -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
-    
+
     <!-- Estilos Customizados -->
     <link rel="stylesheet" href="style.css">
-    
+
     <!-- Bibliotecas Necessárias via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <!-- ==========================================
@@ -27,7 +30,7 @@
                 <h1>Finanças Premium</h1>
                 <p>Acesse sua conta para continuar</p>
             </div>
-            
+
             <form id="login-form" class="login-options" onsubmit="event.preventDefault(); tentarLogin('Real');">
                 <div class="input-group">
                     <i class="ri-mail-line"></i>
@@ -37,15 +40,15 @@
                     <i class="ri-lock-line"></i>
                     <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
                 </div>
-                
+
                 <button type="submit" class="btn-primary">
                     Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
                 </button>
-                
+
                 <div class="divider">
                     <span>ou</span>
                 </div>
-                
+
                 <button type="button" onclick="tentarLogin('Visitante')" class="btn-secondary">
                     <i class="ri-user-smile-line"></i> Acessar como Visitante
                 </button>
@@ -57,7 +60,7 @@
          2. TELA DO DASHBOARD FINANCEIRO
          ========================================== -->
     <main id="dashboard-screen" style="display: none;">
-        
+
         <!-- Header Principal -->
         <header class="glass animate-fade">
             <div class="header-brand">
@@ -69,13 +72,14 @@
                     <span id="demo-badge" class="demo-badge" style="display: none;">Modo Teste</span>
                 </div>
             </div>
-            
+
             <div class="header-actions">
-                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema escuro/claro" title="Alternar Tema">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema escuro/claro"
+                    title="Alternar Tema">
                     <i class="ri-sun-line sun-icon"></i>
                     <i class="ri-moon-line moon-icon"></i>
                 </button>
-                
+
                 <div class="user-profile">
                     <img id="user-avatar" class="user-avatar" src="" alt="Foto do usuário">
                     <div class="user-info">
@@ -100,7 +104,7 @@
                     <span id="val-balance" class="widget-value">R$ 0,00</span>
                 </div>
             </div>
-            
+
             <!-- Receitas (Entradas) -->
             <div class="widget-card widget-income glass">
                 <div class="widget-icon">
@@ -111,7 +115,7 @@
                     <span id="val-income" class="widget-value">R$ 0,00</span>
                 </div>
             </div>
-            
+
             <!-- Despesas (Saídas) -->
             <div class="widget-card widget-expense glass">
                 <div class="widget-icon">
@@ -136,7 +140,7 @@
                     <canvas id="monthlyExpensesChart"></canvas>
                 </div>
             </div>
-            
+
             <!-- Gráfico de Distribuição por Categoria -->
             <div class="chart-card glass">
                 <div class="chart-card-header">
@@ -155,22 +159,23 @@
                 <div class="search-filter-box">
                     <div class="search-input-wrapper">
                         <i class="ri-search-line"></i>
-                        <input id="search-input" class="search-input" type="text" placeholder="Buscar por descrição ou categoria...">
+                        <input id="search-input" class="search-input" type="text"
+                            placeholder="Buscar por descrição ou categoria...">
                     </div>
-                    
+
                     <select id="filter-select" class="filter-select">
                         <option value="all">Todas as Transações</option>
                         <option value="income">Entradas (Receitas)</option>
                         <option value="expense">Saídas (Despesas)</option>
                     </select>
                 </div>
-                
+
                 <button id="open-add-modal-btn" class="btn-primary">
                     <i class="ri-add-line"></i>
                     Nova Transação
                 </button>
             </div>
-            
+
             <!-- Histórico de Transações -->
             <div class="transactions-card glass">
                 <div class="table-responsive">
@@ -209,51 +214,13 @@
                 </button>
             </div>
             <form id="transaction-form" autocomplete="off">
-                <div class="modal-body">
-                    <!-- Tipo de Transação -->
-                    <div class="form-group">
-                        <span class="form-label">Tipo de Transação</span>
-                        <div class="type-selector">
-                            <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active">
-                                <i class="ri-arrow-down-circle-line"></i> Despesa
-                            </button>
-                            <button type="button" id="btn-type-income" class="type-btn type-btn-income">
-                                <i class="ri-arrow-up-circle-line"></i> Receita
-                            </button>
-                        </div>
-                        <input type="hidden" id="trans-type" value="expense">
-                    </div>
-                    
-                    <!-- Descrição -->
-                    <div class="form-group">
-                        <label for="trans-desc" class="form-label">Descrição</label>
-                        <input id="trans-desc" class="form-input" type="text" placeholder="Ex: Supermercado, Salário" required>
-                    </div>
-                    
-                    <!-- Valor -->
-                    <div class="form-group">
-                        <label for="trans-amount" class="form-label">Valor (R$)</label>
-                        <input id="trans-amount" class="form-input" type="number" step="0.01" min="0.01" placeholder="0.00" required>
-                    </div>
-                    
-                    <!-- Categoria -->
-                    <div class="form-group">
-                        <label for="trans-category" class="form-label">Categoria</label>
-                        <select id="trans-category" class="form-input">
-                            <option value="Alimentação">🍔 Alimentação</option>
-                            <option value="Moradia">🏠 Moradia</option>
-                            <option value="Transporte">🚗 Transporte</option>
-                            <option value="Lazer">🎉 Lazer</option>
-                            <option value="Salário">💼 Salário</option>
-                            <option value="Outros">🏷️ Outros</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Data -->
-                    <div class="form-group">
-                        <label for="trans-date" class="form-label">Data</label>
-                        <input id="trans-date" class="form-input" type="date" required>
-                    </div>
+                <div class="form-group">
+                    <label for="trans-category" class="form-label">Categoria</label>
+                    <select id="trans-category" class="form-input">
+                    </select>
+
+                    <input type="text" id="trans-custom-category" class="form-input"
+                        style="display: none; margin-top: 12px;" placeholder="Qual? (Ex: Conta de Luz, Presente)">
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="cancel-modal-btn" class="btn-secondary">Cancelar</button>
@@ -269,4 +236,5 @@
     <!-- Script Principal -->
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

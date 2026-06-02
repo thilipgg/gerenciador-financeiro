@@ -667,3 +667,52 @@ td {
 .divider span {
     padding: 0 12px;
 }
+
+/* ==========================================================================
+   CORREÇÕES: ESPAÇAMENTO, CONTRASTE (MODO ESCURO) E AVATAR
+   ========================================================================== */
+
+/* 1. Efeito de clique no Avatar */
+#user-avatar {
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+#user-avatar:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+/* 2. Espaçamento dos campos no Modal (Desembolar) */
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* 3. Contraste Total no Modo Escuro */
+:root.dark .modal-content, 
+:root.dark .login-card {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+}
+
+:root.dark .form-input, 
+:root.dark select, 
+:root.dark option {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+:root.dark .form-input::placeholder {
+    color: var(--text-muted);
+}
+
+:root.dark .form-label, 
+:root.dark td, 
+:root.dark .td-description, 
+:root.dark .td-category {
+    color: var(--text-main);
+}
+
+:root.dark tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}

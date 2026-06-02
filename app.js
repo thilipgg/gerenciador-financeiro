@@ -8,7 +8,8 @@ import {
     toggleTheme,
     openModal,
     closeModal,
-    filterAndRenderTransactions
+    filterAndRenderTransactions,
+    updateCategoryDropdown
 } from './ui.js';
 
 // ==========================================
@@ -52,7 +53,28 @@ window.tentarLogin = async (tipo) => {
 };
 
 // ==========================================
-// 3. EVENTOS DA INTERFACE (DASHBOARD)
+// 3. ATUALIZAÇÃO DE AVATAR (Perfil)
+// ==========================================
+document.getElementById('user-avatar')?.addEventListener('click', async () => {
+    const novaUrl = prompt("Cole aqui o link (URL) da nova imagem para o seu perfil:");
+    if (novaUrl && novaUrl.startsWith('http')) {
+        try {
+            const { error } = await supabase.auth.updateUser({
+                data: { avatar_url: novaUrl }
+            });
+            if (error) throw error;
+            document.getElementById('user-avatar').src = novaUrl;
+            showToast("Avatar atualizado com sucesso!", "success");
+        } catch (err) {
+            showToast("Erro ao atualizar o avatar.", "error");
+        }
+    } else if (novaUrl) {
+        showToast("Por favor, insira um link válido começando com http.", "error");
+    }
+});
+
+// ==========================================
+// 4. EVENTOS DA INTERFACE
 // ==========================================
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
@@ -64,6 +86,7 @@ document.getElementById('open-add-modal-btn')?.addEventListener('click', () => o
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
+// Alternância Receita/Despesa e Categorias Dinâmicas
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
@@ -72,14 +95,30 @@ btnExpense?.addEventListener('click', () => {
     btnExpense.classList.add('active');
     btnIncome?.classList.remove('active');
     if (transTypeInput) transTypeInput.value = 'expense';
+    updateCategoryDropdown('expense'); // Atualiza lista de categorias
 });
 
 btnIncome?.addEventListener('click', () => {
     btnIncome.classList.add('active');
     btnExpense?.classList.remove('active');
     if (transTypeInput) transTypeInput.value = 'income';
+    updateCategoryDropdown('income'); // Atualiza lista de categorias
 });
 
+// Mostrar/Ocultar campo de Categoria Customizada ("Outros")
+document.getElementById('trans-category')?.addEventListener('change', (e) => {
+    const customInput = document.getElementById('trans-custom-category');
+    if (e.target.value === 'Outros') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
+});
+
+// SUBMIT DO FORMULÁRIO (Criação ou Edição)
 document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -91,10 +130,17 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
     const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
     const finalType = transTypeInput ? transTypeInput.value : fallbackType;
 
+    // Lógica para pegar a categoria padrão ou a categoria digitada
+    let finalCategory = document.getElementById('trans-category').value;
+    if (finalCategory === 'Outros') {
+        const customValue = document.getElementById('trans-custom-category').value.trim();
+        if (customValue) finalCategory = customValue;
+    }
+
     const data = {
         description: document.getElementById('trans-desc').value,
         amount: cleanAmount,
-        category: document.getElementById('trans-category').value,
+        category: finalCategory,
         date: document.getElementById('trans-date').value,
         type: finalType
     };
