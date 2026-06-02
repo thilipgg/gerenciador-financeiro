@@ -62,3 +62,13 @@ export async function removeTransaction(id) {
     if (error) throw error;
     return true;
 }
+
+export async function updateTransaction(id, updates) {
+    const { data, error } = await supabase
+        .from('transactions')
+        .update(updates)
+        .eq('id', id);
+
+    if (error) throw error;
+    return data;
+}

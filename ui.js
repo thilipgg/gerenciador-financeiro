@@ -11,13 +11,13 @@ const CATEGORY_ICONS = {
     'Outros': '🏷️'
 };
 
-// Referências globais de transações
+// Referências globais de transações para filtros e edições
 let currentTransactionsList = [];
 
-// ----------------------------------------------------
-// TELA E VISIBILIDADE
-// ----------------------------------------------------
+// Expõe a lista globalmente para o app.js e ações inline no HTML terem acesso
+window.allTransactions = [];
 
+// ----------------------------------------------------\n// TELA E VISIBILIDADE\n// ----------------------------------------------------\n
 export function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard-screen').style.display = 'none';
@@ -37,17 +37,184 @@ export function showDashboardScreen(user, isDemo) {
     if (badgeEl) badgeEl.style.display = isDemo ? 'inline-block' : 'none';
 }
 
-// ----------------------------------------------------
-// GERENCIAMENTO DE MODO CLARO/ESCURO
-// ----------------------------------------------------
+// ----------------------------------------------------\n// ATUALIZAÇÃO DO DASHBOARD (DADOS E UI)\n// ----------------------------------------------------\n
+export function updateDashboardUI(transactions) {
+    currentTransactionsList = transactions;
+    window.allTransactions = transactions; // Alimenta a referência global
+    
+    calculateSummary(transactions);
+    filterAndRenderTransactions();
+    renderCharts(transactions);
+}
 
+function calculateSummary(transactions) {
+    let income = 0;
+    let expense = 0;
+
+    transactions.forEach(t => {
+        const amount = parseFloat(t.amount) || 0;
+        if (t.type === 'income') {
+            income += amount;
+        } else {
+            expense += amount;
+        }
+    });
+
+    const balance = income - expense;
+
+    // Atualiza os elementos na tela
+    const balanceEl = document.getElementById('total-balance');
+    const incomeEl = document.getElementById('total-income');
+    const expenseEl = document.getElementById('total-expense');
+
+    if (balanceEl) balanceEl.textContent = formatCurrency(balance);
+    if (incomeEl) incomeEl.textContent = formatCurrency(income);
+    if (expenseEl) expenseEl.textContent = formatCurrency(expense);
+}
+
+export function filterAndRenderTransactions() {
+    const searchInput = document.getElementById('search-input');
+    const filterSelect = document.getElementById('filter-select');
+    
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const filterType = filterSelect ? filterSelect.value : 'all';
+
+    const filtered = currentTransactionsList.filter(t => {
+        const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
+                              t.category.toLowerCase().includes(searchTerm);
+        
+        const matchesType = filterType === 'all' || 
+                            (filterType === 'income' && t.type === 'income') || 
+                            (filterType === 'expense' && t.type === 'expense');
+
+        return matchesSearch && matchesType;
+    });
+
+    renderTable(filtered);
+}
+
+function renderTable(transactions) {
+    const tbody = document.getElementById('transactions-tbody');
+    if (!tbody) return;
+
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                    Nenhuma transação encontrada.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = transactions.map(t => {
+        const icon = CATEGORY_ICONS[t.category] || '🏷️';
+        const isIncome = t.type === 'income';
+        const amountClass = isIncome ? 'amount-income' : 'amount-expense';
+        const amountPrefix = isIncome ? '+' : '-';
+
+        return `
+            <tr class="animate-fade">
+                <td class="td-description">${escapeHTML(t.description)}</td>
+                <td>
+                    <span class="td-category">${icon} ${escapeHTML(t.category)}</span>
+                </td>
+                <td style="color: var(--text-muted);">${formatDate(t.date)}</td>
+                <td class="${amountClass}" style="font-variant-numeric: tabular-nums;">
+                    ${amountPrefix}${formatCurrency(t.amount)}
+                </td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')">
+                            <i class="ri-pencil-line"></i>
+                        </button>
+                        <button class="btn-delete" title="Excluir item" data-id="${t.id}" style="color: var(--danger);">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    setupDeleteListeners();
+}
+
+// ----------------------------------------------------\n// PREPARAÇÃO PARA EDIÇÃO DO ITEM\n// ----------------------------------------------------\n
+window.prepararEdicao = (id) => {
+    // Procura a transação correta dentro da lista global
+    const transacao = window.allTransactions.find(t => String(t.id) === String(id));
+    if (!transacao) return;
+
+    // Vincula o ID à propriedade dataset do formulário para o app.js capturar no submit
+    const form = document.getElementById('transaction-form');
+    if (form) form.dataset.editId = id;
+
+    // Preenche os campos do modal com as informações do banco
+    const descInput = document.getElementById('trans-desc');
+    const amountInput = document.getElementById('trans-amount');
+    const categoryInput = document.getElementById('trans-category');
+    const dateInput = document.getElementById('trans-date');
+    const typeInput = document.getElementById('trans-type');
+
+    if (descInput) descInput.value = transacao.description;
+    if (amountInput) amountInput.value = transacao.amount;
+    if (categoryInput) categoryInput.value = transacao.category;
+    if (dateInput) dateInput.value = transacao.date;
+    if (typeInput) typeInput.value = transacao.type;
+
+    // Atualiza as classes visuais ativas dos botões de Tipo (Receita / Despesa)
+    const btnExpense = document.getElementById('btn-type-expense');
+    const btnIncome = document.getElementById('btn-type-income');
+
+    if (transacao.type === 'income') {
+        btnIncome?.classList.add('active');
+        btnExpense?.classList.remove('active');
+    } else {
+        btnExpense?.classList.add('active');
+        btnIncome?.classList.remove('active');
+    }
+
+    // Altera o título do Modal para melhor legibilidade
+    const modalTitle = document.querySelector('.modal-header h3');
+    if (modalTitle) modalTitle.textContent = "Editar Transação";
+
+    openModal();
+};
+
+// ----------------------------------------------------\n// CONTROLE DE MODAL\n// ----------------------------------------------------\n
+export function openModal() {
+    const modal = document.getElementById('transaction-modal');
+    if (modal) modal.classList.add('active');
+}
+
+export function closeModal() {
+    const modal = document.getElementById('transaction-modal');
+    const form = document.getElementById('transaction-form');
+    
+    if (modal) modal.classList.remove('active');
+    
+    if (form) {
+        form.reset();
+        delete form.dataset.editId; // Remove identificador de edição se houver
+    }
+
+    // Restaura o título padrão do Modal
+    const modalTitle = document.querySelector('.modal-header h3');
+    if (modalTitle) modalTitle.textContent = "Nova Transação";
+
+    // Reseta botões de tipo para o padrão (Despesa ativo)
+    document.getElementById('btn-type-expense')?.classList.add('active');
+    document.getElementById('btn-type-income')?.classList.remove('active');
+    const typeInput = document.getElementById('trans-type');
+    if (typeInput) typeInput.value = 'expense';
+}
+
+// ----------------------------------------------------\n// GERENCIAMENTO DE TEMAS (DARK / LIGHT)\n// ----------------------------------------------------\n
 export function initTheme() {
-    const savedTheme = localStorage.getItem('finances_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
-    
-    if (isDark) {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
     } else {
         document.documentElement.classList.remove('dark');
@@ -56,180 +223,24 @@ export function initTheme() {
 
 export function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('finances_theme', isDark ? 'dark' : 'light');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
     updateChartsTheme(isDark);
 }
 
-export function isDarkActive() {
-    return document.documentElement.classList.contains('dark');
-}
+// ----------------------------------------------------\n// EVENT LISTENERS INTERNOS\n// ----------------------------------------------------\n
+function setupDeleteListeners() {
+    document.querySelectorAll('.btn-delete').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const id = e.currentTarget.dataset.id;
+            if (!id) return;
 
-// ----------------------------------------------------
-// MODAL DE NOVA TRANSAÇÃO
-// ----------------------------------------------------
-
-export function openModal() {
-    const modal = document.getElementById('transaction-modal');
-    if (modal) {
-        modal.classList.add('active');
-        // Define a data padrão como hoje
-        document.getElementById('trans-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('trans-desc').focus();
-    }
-}
-
-export function closeModal() {
-    const modal = document.getElementById('transaction-modal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.getElementById('transaction-form').reset();
-        
-        // Reseta botões do seletor de tipo
-        document.getElementById('btn-type-income').classList.remove('active');
-        document.getElementById('btn-type-expense').classList.add('active');
-        document.getElementById('trans-type').value = 'expense';
-    }
-}
-
-// ----------------------------------------------------
-// RENDERIZAÇÃO DO RESUMO E TRANSAÇÕES
-// ----------------------------------------------------
-
-export function updateDashboardUI(transactions) {
-    currentTransactionsList = transactions;
-    
-    // 1. Calcula Resumo Financeiro
-    let totalIncome = 0;
-    let totalExpense = 0;
-    
-    transactions.forEach(t => {
-        const amount = parseFloat(t.amount);
-        if (t.type === 'income') {
-            totalIncome += amount;
-        } else {
-            totalExpense += amount;
-        }
-    });
-    
-    const totalBalance = totalIncome - totalExpense;
-    
-    // Atualiza DOM dos Widgets
-    const balanceVal = document.getElementById('val-balance');
-    const incomeVal = document.getElementById('val-income');
-    const expenseVal = document.getElementById('val-expense');
-    
-    if (balanceVal) {
-        balanceVal.textContent = formatCurrency(totalBalance);
-        // Altera cor dependendo se saldo é negativo ou positivo
-        if (totalBalance < 0) {
-            balanceVal.style.color = 'var(--danger)';
-        } else {
-            balanceVal.style.color = 'var(--text-main)';
-        }
-    }
-    if (incomeVal) incomeVal.textContent = formatCurrency(totalIncome);
-    if (expenseVal) expenseVal.textContent = formatCurrency(totalExpense);
-    
-    // 2. Renderiza lista de transações (filtrada)
-    filterAndRenderTransactions();
-    
-    // 3. Renderiza Gráficos
-    renderCharts(transactions, isDarkActive());
-}
-
-export function filterAndRenderTransactions() {
-    const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
-    const filterType = document.getElementById('filter-select')?.value || 'all';
-    
-    const filtered = currentTransactionsList.filter(t => {
-        const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
-                              t.category.toLowerCase().includes(searchTerm);
-        
-        const matchesType = filterType === 'all' || t.type === filterType;
-        
-        return matchesSearch && matchesType;
-    });
-    
-    renderTransactionsList(filtered);
-}
-
-function renderTransactionsList(transactions) {
-    const tbody = document.getElementById('transactions-tbody');
-    const mobileList = document.getElementById('mobile-transactions-list');
-    
-    if (!tbody || !mobileList) return;
-    
-    tbody.innerHTML = '';
-    mobileList.innerHTML = '';
-    
-    if (transactions.length === 0) {
-        const emptyHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📭</div>
-                <h3>Nenhuma transação encontrada</h3>
-                <p>Cadastre uma nova transação ou limpe seus filtros de busca.</p>
-            </div>
-        `;
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; border-bottom: none;">${emptyHTML}</td></tr>`;
-        mobileList.innerHTML = emptyHTML;
-        return;
-    }
-    
-    transactions.forEach(t => {
-        const amountFormatted = formatCurrency(parseFloat(t.amount));
-        const amountClass = t.type === 'income' ? 'amount-income' : 'amount-expense';
-        const amountPrefix = t.type === 'income' ? '+' : '-';
-        const dateFormatted = formatDate(t.date);
-        const icon = CATEGORY_ICONS[t.category] || '🏷️';
-        
-        // 1. Tabela Desktop
-        const tr = document.createElement('tr');
-        tr.className = 'animate-fade';
-        tr.innerHTML = `
-            <td class="td-description">${escapeHTML(t.description)}</td>
-            <td>
-                <span class="td-category">
-                    <span>${icon}</span>
-                    <span>${escapeHTML(t.category)}</span>
-                </span>
-            </td>
-            <td>${dateFormatted}</td>
-            <td class="td-amount ${amountClass}">${amountPrefix} ${amountFormatted}</td>
-            <td style="text-align: right; width: 60px;">
-                <button class="btn-delete" data-id="${t.id}" title="Deletar Transação">🗑️</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-        
-        // 2. Lista Mobile
-        const mDiv = document.createElement('div');
-        mDiv.className = 'mobile-transaction-item animate-fade';
-        mDiv.innerHTML = `
-            <div class="mobile-item-left">
-                <div class="mobile-item-title">${escapeHTML(t.description)}</div>
-                <div class="mobile-item-meta">
-                    <span class="td-category" style="padding: 2px 8px; font-size: 11px;">${icon} ${escapeHTML(t.category)}</span>
-                    <span>${dateFormatted}</span>
-                </div>
-            </div>
-            <div class="mobile-item-right">
-                <div class="td-amount ${amountClass}" style="font-size: 16px;">${amountPrefix} ${amountFormatted}</div>
-                <button class="btn-delete" data-id="${t.id}" title="Deletar Transação" style="margin-left: 8px;">🗑️</button>
-            </div>
-        `;
-        mobileList.appendChild(mDiv);
-    });
-    
-    // Adiciona event listeners para exclusão em todos os botões de lixeira recém-criados
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            if (confirm("Tem certeza que deseja excluir esta transação?")) {
+            if (confirm("Tem certeza que deseja excluir esta transação de forma permanente?")) {
                 try {
                     await removeTransaction(id);
-                    showToast("Transação excluída com sucesso!", "success");
-                    // Dispara evento global de atualização de dados
-                    window.dispatchEvent(new CustomEvent('transactions-updated'));
+                    showToast("Transação excluída com sucesso!");
+                    
+                    // Dispara evento global para o app.js recarregar os dados do banco
+                    window.dispatchEvent(new Event('transactions-updated'));
                 } catch (err) {
                     showToast("Erro ao excluir transação.", "error");
                 }
@@ -238,10 +249,7 @@ function renderTransactionsList(transactions) {
     });
 }
 
-// ----------------------------------------------------
-// UTILS E NOTIFICAÇÕES (TOAST)
-// ----------------------------------------------------
-
+// ----------------------------------------------------\n// UTILS E NOTIFICAÇÕES (TOAST)\n// ----------------------------------------------------\n
 export function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -270,13 +278,14 @@ function formatCurrency(value) {
 }
 
 function formatDate(dateStr) {
-    // Corrige deslocamento de timezone na visualização da data
+    if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
 }
 
 function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
+    if (!str) return '';
+    return str.replace(/[&<>'\"]/g, 
         tag => ({
             '&': '&amp;',
             '<': '&lt;',

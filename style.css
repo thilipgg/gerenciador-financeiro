@@ -552,3 +552,54 @@ td {
     .transactions-toolbar { flex-direction: column; }
     #login-screen .login-card { width: 95%; padding: 24px; }
 }
+
+/* Correção da Toolbar e Busca */
+.transactions-toolbar {
+    display: flex;
+    align-items: center; /* Alinha verticalmente os botões e busca */
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.search-filter-box {
+    display: flex;
+    gap: 12px;
+    flex: 2; /* Dá mais espaço para a busca */
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 12px 12px 42px !important; /* Espaço para o ícone de lupa */
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border);
+}
+
+/* Estilo para o botão de editar na tabela */
+.btn-edit {
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+    transition: var(--transition);
+}
+
+.btn-edit:hover {
+    transform: scale(1.2);
+}
