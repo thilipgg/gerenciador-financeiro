@@ -24,37 +24,37 @@
          1. TELA DE LOGIN (Google OAuth / Modo Demo)
          ========================================== -->
     <main id="login-screen" style="display: flex;">
-        <div class="login-card glass">
-            <div class="login-header">
-                <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
-                <h1>Finanças Premium</h1>
-                <p>Acesse sua conta para continuar</p>
+    <div class="login-card glass">
+        <div class="login-header">
+            <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
+            <h1>Finanças Premium</h1>
+            <p>Acesse sua conta para continuar</p>
+        </div>
+
+        <form id="login-form" class="login-options">
+            <div class="input-group">
+                <i class="ri-mail-line"></i>
+                <input type="email" id="user-email" placeholder="E-mail" class="form-input" required>
+            </div>
+            <div class="input-group">
+                <i class="ri-lock-line"></i>
+                <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
             </div>
 
-            <form id="login-form" class="login-options" onsubmit="event.preventDefault(); tentarLogin('Real');">
-                <div class="input-group">
-                    <i class="ri-mail-line"></i>
-                    <input type="email" id="user-email" placeholder="E-mail" class="form-input" required>
-                </div>
-                <div class="input-group">
-                    <i class="ri-lock-line"></i>
-                    <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
-                </div>
+            <button type="submit" class="btn-primary" id="btn-login-real">
+                Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
+            </button>
 
-                <button type="submit" class="btn-primary">
-                    Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
-                </button>
+            <div class="divider">
+                <span>ou</span>
+            </div>
 
-                <div class="divider">
-                    <span>ou</span>
-                </div>
-
-                <button type="button" onclick="tentarLogin('Visitante')" class="btn-secondary">
-                    <i class="ri-user-smile-line"></i> Acessar como Visitante
-                </button>
-            </form>
-        </div>
-    </main>
+            <button type="button" id="btn-login-visitante" class="btn-secondary">
+                <i class="ri-user-smile-line"></i> Acessar como Visitante
+            </button>
+        </form>
+    </div>
+</main>
 
     <!-- ==========================================
          2. TELA DO DASHBOARD FINANCEIRO

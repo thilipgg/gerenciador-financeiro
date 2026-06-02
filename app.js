@@ -12,6 +12,35 @@ import {
     updateCategoryDropdown
 } from './ui.js';
 
+// ... seus imports
+
+// Adiciona os ouvintes de evento assim que a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const btnVisitante = document.getElementById('btn-login-visitante');
+
+    // Listener para o botão Entrar (Formulário)
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Impede o recarregamento da página
+        const email = document.getElementById('user-email').value;
+        const password = document.getElementById('user-pass').value;
+
+        try {
+            await loginComEmail(email, password);
+        } catch (err) {
+            showToast("Erro no login: " + err.message, "error");
+        }
+    });
+
+    // Listener para o botão Visitante
+    btnVisitante?.addEventListener('click', () => {
+        showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
+        updateDashboardUI([]); 
+    });
+});
+
+// ... resto do seu código
+
 // ==========================================
 // 1. INICIALIZAÇÃO E MONITORAMENTO
 // ==========================================
