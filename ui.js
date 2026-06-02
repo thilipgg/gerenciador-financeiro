@@ -1,4 +1,3 @@
-// Módulo de Gerenciamento da Interface (UI)
 import { removeTransaction } from './db.js';
 import { renderCharts, updateChartsTheme } from './chart-manager.js';
 
@@ -40,27 +39,28 @@ export function updateDashboardUI(transactions) {
     filterAndRenderTransactions();
 }
 
-// CORREÇÃO DEFINITIVA DO CÁLCULO (Ignorando diferenças de maiúsculas/minúsculas)
+// CÁLCULO SEGURO DOS CARDS
 function calculateSummary(transactions) {
     let income = 0;
     let expense = 0;
 
     transactions.forEach(t => {
         const amount = Math.abs(parseFloat(t.amount)) || 0;
-        const transactionType = String(t.type).toLowerCase().trim();
+        const normalizedType = String(t.type).toLowerCase().trim();
 
-        if (transactionType === 'income' || transactionType === 'receita') {
+        if (normalizedType === 'income' || normalizedType === 'receita') {
             income += amount;
-        } else if (transactionType === 'expense' || transactionType === 'despesa') {
+        } else {
             expense += amount;
         }
     });
 
     const balance = income - expense;
 
-    const balanceEl = document.getElementById('total-balance');
-    const incomeEl = document.getElementById('total-income');
-    const expenseEl = document.getElementById('total-expense');
+    // Tenta buscar pelos IDs padrões ou seletores comuns de classes se os IDs falharem
+    const balanceEl = document.getElementById('val-balance') || document.getElementById('total-balance') || document.querySelector('.widget-balance .widget-value');
+    const incomeEl = document.getElementById('val-income') || document.getElementById('total-income') || document.querySelector('.widget-income .widget-value');
+    const expenseEl = document.getElementById('val-expense') || document.getElementById('total-expense') || document.querySelector('.widget-expense .widget-value');
 
     if (balanceEl) balanceEl.textContent = formatCurrency(balance);
     if (incomeEl) incomeEl.textContent = formatCurrency(income);
@@ -78,10 +78,12 @@ export function filterAndRenderTransactions() {
         const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
                               t.category.toLowerCase().includes(searchTerm);
         
-        const transactionType = String(t.type).toLowerCase().trim();
+        const normalizedType = String(t.type).toLowerCase().trim();
+        const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
+
         const matchesType = filterType === 'all' || 
-                            (filterType === 'income' && (transactionType === 'income' || transactionType === 'receita')) || 
-                            (filterType === 'expense' && (transactionType === 'expense' || transactionType === 'despesa'));
+                            (filterType === 'income' && isIncome) || 
+                            (filterType === 'expense' && !isIncome);
 
         return matchesSearch && matchesType;
     });
@@ -95,30 +97,22 @@ function renderTable(transactions) {
     if (!tbody) return;
 
     if (transactions.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
-                    Nenhuma transação encontrada.
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">Nenhuma transação encontrada.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = transactions.map(t => {
         const icon = CATEGORY_ICONS[t.category] || '🏷️';
-        const transactionType = String(t.type).toLowerCase().trim();
+        const normalizedType = String(t.type).toLowerCase().trim();
+        const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
         
-        const isIncome = (transactionType === 'income' || transactionType === 'receita');
         const amountClass = isIncome ? 'amount-income' : 'amount-expense';
-        const amountPrefix = isIncome ? '+' : '-';
+        const amountPrefix = isIncome ? '+ ' : '- ';
 
         return `
             <tr class="animate-fade">
                 <td class="td-description">${escapeHTML(t.description)}</td>
-                <td>
-                    <span class="td-category">${icon} ${escapeHTML(t.category)}</span>
-                </td>
+                <td><span class="td-category">${icon} ${escapeHTML(t.category)}</span></td>
                 <td style="color: var(--text-muted);">${formatDate(t.date)}</td>
                 <td class="${amountClass}" style="font-variant-numeric: tabular-nums;">
                     ${amountPrefix}${formatCurrency(t.amount)}
@@ -154,14 +148,14 @@ window.prepararEdicao = (id) => {
     
     const typeInput = document.getElementById('trans-type');
     const normalizedType = String(transacao.type).toLowerCase().trim();
-    const finalType = (normalizedType === 'income' || normalizedType === 'receita') ? 'income' : 'expense';
+    const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
     
-    if (typeInput) typeInput.value = finalType;
+    if (typeInput) typeInput.value = isIncome ? 'income' : 'expense';
 
     const btnExpense = document.getElementById('btn-type-expense');
     const btnIncome = document.getElementById('btn-type-income');
 
-    if (finalType === 'income') {
+    if (isIncome) {
         btnIncome?.classList.add('active');
         btnExpense?.classList.remove('active');
     } else {
@@ -172,41 +166,45 @@ window.prepararEdicao = (id) => {
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Editar Transação";
 
-    openModal();
+    openModal(true); // Abre sem resetar para a data atual
 };
 
-export function openModal() {
+// MODAL COM DATA ATUAL AUTOMÁTICA
+export function openModal(isEditing = false) {
     const modal = document.getElementById('transaction-modal');
     if (modal) modal.classList.add('active');
+
+    // Se for uma nova inserção, define a data de hoje no input
+    if (!isEditing) {
+        const dateInput = document.getElementById('trans-date');
+        if (dateInput) {
+            const hoje = new Date();
+            // Ajuste de timezone para capturar o dia correto local
+            const offset = hoje.getTimezoneOffset() * 60000;
+            const dataLocal = new Date(hoje.getTime() - offset);
+            dateInput.value = dataLocal.toISOString().split('T')[0];
+        }
+    }
 }
 
 export function closeModal() {
-    const modal = document.getElementById('transaction-modal');
+    document.getElementById('transaction-modal')?.classList.remove('active');
     const form = document.getElementById('transaction-form');
-    
-    if (modal) modal.classList.remove('active');
-    
-    if (form) {
-        form.reset();
+    if (form) { 
+        form.reset(); 
         delete form.dataset.editId; 
     }
-
-    const modalTitle = document.querySelector('.modal-header h3');
-    if (modalTitle) modalTitle.textContent = "Nova Transação";
-
     document.getElementById('btn-type-expense')?.classList.add('active');
     document.getElementById('btn-type-income')?.classList.remove('active');
     const typeInput = document.getElementById('trans-type');
     if (typeInput) typeInput.value = 'expense';
+
+    const modalTitle = document.querySelector('.modal-header h3');
+    if (modalTitle) modalTitle.textContent = "Nova Transação";
 }
 
 export function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+    if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
 }
 
 export function toggleTheme() {
@@ -216,19 +214,12 @@ export function toggleTheme() {
 }
 
 function setupDeleteListeners() {
-    document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', async (e) => {
+    document.querySelectorAll('.btn-delete').forEach(b => {
+        b.addEventListener('click', async (e) => {
             const id = e.currentTarget.dataset.id;
-            if (!id) return;
-
-            if (confirm("Tem certeza que deseja excluir esta transação?")) {
-                try {
-                    await removeTransaction(id);
-                    showToast("Transação excluída!");
-                    window.dispatchEvent(new Event('transactions-updated'));
-                } catch (err) {
-                    showToast("Erro ao excluir transação.", "error");
-                }
+            if (id && confirm("Deseja excluir essa transação?")) {
+                await removeTransaction(id);
+                window.dispatchEvent(new Event('transactions-updated'));
             }
         });
     });
@@ -237,45 +228,23 @@ function setupDeleteListeners() {
 export function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
     if (!container) return;
-    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
-    const icon = type === 'success' ? '✅' : '❌';
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-    
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
     container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(50px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    setTimeout(() => toast.remove(), 3000);
 }
 
-function formatCurrency(value) {
-    return Math.abs(value).toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    });
+function formatCurrency(v) { 
+    return Math.abs(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
+function formatDate(d) { 
+    if(!d) return ''; 
+    const [y, m, day] = d.split('-'); 
+    return `${day}/${m}/${y}`; 
 }
 
-function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'\"]/g, 
-        tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag)
-    );
+function escapeHTML(s) { 
+    return s ? s.replace(/[&<>'\"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":"&#39;",'"':'&quot;'}[t]||t)) : ''; 
 }

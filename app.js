@@ -14,10 +14,8 @@ import {
 // ==========================================
 // 1. INICIALIZAÇÃO E MONITORAMENTO
 // ==========================================
-
 initTheme();
 
-// Observa mudanças de autenticação no Supabase
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
         showDashboardScreen(session.user, false);
@@ -28,14 +26,11 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// Atualiza a tela quando uma transação é excluída ou alterada via evento global
 window.addEventListener('transactions-updated', loadDashboardData);
 
-
 // ==========================================
-// 2. FUNÇÕES DE AUTENTICAÇÃO
+// 2. AUTENTICAÇÃO (LOGIN COM ENTER)
 // ==========================================
-
 window.tentarLogin = async (tipo) => {
     if (tipo === 'Visitante') {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
@@ -66,24 +61,21 @@ function setupLoginListeners() {
     });
 }
 
-
 // ==========================================
 // 3. EVENTOS DA INTERFACE (DASHBOARD)
 // ==========================================
-
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
 });
 
-document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    toggleTheme();
-});
+document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
 
-document.getElementById('open-add-modal-btn')?.addEventListener('click', openModal);
+// Chama openModal com 'false' indicando que é uma nova transação
+document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
-// Seleção de Tipo no Modal (Receita / Despesa)
+// Alternância dos botões de Receita/Despesa salvando no input hidden
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
@@ -100,55 +92,47 @@ btnIncome?.addEventListener('click', () => {
     if (transTypeInput) transTypeInput.value = 'income';
 });
 
-// SUBMISSÃO E CORREÇÃO DA DUPLICAÇÃO (Criação vs Edição)
+// SUBMIT DO FORMULÁRIO (Criação ou Edição sem duplicação)
 document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
-    const editId = form.dataset.editId; // Captura o ID caso seja edição
+    const editId = form.dataset.editId;
 
-    // Limpa o valor numérico removendo máscaras visuais desnecessárias
     const rawAmount = document.getElementById('trans-amount').value;
-    const cleanAmount = parseFloat(String(rawAmount).replace(',', '.'));
+    const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, '')) || 0;
+
+    // Se o input hidden falhar, pegamos pela classe ativa do botão
+    const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
+    const finalType = transTypeInput ? transTypeInput.value : fallbackType;
 
     const data = {
         description: document.getElementById('trans-desc').value,
         amount: cleanAmount,
         category: document.getElementById('trans-category').value,
         date: document.getElementById('trans-date').value,
-        type: transTypeInput ? transTypeInput.value : 'expense'
+        type: finalType
     };
 
     try {
         if (editId) {
-            // EXECUTA ATUALIZAÇÃO NO SUPABASE EM VEZ DE CRIAR NOVO
-            const { error } = await supabase
-                .from('transactions')
-                .update(data)
-                .eq('id', editId);
-
+            const { error } = await supabase.from('transactions').update(data).eq('id', editId);
             if (error) throw error;
-            showToast("Transação atualizada com sucesso!", "success");
+            showToast("Transação atualizada!", "success");
         } else {
-            // EXECUTA NOVA INSERÇÃO
             await insertTransaction(data);
             showToast("Lançamento realizado!", "success");
         }
         
         closeModal();
-        loadDashboardData(); // Recarrega a tabela e recalcula o sumário
+        loadDashboardData();
     } catch (err) {
         console.error(err);
-        showToast("Erro ao salvar operação: " + err.message, "error");
+        showToast("Erro ao processar: " + err.message, "error");
     }
 });
 
 document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
 document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
-
-
-// ==========================================
-// 4. CARREGAMENTO DE DADOS
-// ==========================================
 
 async function loadDashboardData() {
     try {
@@ -156,6 +140,5 @@ async function loadDashboardData() {
         updateDashboardUI(transactions);
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        showToast("Erro ao conectar com o banco de dados.", "error");
     }
 }
