@@ -12,76 +12,83 @@ import {
 } from './ui.js';
 
 // ==========================================
-// 1. INICIALIZAÇÃO DO APP E CONFIGURAÇÕES
+// 1. INICIALIZAÇÃO E MONITORAMENTO
 // ==========================================
 
-// Inicializa o tema salvo (claro ou escuro)
+// Inicializa o tema (claro/escuro) baseado na preferência salva[cite: 3]
 initTheme();
 
-// Escuta mudanças no estado de autenticação do Supabase
+// Observa mudanças de autenticação no Supabase
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
         showDashboardScreen(session.user, false);
         loadDashboardData();
     } else {
         showLoginScreen();
+        setupLoginListeners(); // Garante que o Enter funcione ao voltar para o login
     }
 });
 
-// Escuta o evento de exclusão disparado pelo ui.js para recarregar a tela
+// Atualiza a tela quando uma transação é excluída (evento vindo do ui.js)
 window.addEventListener('transactions-updated', loadDashboardData);
 
 
 // ==========================================
-// 2. FUNÇÃO DE LOGIN (ESCOPO GLOBAL)
+// 2. FUNÇÕES DE AUTENTICAÇÃO
 // ==========================================
 
 window.tentarLogin = async (tipo) => {
     if (tipo === 'Visitante') {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
-        updateDashboardUI([]); // Inicializa painel do visitante vazio ou com dados mockados
+        updateDashboardUI([]); 
     } else {
         const email = "filipesoares.cunha@gmail.com";
         const campoSenha = document.getElementById('admin-pass');
         
         if (!campoSenha || !campoSenha.value) {
-            showToast("Digite a senha!", "error");
+            showToast("Por favor, digite a senha.", "error");
             return;
         }
 
         try {
             await loginComEmail(email, campoSenha.value);
         } catch (err) {
-            showToast("Erro no login: " + err.message, "error");
+            showToast("Senha incorreta ou erro de conexão.", "error");
         }
     }
 };
 
+// Função para configurar o "Enter" no campo de senha
+function setupLoginListeners() {
+    const inputSenha = document.getElementById('admin-pass');
+    inputSenha?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            window.tentarLogin('Filipe');
+        }
+    });
+}
+
 
 // ==========================================
-// 3. MAPEAMENTO DE EVENTOS DA INTERFACE (LISTENERS)
+// 3. EVENTOS DA INTERFACE (DASHBOARD)
 // ==========================================
 
-// Botão de Encerrar Sessão (Logout)
+// Logout
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try {
-        await logout();
-    } catch (err) {
-        showToast("Erro ao sair do sistema.", "error");
-    }
+    await logout();
 });
 
-// Botão de Alternar Tema (Light / Dark Mode)
+// Alternar Tema (Dark Mode)
 document.getElementById('theme-toggle')?.addEventListener('click', () => {
     toggleTheme();
 });
 
-// Controle de Abertura e Fechamento do Modal
+// Controle do Modal de Adicionar Transação
 document.getElementById('open-add-modal-btn')?.addEventListener('click', openModal);
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
-// Seletores de Tipo dentro do Modal (Despesa / Receita)
+// Seleção de Tipo no Modal (Receita / Despesa)
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
@@ -98,33 +105,35 @@ btnIncome?.addEventListener('click', () => {
     if (transTypeInput) transTypeInput.value = 'income';
 });
 
-// Submissão do Formulário de Nova Transação (Adicionar)
+// Envio do Formulário de Transação
 document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const description = document.getElementById('trans-desc').value;
-    const amount = document.getElementById('trans-amount').value;
-    const category = document.getElementById('trans-category').value;
-    const date = document.getElementById('trans-date').value;
-    const type = transTypeInput ? transTypeInput.value : 'expense';
+    const data = {
+        description: document.getElementById('trans-desc').value,
+        amount: document.getElementById('trans-amount').value,
+        category: document.getElementById('trans-category').value,
+        date: document.getElementById('trans-date').value,
+        type: transTypeInput ? transTypeInput.value : 'expense'
+    };
 
     try {
-        await insertTransaction({ description, amount, category, date, type });
-        showToast("Transação adicionada com sucesso!", "success");
+        await insertTransaction(data);
+        showToast("Lançamento realizado!", "success");
         closeModal();
-        loadDashboardData(); // Recarrega os dados e atualiza gráficos na hora
+        loadDashboardData();
     } catch (err) {
-        showToast("Erro ao salvar transação: " + err.message, "error");
+        showToast("Erro ao salvar.", "error");
     }
 });
 
-// Filtros de Busca e Filtro de Tipo por Select (Tempo Real)
+// Filtros de busca em tempo real
 document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
 document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
 
 
 // ==========================================
-// 4. CONTROLE DE FLUXO DE DADOS
+// 4. CARREGAMENTO DE DADOS
 // ==========================================
 
 async function loadDashboardData() {
@@ -132,7 +141,6 @@ async function loadDashboardData() {
         const transactions = await fetchTransactions();
         updateDashboardUI(transactions);
     } catch (err) {
-        showToast("Erro ao buscar dados no Supabase.", "error");
-        console.error(err);
+        console.error("Erro ao carregar dados:", err);
     }
 }
