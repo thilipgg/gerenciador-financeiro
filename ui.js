@@ -1,3 +1,4 @@
+// Módulo de Gerenciamento da Interface (UI)
 import { removeTransaction } from './db.js';
 import { renderCharts, updateChartsTheme } from './chart-manager.js';
 
@@ -31,9 +32,6 @@ export function showDashboardScreen(user, isDemo) {
     if (badgeEl) badgeEl.style.display = isDemo ? 'inline-block' : 'none';
 }
 
-// ----------------------------------------------------
-// ATUALIZAÇÃO DO DASHBOARD (DADOS E UI)
-// ----------------------------------------------------
 export function updateDashboardUI(transactions) {
     currentTransactionsList = transactions;
     window.allTransactions = transactions; 
@@ -42,17 +40,18 @@ export function updateDashboardUI(transactions) {
     filterAndRenderTransactions();
 }
 
-// CORREÇÃO DOS VALORES ZERADOS
+// CORREÇÃO DEFINITIVA DO CÁLCULO (Ignorando diferenças de maiúsculas/minúsculas)
 function calculateSummary(transactions) {
     let income = 0;
     let expense = 0;
 
     transactions.forEach(t => {
-        // Força a conversão do dado vindo do Supabase para número absoluto
         const amount = Math.abs(parseFloat(t.amount)) || 0;
-        if (t.type === 'income') {
+        const transactionType = String(t.type).toLowerCase().trim();
+
+        if (transactionType === 'income' || transactionType === 'receita') {
             income += amount;
-        } else {
+        } else if (transactionType === 'expense' || transactionType === 'despesa') {
             expense += amount;
         }
     });
@@ -79,15 +78,16 @@ export function filterAndRenderTransactions() {
         const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
                               t.category.toLowerCase().includes(searchTerm);
         
+        const transactionType = String(t.type).toLowerCase().trim();
         const matchesType = filterType === 'all' || 
-                            (filterType === 'income' && t.type === 'income') || 
-                            (filterType === 'expense' && t.type === 'expense');
+                            (filterType === 'income' && (transactionType === 'income' || transactionType === 'receita')) || 
+                            (filterType === 'expense' && (transactionType === 'expense' || transactionType === 'despesa'));
 
         return matchesSearch && matchesType;
     });
 
     renderTable(filtered);
-    renderCharts(filtered); // Atualiza os gráficos de acordo com os filtros reais
+    renderCharts(filtered);
 }
 
 function renderTable(transactions) {
@@ -107,7 +107,9 @@ function renderTable(transactions) {
 
     tbody.innerHTML = transactions.map(t => {
         const icon = CATEGORY_ICONS[t.category] || '🏷️';
-        const isIncome = t.type === 'income';
+        const transactionType = String(t.type).toLowerCase().trim();
+        
+        const isIncome = (transactionType === 'income' || transactionType === 'receita');
         const amountClass = isIncome ? 'amount-income' : 'amount-expense';
         const amountPrefix = isIncome ? '+' : '-';
 
@@ -123,7 +125,7 @@ function renderTable(transactions) {
                 </td>
                 <td>
                     <div class="actions-cell">
-                        <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')">
+                        <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')" style="background:none; border:none; cursor:pointer;">
                             <i class="ri-pencil-line"></i>
                         </button>
                         <button class="btn-delete" title="Excluir item" data-id="${t.id}" style="color: var(--danger); background:none; border:none; cursor:pointer;">
@@ -138,13 +140,12 @@ function renderTable(transactions) {
     setupDeleteListeners();
 }
 
-// PREPARAÇÃO PARA EDIÇÃO (Mapeia o ID no Form)
 window.prepararEdicao = (id) => {
     const transacao = window.allTransactions.find(t => String(t.id) === String(id));
     if (!transacao) return;
 
     const form = document.getElementById('transaction-form');
-    if (form) form.dataset.editId = id; // Vincula o ID para o app.js saber que é update
+    if (form) form.dataset.editId = id; 
 
     document.getElementById('trans-desc').value = transacao.description;
     document.getElementById('trans-amount').value = transacao.amount;
@@ -152,12 +153,15 @@ window.prepararEdicao = (id) => {
     document.getElementById('trans-date').value = transacao.date;
     
     const typeInput = document.getElementById('trans-type');
-    if (typeInput) typeInput.value = transacao.type;
+    const normalizedType = String(transacao.type).toLowerCase().trim();
+    const finalType = (normalizedType === 'income' || normalizedType === 'receita') ? 'income' : 'expense';
+    
+    if (typeInput) typeInput.value = finalType;
 
     const btnExpense = document.getElementById('btn-type-expense');
     const btnIncome = document.getElementById('btn-type-income');
 
-    if (transacao.type === 'income') {
+    if (finalType === 'income') {
         btnIncome?.classList.add('active');
         btnExpense?.classList.remove('active');
     } else {
@@ -184,7 +188,7 @@ export function closeModal() {
     
     if (form) {
         form.reset();
-        delete form.dataset.editId; // Crucial: deleta o estado de edição ao fechar
+        delete form.dataset.editId; 
     }
 
     const modalTitle = document.querySelector('.modal-header h3');
@@ -217,7 +221,7 @@ function setupDeleteListeners() {
             const id = e.currentTarget.dataset.id;
             if (!id) return;
 
-            if (confirm("Tem certeza que deseja excluir esta transação de forma permanente?")) {
+            if (confirm("Tem certeza que deseja excluir esta transação?")) {
                 try {
                     await removeTransaction(id);
                     showToast("Transação excluída!");
