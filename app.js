@@ -1,7 +1,7 @@
 import { fetchTransactions, loginComEmail, logout, supabase } from './db.js';
 import { showLoginScreen, showDashboardScreen, updateDashboardUI, showToast } from './ui.js';
 
-// 1. Escuta mudanças no Login (O "coração" da app)
+// 1. Escuta mudanças na autenticação
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
         showDashboardScreen(session.user);
@@ -11,39 +11,34 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// 2. Função chamada pelo formulário de Login
-import { loginComEmail, setAuthType, loadDashboardData } from './db.js';
-import { showDashboardScreen, showToast } from './ui.js';
-
+// 2. Função de login atribuída ao escopo global para o HTML reconhecer
 window.tentarLogin = async (tipo) => {
     if (tipo === 'Visitante') {
-        setAuthType('Visitante');
-        showDashboardScreen({ full_name: "Visitante", email: "demo@demo.com" }, true);
-        await loadDashboardData();
+        // Lógica de Visitante (assumindo que você manteve o modo demo no ui.js/db.js)
+        showDashboardScreen({ full_name: "Visitante", email: "demo@demo.com" });
     } else {
-        const email = "filipesoares.cunha@gmail.com"; // Seu e-mail fixo
-        const senhaInput = document.getElementById('admin-pass');
+        const email = "filipesoares.cunha@gmail.com";
+        const campoSenha = document.getElementById('admin-pass');
         
-        if (!senhaInput || !senhaInput.value) {
-            showToast("Por favor, insira a senha.", "error");
+        if (!campoSenha || !campoSenha.value) {
+            showToast("Digite a senha!", "error");
             return;
         }
 
         try {
-            // Chama a função real do Supabase que valida e-mail e senha
-            await loginComEmail(email, senhaInput.value);
-            
-            setAuthType('Filipe');
-            showDashboardScreen({ full_name: "Filipe", email: email }, false);
-            await loadDashboardData();
+            await loginComEmail(email, campoSenha.value);
         } catch (err) {
-            console.error("Erro no login:", err);
-            showToast("E-mail ou senha incorretos!", "error");
+            showToast("Erro no login: " + err.message, "error");
         }
     }
 };
 
-// 3. Carregamento de dados
+// 3. Logout global
+window.fazerLogout = async () => {
+    await logout();
+};
+
+// 4. Carregamento de dados
 async function loadDashboardData() {
     try {
         const transactions = await fetchTransactions();
@@ -52,8 +47,3 @@ async function loadDashboardData() {
         showToast("Erro ao carregar dados.", "error");
     }
 }
-
-// 4. Logout global
-window.fazerLogout = async () => {
-    await logout();
-};
