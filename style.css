@@ -244,11 +244,12 @@ button, input, select {
     flex: 1;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 24px;
     gap: 24px;
+    max-width: 1200px;    /* Define um limite máximo de largura (ajuste se quiser maior/menor) */
+    margin: 0 auto;       /* Centraliza o painel no monitor */
+    width: 95%;           /* Ocupa 95% em telas pequenas, mas nunca passa de 1200px */
+    padding: 20px;        /* Garante respiro nas laterais */
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
 }
 
 header {
@@ -395,8 +396,8 @@ header {
 /* Gráficos */
 .charts-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .chart-card {
@@ -687,6 +688,10 @@ td {
     margin-bottom: 20px;
 }
 
+/* .form-label {
+    font-style: italic;
+} */
+
 /* 3. Contraste Total no Modo Escuro */
 :root.dark .modal-content, 
 :root.dark .login-card {
@@ -707,12 +712,67 @@ td {
 }
 
 :root.dark .form-label, 
-:root.dark td, 
+:root.dark td,
 :root.dark .td-description, 
 :root.dark .td-category {
     color: var(--text-main);
 }
 
+/* Correção do botão de fechar no Modal */
+.modal-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted); /* Usa a cor cinza do seu sistema */
+    font-size: 24px; /* Ajuste o tamanho conforme preferir */
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: var(--danger); /* Fica vermelho ao passar o mouse */
+    transform: rotate(90deg); /* Um efeito extra de movimento */
+}
+
 :root.dark tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ==========================================================================
+   AJUSTES DE "BREATHING ROOM" (ESPACAMENTO DO MODAL)
+   ========================================================================== */
+
+/* Adiciona respiro interno no formulário */
+#transaction-form {
+    padding: 10px; 
+}
+
+/* Aumenta a distância entre um campo e outro */
+.form-group {
+    margin-bottom: 10px !important;
+}
+
+/* Ajusta o espaçamento dos botões de tipo (Despesa/Receita) */
+/* Estamos usando um seletor específico para o container dos botões */
+.modal-container form .form-group[style*="display: flex"] {
+    gap: 16px !important;
+    margin-bottom: 16px !important; /* Um pouco mais de espaço antes da descrição */
+    
+}
+
+/* Correção do espaçamento entre Label e Input */
+.form-label {
+    display: block;          /* Garante que o label ocupe sua própria linha */
+    margin-bottom: 8px;      /* Aumenta o espaço para baixo */
+    font-weight: 500;        /* Opcional: melhora a legibilidade do título */
+    color: var(--text-main); /* Garante que a cor respeite seu tema */
+}
+
+/* Remove as setas nativas do input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
