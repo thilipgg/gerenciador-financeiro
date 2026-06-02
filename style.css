@@ -603,3 +603,67 @@ td {
 .btn-edit:hover {
     transform: scale(1.2);
 }
+
+/* ==========================================================================
+   ESTILOS PREMIUM PARA A NOVA TELA DE LOGIN
+   ========================================================================== */
+.login-header {
+    margin-bottom: 28px;
+}
+
+.login-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+:root.dark .login-icon {
+    background: rgba(255,255,255,0.05);
+}
+
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.input-group i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 18px;
+    z-index: 2;
+}
+
+.input-group .form-input {
+    padding-left: 46px !important;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+}
+
+.divider span {
+    padding: 0 12px;
+}

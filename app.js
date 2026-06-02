@@ -22,44 +22,34 @@ supabase.auth.onAuthStateChange((event, session) => {
         loadDashboardData();
     } else {
         showLoginScreen();
-        setupLoginListeners();
     }
 });
 
 window.addEventListener('transactions-updated', loadDashboardData);
 
 // ==========================================
-// 2. AUTENTICAÇÃO (LOGIN COM ENTER)
+// 2. AUTENTICAÇÃO
 // ==========================================
 window.tentarLogin = async (tipo) => {
     if (tipo === 'Visitante') {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
         updateDashboardUI([]); 
     } else {
-        const email = "filipesoares.cunha@gmail.com";
-        const campoSenha = document.getElementById('admin-pass');
+        const emailInput = document.getElementById('user-email').value;
+        const passInput = document.getElementById('user-pass').value;
         
-        if (!campoSenha || !campoSenha.value) {
-            showToast("Por favor, digite a senha.", "error");
+        if (!emailInput || !passInput) {
+            showToast("Por favor, preencha e-mail e senha.", "error");
             return;
         }
 
         try {
-            await loginComEmail(email, campoSenha.value);
+            await loginComEmail(emailInput, passInput);
         } catch (err) {
-            showToast("Senha incorreta ou erro de conexão.", "error");
+            showToast("E-mail ou senha incorretos.", "error");
         }
     }
 };
-
-function setupLoginListeners() {
-    const inputSenha = document.getElementById('admin-pass');
-    inputSenha?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            window.tentarLogin('Filipe');
-        }
-    });
-}
 
 // ==========================================
 // 3. EVENTOS DA INTERFACE (DASHBOARD)
@@ -70,12 +60,10 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
 
 document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
 
-// Chama openModal com 'false' indicando que é uma nova transação
 document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
-// Alternância dos botões de Receita/Despesa salvando no input hidden
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
@@ -92,7 +80,6 @@ btnIncome?.addEventListener('click', () => {
     if (transTypeInput) transTypeInput.value = 'income';
 });
 
-// SUBMIT DO FORMULÁRIO (Criação ou Edição sem duplicação)
 document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -101,7 +88,6 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
     const rawAmount = document.getElementById('trans-amount').value;
     const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, '')) || 0;
 
-    // Se o input hidden falhar, pegamos pela classe ativa do botão
     const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
     const finalType = transTypeInput ? transTypeInput.value : fallbackType;
 
