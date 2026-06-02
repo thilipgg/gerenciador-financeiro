@@ -116,22 +116,35 @@ document.getElementById('close-modal-btn')?.addEventListener('click', closeModal
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
 // Alternância Receita/Despesa e Categorias Dinâmicas
+// Alternância Receita/Despesa e Categorias Dinâmicas
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
 
 btnExpense?.addEventListener('click', () => {
-    btnExpense.classList.add('active');
-    btnIncome?.classList.remove('active');
+    // Aplica estilo de destaque para Despesa
+    btnExpense.classList.add('btn-primary');
+    btnExpense.classList.remove('btn-secondary');
+    
+    // Aplica estilo neutro para Receita
+    btnIncome.classList.add('btn-secondary');
+    btnIncome.classList.remove('btn-primary');
+
     if (transTypeInput) transTypeInput.value = 'expense';
-    updateCategoryDropdown('expense'); // Atualiza lista de categorias
+    updateCategoryDropdown('expense');
 });
 
 btnIncome?.addEventListener('click', () => {
-    btnIncome.classList.add('active');
-    btnExpense?.classList.remove('active');
+    // Aplica estilo de destaque para Receita
+    btnIncome.classList.add('btn-primary');
+    btnIncome.classList.remove('btn-secondary');
+    
+    // Aplica estilo neutro para Despesa
+    btnExpense.classList.add('btn-secondary');
+    btnExpense.classList.remove('btn-primary');
+
     if (transTypeInput) transTypeInput.value = 'income';
-    updateCategoryDropdown('income'); // Atualiza lista de categorias
+    updateCategoryDropdown('income');
 });
 
 // Mostrar/Ocultar campo de Categoria Customizada ("Outros")
