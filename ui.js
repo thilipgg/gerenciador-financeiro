@@ -10,6 +10,20 @@ const CATEGORY_ICONS = {
     'Outros': '🏷️'
 };
 
+const DYNAMIC_CATEGORIES = {
+    income: [
+        { value: 'Salário', label: '💼 Salário' },
+        { value: 'Outros', label: '🏷️ Outros' }
+    ],
+    expense: [
+        { value: 'Alimentação', label: '🍔 Alimentação' },
+        { value: 'Moradia', label: '🏠 Moradia' },
+        { value: 'Transporte', label: '🚗 Transporte' },
+        { value: 'Lazer', label: '🎉 Lazer' },
+        { value: 'Outros', label: '🏷️ Outros' }
+    ]
+};
+
 let currentTransactionsList = [];
 window.allTransactions = [];
 
@@ -39,7 +53,6 @@ export function updateDashboardUI(transactions) {
     filterAndRenderTransactions();
 }
 
-// CÁLCULO SEGURO DOS CARDS
 function calculateSummary(transactions) {
     let income = 0;
     let expense = 0;
@@ -57,7 +70,6 @@ function calculateSummary(transactions) {
 
     const balance = income - expense;
 
-    // Tenta buscar pelos IDs padrões ou seletores comuns de classes se os IDs falharem
     const balanceEl = document.getElementById('val-balance') || document.getElementById('total-balance') || document.querySelector('.widget-balance .widget-value');
     const incomeEl = document.getElementById('val-income') || document.getElementById('total-income') || document.querySelector('.widget-income .widget-value');
     const expenseEl = document.getElementById('val-expense') || document.getElementById('total-expense') || document.querySelector('.widget-expense .widget-value');
@@ -102,6 +114,7 @@ function renderTable(transactions) {
     }
 
     tbody.innerHTML = transactions.map(t => {
+        // Se a categoria for customizada, usa a tag de Outros como ícone padrão
         const icon = CATEGORY_ICONS[t.category] || '🏷️';
         const normalizedType = String(t.type).toLowerCase().trim();
         const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
@@ -134,6 +147,26 @@ function renderTable(transactions) {
     setupDeleteListeners();
 }
 
+// ATUALIZA O DROPDOWN DEPENDENDO DO TIPO (Receita/Despesa)
+export function updateCategoryDropdown(type) {
+    const categorySelect = document.getElementById('trans-category');
+    if (!categorySelect) return;
+
+    const options = DYNAMIC_CATEGORIES[type] || DYNAMIC_CATEGORIES['expense'];
+    
+    categorySelect.innerHTML = options.map(opt => 
+        `<option value="${opt.value}">${opt.label}</option>`
+    ).join('');
+
+    // Sempre oculta o input customizado ao mudar de tipo
+    const customInput = document.getElementById('trans-custom-category');
+    if (customInput) {
+        customInput.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
+}
+
 window.prepararEdicao = (id) => {
     const transacao = window.allTransactions.find(t => String(t.id) === String(id));
     if (!transacao) return;
@@ -141,16 +174,16 @@ window.prepararEdicao = (id) => {
     const form = document.getElementById('transaction-form');
     if (form) form.dataset.editId = id; 
 
+    const normalizedType = String(transacao.type).toLowerCase().trim();
+    const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
+    const transactionType = isIncome ? 'income' : 'expense';
+
     document.getElementById('trans-desc').value = transacao.description;
     document.getElementById('trans-amount').value = transacao.amount;
-    document.getElementById('trans-category').value = transacao.category;
     document.getElementById('trans-date').value = transacao.date;
     
     const typeInput = document.getElementById('trans-type');
-    const normalizedType = String(transacao.type).toLowerCase().trim();
-    const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
-    
-    if (typeInput) typeInput.value = isIncome ? 'income' : 'expense';
+    if (typeInput) typeInput.value = transactionType;
 
     const btnExpense = document.getElementById('btn-type-expense');
     const btnIncome = document.getElementById('btn-type-income');
@@ -163,27 +196,44 @@ window.prepararEdicao = (id) => {
         btnIncome?.classList.remove('active');
     }
 
+    // Atualiza as categorias antes de setar o valor
+    updateCategoryDropdown(transactionType);
+
+    const categorySelect = document.getElementById('trans-category');
+    const customInput = document.getElementById('trans-custom-category');
+    
+    // Verifica se a categoria do banco existe nas opções padrões. Se não existir, é porque é "Outros/Customizada"
+    const defaultOptions = DYNAMIC_CATEGORIES[transactionType].map(opt => opt.value);
+    
+    if (defaultOptions.includes(transacao.category)) {
+        categorySelect.value = transacao.category;
+    } else {
+        categorySelect.value = 'Outros';
+        customInput.style.display = 'block';
+        customInput.required = true;
+        customInput.value = transacao.category;
+    }
+
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Editar Transação";
 
-    openModal(true); // Abre sem resetar para a data atual
+    openModal(true); 
 };
 
-// MODAL COM DATA ATUAL AUTOMÁTICA
 export function openModal(isEditing = false) {
     const modal = document.getElementById('transaction-modal');
     if (modal) modal.classList.add('active');
 
-    // Se for uma nova inserção, define a data de hoje no input
     if (!isEditing) {
         const dateInput = document.getElementById('trans-date');
         if (dateInput) {
             const hoje = new Date();
-            // Ajuste de timezone para capturar o dia correto local
             const offset = hoje.getTimezoneOffset() * 60000;
             const dataLocal = new Date(hoje.getTime() - offset);
             dateInput.value = dataLocal.toISOString().split('T')[0];
         }
+        // Ao abrir para nova inserção, garante que a aba inicial seja Despesa
+        updateCategoryDropdown('expense');
     }
 }
 
@@ -196,8 +246,16 @@ export function closeModal() {
     }
     document.getElementById('btn-type-expense')?.classList.add('active');
     document.getElementById('btn-type-income')?.classList.remove('active');
+    
     const typeInput = document.getElementById('trans-type');
     if (typeInput) typeInput.value = 'expense';
+
+    const customInput = document.getElementById('trans-custom-category');
+    if (customInput) {
+        customInput.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
 
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Nova Transação";
