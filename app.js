@@ -15,7 +15,6 @@ import {
 // 1. INICIALIZAÇÃO E MONITORAMENTO
 // ==========================================
 
-// Inicializa o tema (claro/escuro) baseado na preferência salva[cite: 3]
 initTheme();
 
 // Observa mudanças de autenticação no Supabase
@@ -25,11 +24,11 @@ supabase.auth.onAuthStateChange((event, session) => {
         loadDashboardData();
     } else {
         showLoginScreen();
-        setupLoginListeners(); // Garante que o Enter funcione ao voltar para o login
+        setupLoginListeners();
     }
 });
 
-// Atualiza a tela quando uma transação é excluída (evento vindo do ui.js)
+// Atualiza a tela quando uma transação é excluída ou alterada via evento global
 window.addEventListener('transactions-updated', loadDashboardData);
 
 
@@ -58,7 +57,6 @@ window.tentarLogin = async (tipo) => {
     }
 };
 
-// Função para configurar o "Enter" no campo de senha
 function setupLoginListeners() {
     const inputSenha = document.getElementById('admin-pass');
     inputSenha?.addEventListener('keydown', (e) => {
@@ -73,17 +71,14 @@ function setupLoginListeners() {
 // 3. EVENTOS DA INTERFACE (DASHBOARD)
 // ==========================================
 
-// Logout
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
 });
 
-// Alternar Tema (Dark Mode)
 document.getElementById('theme-toggle')?.addEventListener('click', () => {
     toggleTheme();
 });
 
-// Controle do Modal de Adicionar Transação
 document.getElementById('open-add-modal-btn')?.addEventListener('click', openModal);
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
@@ -105,29 +100,48 @@ btnIncome?.addEventListener('click', () => {
     if (transTypeInput) transTypeInput.value = 'income';
 });
 
-// Envio do Formulário de Transação
+// SUBMISSÃO E CORREÇÃO DA DUPLICAÇÃO (Criação vs Edição)
 document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const form = e.target;
+    const editId = form.dataset.editId; // Captura o ID caso seja edição
+
+    // Limpa o valor numérico removendo máscaras visuais desnecessárias
+    const rawAmount = document.getElementById('trans-amount').value;
+    const cleanAmount = parseFloat(String(rawAmount).replace(',', '.'));
 
     const data = {
         description: document.getElementById('trans-desc').value,
-        amount: document.getElementById('trans-amount').value,
+        amount: cleanAmount,
         category: document.getElementById('trans-category').value,
         date: document.getElementById('trans-date').value,
         type: transTypeInput ? transTypeInput.value : 'expense'
     };
 
     try {
-        await insertTransaction(data);
-        showToast("Lançamento realizado!", "success");
+        if (editId) {
+            // EXECUTA ATUALIZAÇÃO NO SUPABASE EM VEZ DE CRIAR NOVO
+            const { error } = await supabase
+                .from('transactions')
+                .update(data)
+                .eq('id', editId);
+
+            if (error) throw error;
+            showToast("Transação atualizada com sucesso!", "success");
+        } else {
+            // EXECUTA NOVA INSERÇÃO
+            await insertTransaction(data);
+            showToast("Lançamento realizado!", "success");
+        }
+        
         closeModal();
-        loadDashboardData();
+        loadDashboardData(); // Recarrega a tabela e recalcula o sumário
     } catch (err) {
-        showToast("Erro ao salvar.", "error");
+        console.error(err);
+        showToast("Erro ao salvar operação: " + err.message, "error");
     }
 });
 
-// Filtros de busca em tempo real
 document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
 document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
 
@@ -142,5 +156,6 @@ async function loadDashboardData() {
         updateDashboardUI(transactions);
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
+        showToast("Erro ao conectar com o banco de dados.", "error");
     }
 }

@@ -1,4 +1,3 @@
-// Módulo de Gerenciamento da Interface (UI)
 import { removeTransaction } from './db.js';
 import { renderCharts, updateChartsTheme } from './chart-manager.js';
 
@@ -11,13 +10,9 @@ const CATEGORY_ICONS = {
     'Outros': '🏷️'
 };
 
-// Referências globais de transações para filtros e edições
 let currentTransactionsList = [];
-
-// Expõe a lista globalmente para o app.js e ações inline no HTML terem acesso
 window.allTransactions = [];
 
-// ----------------------------------------------------\n// TELA E VISIBILIDADE\n// ----------------------------------------------------\n
 export function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard-screen').style.display = 'none';
@@ -27,7 +22,6 @@ export function showDashboardScreen(user, isDemo) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'flex';
     
-    // Atualiza dados do usuário no header
     const avatarEl = document.getElementById('user-avatar');
     const nameEl = document.getElementById('user-name');
     const badgeEl = document.getElementById('demo-badge');
@@ -37,22 +31,25 @@ export function showDashboardScreen(user, isDemo) {
     if (badgeEl) badgeEl.style.display = isDemo ? 'inline-block' : 'none';
 }
 
-// ----------------------------------------------------\n// ATUALIZAÇÃO DO DASHBOARD (DADOS E UI)\n// ----------------------------------------------------\n
+// ----------------------------------------------------
+// ATUALIZAÇÃO DO DASHBOARD (DADOS E UI)
+// ----------------------------------------------------
 export function updateDashboardUI(transactions) {
     currentTransactionsList = transactions;
-    window.allTransactions = transactions; // Alimenta a referência global
+    window.allTransactions = transactions; 
     
     calculateSummary(transactions);
     filterAndRenderTransactions();
-    renderCharts(transactions);
 }
 
+// CORREÇÃO DOS VALORES ZERADOS
 function calculateSummary(transactions) {
     let income = 0;
     let expense = 0;
 
     transactions.forEach(t => {
-        const amount = parseFloat(t.amount) || 0;
+        // Força a conversão do dado vindo do Supabase para número absoluto
+        const amount = Math.abs(parseFloat(t.amount)) || 0;
         if (t.type === 'income') {
             income += amount;
         } else {
@@ -62,7 +59,6 @@ function calculateSummary(transactions) {
 
     const balance = income - expense;
 
-    // Atualiza os elementos na tela
     const balanceEl = document.getElementById('total-balance');
     const incomeEl = document.getElementById('total-income');
     const expenseEl = document.getElementById('total-expense');
@@ -91,6 +87,7 @@ export function filterAndRenderTransactions() {
     });
 
     renderTable(filtered);
+    renderCharts(filtered); // Atualiza os gráficos de acordo com os filtros reais
 }
 
 function renderTable(transactions) {
@@ -129,7 +126,7 @@ function renderTable(transactions) {
                         <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')">
                             <i class="ri-pencil-line"></i>
                         </button>
-                        <button class="btn-delete" title="Excluir item" data-id="${t.id}" style="color: var(--danger);">
+                        <button class="btn-delete" title="Excluir item" data-id="${t.id}" style="color: var(--danger); background:none; border:none; cursor:pointer;">
                             <i class="ri-delete-bin-line"></i>
                         </button>
                     </div>
@@ -141,30 +138,22 @@ function renderTable(transactions) {
     setupDeleteListeners();
 }
 
-// ----------------------------------------------------\n// PREPARAÇÃO PARA EDIÇÃO DO ITEM\n// ----------------------------------------------------\n
+// PREPARAÇÃO PARA EDIÇÃO (Mapeia o ID no Form)
 window.prepararEdicao = (id) => {
-    // Procura a transação correta dentro da lista global
     const transacao = window.allTransactions.find(t => String(t.id) === String(id));
     if (!transacao) return;
 
-    // Vincula o ID à propriedade dataset do formulário para o app.js capturar no submit
     const form = document.getElementById('transaction-form');
-    if (form) form.dataset.editId = id;
+    if (form) form.dataset.editId = id; // Vincula o ID para o app.js saber que é update
 
-    // Preenche os campos do modal com as informações do banco
-    const descInput = document.getElementById('trans-desc');
-    const amountInput = document.getElementById('trans-amount');
-    const categoryInput = document.getElementById('trans-category');
-    const dateInput = document.getElementById('trans-date');
+    document.getElementById('trans-desc').value = transacao.description;
+    document.getElementById('trans-amount').value = transacao.amount;
+    document.getElementById('trans-category').value = transacao.category;
+    document.getElementById('trans-date').value = transacao.date;
+    
     const typeInput = document.getElementById('trans-type');
-
-    if (descInput) descInput.value = transacao.description;
-    if (amountInput) amountInput.value = transacao.amount;
-    if (categoryInput) categoryInput.value = transacao.category;
-    if (dateInput) dateInput.value = transacao.date;
     if (typeInput) typeInput.value = transacao.type;
 
-    // Atualiza as classes visuais ativas dos botões de Tipo (Receita / Despesa)
     const btnExpense = document.getElementById('btn-type-expense');
     const btnIncome = document.getElementById('btn-type-income');
 
@@ -176,14 +165,12 @@ window.prepararEdicao = (id) => {
         btnIncome?.classList.remove('active');
     }
 
-    // Altera o título do Modal para melhor legibilidade
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Editar Transação";
 
     openModal();
 };
 
-// ----------------------------------------------------\n// CONTROLE DE MODAL\n// ----------------------------------------------------\n
 export function openModal() {
     const modal = document.getElementById('transaction-modal');
     if (modal) modal.classList.add('active');
@@ -197,21 +184,18 @@ export function closeModal() {
     
     if (form) {
         form.reset();
-        delete form.dataset.editId; // Remove identificador de edição se houver
+        delete form.dataset.editId; // Crucial: deleta o estado de edição ao fechar
     }
 
-    // Restaura o título padrão do Modal
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Nova Transação";
 
-    // Reseta botões de tipo para o padrão (Despesa ativo)
     document.getElementById('btn-type-expense')?.classList.add('active');
     document.getElementById('btn-type-income')?.classList.remove('active');
     const typeInput = document.getElementById('trans-type');
     if (typeInput) typeInput.value = 'expense';
 }
 
-// ----------------------------------------------------\n// GERENCIAMENTO DE TEMAS (DARK / LIGHT)\n// ----------------------------------------------------\n
 export function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
@@ -227,7 +211,6 @@ export function toggleTheme() {
     updateChartsTheme(isDark);
 }
 
-// ----------------------------------------------------\n// EVENT LISTENERS INTERNOS\n// ----------------------------------------------------\n
 function setupDeleteListeners() {
     document.querySelectorAll('.btn-delete').forEach(button => {
         button.addEventListener('click', async (e) => {
@@ -237,9 +220,7 @@ function setupDeleteListeners() {
             if (confirm("Tem certeza que deseja excluir esta transação de forma permanente?")) {
                 try {
                     await removeTransaction(id);
-                    showToast("Transação excluída com sucesso!");
-                    
-                    // Dispara evento global para o app.js recarregar os dados do banco
+                    showToast("Transação excluída!");
                     window.dispatchEvent(new Event('transactions-updated'));
                 } catch (err) {
                     showToast("Erro ao excluir transação.", "error");
@@ -249,7 +230,6 @@ function setupDeleteListeners() {
     });
 }
 
-// ----------------------------------------------------\n// UTILS E NOTIFICAÇÕES (TOAST)\n// ----------------------------------------------------\n
 export function showToast(message, type = "success") {
     const container = document.getElementById('toast-container');
     if (!container) return;
