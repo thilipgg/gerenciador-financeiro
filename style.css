@@ -17,7 +17,7 @@
     --danger: hsl(355, 78%, 56%);
     --danger-light: hsl(355, 78%, 95%);
     
-    --bg-app: hsl(220, 20%, 97%);
+    --bg-app: hsla(218, 5%, 54%, 0.46);
     --bg-card: hsl(0, 0%, 100%);
     --bg-input: hsl(220, 20%, 95%);
     
@@ -446,6 +446,7 @@ header {
 
 .search-input {
     padding-left: 42px;
+    border-radius: var(--radius-sm);
 }
 
 .filter-select {
@@ -552,6 +553,38 @@ td {
     header { flex-direction: column; gap: 12px; }
     .transactions-toolbar { flex-direction: column; }
     #login-screen .login-card { width: 95%; padding: 24px; }
+}
+
+@media (max-width: 600px) {
+    /* 1. Ajuste da tabela para não ocupar espaço excessivo */
+    th, td {
+        padding: 12px 8px !important; /* Reduzindo drasticamente o padding */
+        font-size: 12px;             /* Texto um pouco menor para caber mais */
+    }
+
+    /* 2. Compactação dos Cards de Resumo */
+    .summary-container {
+        grid-template-columns: 1fr; /* Empilha os cards um sobre o outro */
+        gap: 12px;
+    }
+    
+    .widget-card {
+        padding: 16px; /* Menos padding interno nos cards */
+    }
+
+    .widget-value {
+        font-size: 22px; /* Fonte menor para evitar quebra de linha no valor */
+    }
+
+    /* 3. Ajuste do Modal para ocupar a tela toda com conforto */
+    .modal-container {
+        width: 95%;
+        margin: 0 auto;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
 }
 
 /* Correção da Toolbar e Busca */
@@ -775,4 +808,27 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+@media (max-width: 600px) {
+    /* 1. Permite rolagem horizontal apenas na tabela */
+    .transactions-card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Melhora a fluidez do scroll no iPhone */
+    }
+
+    /* 2. Define uma largura mínima para a tabela não ficar espremida */
+    table {
+        min-width: 500px; 
+    }
+
+    /* 3. Reduz o espaçamento de células e fonte para ganhar espaço */
+    th, td {
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+    }
+
+    /* 4. Opcional: Oculta colunas menos importantes em telas minúsculas */
+    /* Se quiser esconder a data para ganhar ainda mais espaço, descomente a linha abaixo */
+    /* th:nth-child(3), td:nth-child(3) { display: none; } */
 }
