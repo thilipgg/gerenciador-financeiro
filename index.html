@@ -183,10 +183,10 @@
                         <thead>
                             <tr>
                                 <th>Descrição</th>
+                                <th>Valor</th>
                                 <th>Categoria</th>
                                 <th>Data</th>
-                                <th>Valor</th>
-                                <th style="text-align: right;">Ações</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="transactions-tbody">
@@ -218,8 +218,8 @@
             <input type="hidden" id="trans-type" value="expense">
 
             <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button type="button" id="btn-type-expense" class="btn-primary active" style="flex: 1;">Despesa</button>
-                <button type="button" id="btn-type-income" class="btn-secondary" style="flex: 1;">Receita</button>
+                <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active" style="flex: 1;">Despesa</button>
+                <button type="button" id="btn-type-income" class="type-btn type-btn-income" style="flex: 1;">Receita</button>
             </div>
 
             <div class="form-group">

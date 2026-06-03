@@ -122,26 +122,16 @@ const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
 
 btnExpense?.addEventListener('click', () => {
-    // Aplica estilo de destaque para Despesa
-    btnExpense.classList.add('btn-primary');
-    btnExpense.classList.remove('btn-secondary');
-    
-    // Aplica estilo neutro para Receita
-    btnIncome.classList.add('btn-secondary');
-    btnIncome.classList.remove('btn-primary');
+    btnExpense.classList.add('active');
+    btnIncome.classList.remove('active');
 
     if (transTypeInput) transTypeInput.value = 'expense';
     updateCategoryDropdown('expense');
 });
 
 btnIncome?.addEventListener('click', () => {
-    // Aplica estilo de destaque para Receita
-    btnIncome.classList.add('btn-primary');
-    btnIncome.classList.remove('btn-secondary');
-    
-    // Aplica estilo neutro para Despesa
-    btnExpense.classList.add('btn-secondary');
-    btnExpense.classList.remove('btn-primary');
+    btnIncome.classList.add('active');
+    btnExpense.classList.remove('active');
 
     if (transTypeInput) transTypeInput.value = 'income';
     updateCategoryDropdown('income');

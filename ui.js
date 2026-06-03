@@ -125,11 +125,11 @@ function renderTable(transactions) {
         return `
             <tr class="animate-fade">
                 <td class="td-description">${escapeHTML(t.description)}</td>
-                <td><span class="td-category">${icon} ${escapeHTML(t.category)}</span></td>
-                <td style="color: var(--text-muted);">${formatDate(t.date)}</td>
                 <td class="${amountClass}" style="font-variant-numeric: tabular-nums;">
                     ${amountPrefix}${formatCurrency(t.amount)}
                 </td>
+                <td><span class="td-category">${icon} ${escapeHTML(t.category)}</span></td>
+                <td style="color: var(--text-muted);">${formatDate(t.date)}</td>
                 <td>
                     <div class="actions-cell">
                         <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')" style="background:none; border:none; cursor:pointer;">
@@ -164,6 +164,26 @@ export function updateCategoryDropdown(type) {
         customInput.style.display = 'none';
         customInput.required = false;
         customInput.value = '';
+    }
+
+    // Define a opção padrão quando for nova transação do tipo despesa
+    // Queremos que 'Moradia' venha selecionada por padrão
+    try {
+        if (type === 'expense') {
+            const defaultOption = 'Moradia';
+            const hasDefault = Array.from(categorySelect.options).some(o => o.value === defaultOption);
+            if (hasDefault) {
+                categorySelect.value = defaultOption;
+            } else {
+                categorySelect.selectedIndex = 0;
+            }
+        } else {
+            // Para receitas, mantém a primeira opção padrão
+            categorySelect.selectedIndex = 0;
+        }
+    } catch (err) {
+        // silencioso em caso de problema com o DOM
+        categorySelect.selectedIndex = 0;
     }
 }
 

@@ -473,11 +473,46 @@ th {
     font-size: 13px;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border);
+    text-align: center;
 }
 
 td {
     padding: 18px 24px;
     border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+/* Centraliza o conteúdo das células e formata ações */
+.td-category {
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: var(--bg-input);
+    justify-content: center;
+    align-items: center;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Centraliza conteúdo da tabela e alinha verticalmente */
+table th,
+table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Centraliza os botões de ação dentro da célula */
+.actions-cell {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
 }
 
 .td-description { font-weight: 600; }
@@ -522,7 +557,7 @@ td {
     width: 100%;
     max-width: 480px;
     border-radius: var(--radius-lg);
-    background: var(--bg-card);
+    background: hsl(0deg 0% 100% / 61%);
     overflow: hidden;
 }
 
@@ -535,9 +570,10 @@ td {
 
 .modal-body { padding: 24px; }
 .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.type-btn { padding: 12px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; border-radius: var(--radius-sm); }
-.type-btn-expense.active { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
-.type-btn-income.active { background: var(--success-light); border-color: var(--success); color: var(--success); }
+.type-btn { padding: 12px; border: 1px solid var(--border); background: var(--bg-input); cursor: pointer; border-radius: var(--radius-sm); transition: var(--transition); }
+.type-btn.active { color: white; }
+.type-btn-expense.active { background: var(--danger); border-color: var(--danger); }
+.type-btn-income.active { background: var(--success); border-color: var(--success); }
 
 .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
 
