@@ -26,6 +26,60 @@ const DYNAMIC_CATEGORIES = {
 
 let currentTransactionsList = [];
 window.allTransactions = [];
+// Ordenação atual do grid
+let currentSort = { key: null, dir: 'asc' };
+
+export function setSort(key) {
+    if (!key) return;
+    if (currentSort.key === key) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.key = key;
+        currentSort.dir = 'asc';
+    }
+
+    // Atualiza indicadores visuais nos headers
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.key === currentSort.key) {
+            th.classList.add(currentSort.dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        }
+    });
+
+    filterAndRenderTransactions();
+}
+
+function applySorting(arr) {
+    if (!currentSort.key) return arr;
+    const key = currentSort.key;
+    const dir = currentSort.dir === 'asc' ? 1 : -1;
+
+    return arr.slice().sort((a, b) => {
+        const va = (a[key] !== undefined && a[key] !== null) ? a[key] : '';
+        const vb = (b[key] !== undefined && b[key] !== null) ? b[key] : '';
+
+        if (key === 'amount') {
+            const na = parseFloat(va) || 0;
+            const nb = parseFloat(vb) || 0;
+            return (na - nb) * dir;
+        }
+
+        if (key === 'date') {
+            const da = va ? new Date(String(va)) : new Date(0);
+            const db = vb ? new Date(String(vb)) : new Date(0);
+            return (da - db) * dir;
+        }
+
+        if (key === 'due_date') {
+            const da = va ? new Date(String(va)) : new Date(9999, 11, 31);
+            const db = vb ? new Date(String(vb)) : new Date(9999, 11, 31);
+            return (da - db) * dir;
+        }
+
+        // string compare for description and category
+        return String(va).localeCompare(String(vb), 'pt-BR', { sensitivity: 'base' }) * dir;
+    });
+}
 
 export function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
@@ -56,35 +110,64 @@ export function updateDashboardUI(transactions) {
 function calculateSummary(transactions) {
     let income = 0;
     let expense = 0;
+    let pendingExpense = 0;
+    let overdueExpense = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     transactions.forEach(t => {
         const amount = Math.abs(parseFloat(t.amount)) || 0;
         const normalizedType = String(t.type).toLowerCase().trim();
+        const status = String(t.paid_status || 'paid').toLowerCase().trim();
 
         if (normalizedType === 'income' || normalizedType === 'receita') {
             income += amount;
         } else {
             expense += amount;
+            if (status === 'pending') {
+                pendingExpense += amount;
+                // Verifica se está vencida
+                if (t.due_date) {
+                    const dueDate = new Date(t.due_date + 'T00:00:00');
+                    if (dueDate < today) {
+                        overdueExpense += amount;
+                    }
+                }
+            }
         }
     });
 
     const balance = income - expense;
+    const available = balance + pendingExpense;
 
     const balanceEl = document.getElementById('val-balance') || document.getElementById('total-balance') || document.querySelector('.widget-balance .widget-value');
     const incomeEl = document.getElementById('val-income') || document.getElementById('total-income') || document.querySelector('.widget-income .widget-value');
     const expenseEl = document.getElementById('val-expense') || document.getElementById('total-expense') || document.querySelector('.widget-expense .widget-value');
+    const pendingEl = document.getElementById('val-pending');
+    const overdueEl = document.getElementById('val-overdue');
+    const availableEl = document.getElementById('val-available');
 
     if (balanceEl) balanceEl.textContent = formatCurrency(balance);
     if (incomeEl) incomeEl.textContent = formatCurrency(income);
     if (expenseEl) expenseEl.textContent = formatCurrency(expense);
+    if (pendingEl) pendingEl.textContent = formatCurrency(pendingExpense);
+    if (overdueEl) overdueEl.textContent = formatCurrency(overdueExpense);
+    if (availableEl) availableEl.textContent = formatCurrency(available);
 }
 
 export function filterAndRenderTransactions() {
     const searchInput = document.getElementById('search-input');
     const filterSelect = document.getElementById('filter-select');
+    const statusFilter = document.getElementById('status-filter');
     
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     const filterType = filterSelect ? filterSelect.value : 'all';
+    const filterStatus = statusFilter ? statusFilter.value : 'all';
+
+    const startVal = document.getElementById('filter-start-date')?.value;
+    const endVal = document.getElementById('filter-end-date')?.value;
+    const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
+    const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
 
     const filtered = currentTransactionsList.filter(t => {
         const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
@@ -97,11 +180,26 @@ export function filterAndRenderTransactions() {
                             (filterType === 'income' && isIncome) || 
                             (filterType === 'expense' && !isIncome);
 
-        return matchesSearch && matchesType;
+        const status = String(t.paid_status || 'paid').toLowerCase().trim();
+        const matchesStatus = filterStatus === 'all' ||
+                              (filterStatus === 'paid' && status === 'paid') ||
+                              (filterStatus === 'pending' && status === 'pending');
+
+        // Filtra por intervalo de datas, se fornecido
+        if (startDate || endDate) {
+            if (!t.date) return false;
+            const txDate = new Date(t.date + 'T12:00:00');
+            if (startDate && txDate < startDate) return false;
+            if (endDate && txDate > endDate) return false;
+        }
+
+        return matchesSearch && matchesType && matchesStatus;
     });
 
-    renderTable(filtered);
-    renderCharts(filtered);
+    const sorted = applySorting(filtered);
+    renderTable(sorted);
+    const isDarkTheme = document.documentElement.classList.contains('dark');
+    renderCharts(sorted, isDarkTheme);
 }
 
 function renderTable(transactions) {
@@ -109,7 +207,7 @@ function renderTable(transactions) {
     if (!tbody) return;
 
     if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">Nenhuma transação encontrada.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">Nenhuma transação encontrada.</td></tr>`;
         return;
     }
 
@@ -122,6 +220,13 @@ function renderTable(transactions) {
         const amountClass = isIncome ? 'amount-income' : 'amount-expense';
         const amountPrefix = isIncome ? '+ ' : '- ';
 
+        const statusValue = String(t.paid_status || 'paid').toLowerCase().trim();
+        const dueDate = t.due_date ? formatDate(t.due_date) : '-';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const isOverdue = t.due_date && new Date(t.due_date + 'T00:00:00') < today && statusValue === 'pending';
+        const dueDateClass = isOverdue ? 'overdue' : '';
+        
         return `
             <tr class="animate-fade">
                 <td class="td-description">${escapeHTML(t.description)}</td>
@@ -129,7 +234,9 @@ function renderTable(transactions) {
                     ${amountPrefix}${formatCurrency(t.amount)}
                 </td>
                 <td><span class="td-category">${icon} ${escapeHTML(t.category)}</span></td>
+                <td><span class="tx-status ${statusValue === 'paid' ? 'status-paid' : 'status-pending'}">${statusValue === 'paid' ? 'Pago' : 'Pendente'}</span></td>
                 <td style="color: var(--text-muted);">${formatDate(t.date)}</td>
+                <td class="${dueDateClass}" style="font-weight: ${isOverdue ? '700' : '400'}; color: ${isOverdue ? 'var(--danger)' : 'var(--text-muted)'};">${dueDate}</td>
                 <td>
                     <div class="actions-cell">
                         <button class="btn-edit" title="Editar item" onclick="window.prepararEdicao('${t.id}')" style="background:none; border:none; cursor:pointer;">
@@ -201,6 +308,7 @@ window.prepararEdicao = (id) => {
     document.getElementById('trans-desc').value = transacao.description;
     document.getElementById('trans-amount').value = transacao.amount;
     document.getElementById('trans-date').value = transacao.date;
+    document.getElementById('trans-due-date').value = transacao.due_date || '';
     
     const typeInput = document.getElementById('trans-type');
     if (typeInput) typeInput.value = transactionType;
@@ -234,6 +342,9 @@ window.prepararEdicao = (id) => {
         customInput.value = transacao.category;
     }
 
+    const statusSelect = document.getElementById('trans-paid-status');
+    if (statusSelect) statusSelect.value = transacao.paid_status || 'paid';
+
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Editar Transação";
 
@@ -252,8 +363,13 @@ export function openModal(isEditing = false) {
             const dataLocal = new Date(hoje.getTime() - offset);
             dateInput.value = dataLocal.toISOString().split('T')[0];
         }
+        // Foque no campo de descrição para inserções rápidas
+        const desc = document.getElementById('trans-desc');
+        if (desc) desc.focus();
         // Ao abrir para nova inserção, garante que a aba inicial seja Despesa
         updateCategoryDropdown('expense');
+        const statusSelect = document.getElementById('trans-paid-status');
+        if (statusSelect) statusSelect.value = 'pending';
     }
 }
 
@@ -276,6 +392,9 @@ export function closeModal() {
         customInput.required = false;
         customInput.value = '';
     }
+
+    const dueInput = document.getElementById('trans-due-date');
+    if (dueInput) dueInput.value = '';
 
     const modalTitle = document.querySelector('.modal-header h3');
     if (modalTitle) modalTitle.textContent = "Nova Transação";

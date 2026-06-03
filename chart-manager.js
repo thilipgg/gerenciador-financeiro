@@ -87,6 +87,9 @@ function processCategoryExpenses(transactions) {
 // ----------------------------------------------------
 
 export function renderCharts(transactions, isDarkTheme) {
+    if (typeof isDarkTheme !== 'boolean') {
+        isDarkTheme = document.documentElement.classList.contains('dark');
+    }
     const textColor = isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
     const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
     

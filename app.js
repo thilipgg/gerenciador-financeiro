@@ -9,7 +9,8 @@ import {
     openModal,
     closeModal,
     filterAndRenderTransactions,
-    updateCategoryDropdown
+    updateCategoryDropdown,
+    setSort
 } from './ui.js';
 
 // ... seus imports
@@ -36,6 +37,34 @@ document.addEventListener('DOMContentLoaded', () => {
     btnVisitante?.addEventListener('click', () => {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
         updateDashboardUI([]); 
+    });
+
+    // Ajusta filtros de data para o mês atual por padrão
+    const startInput = document.getElementById('filter-start-date');
+    const endInput = document.getElementById('filter-end-date');
+    if (startInput && endInput) {
+        const hoje = new Date();
+        const primeiro = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        const toYMD = d => d.toISOString().split('T')[0];
+        startInput.value = toYMD(primeiro);
+        endInput.value = toYMD(ultimo);
+        startInput.addEventListener('change', filterAndRenderTransactions);
+        endInput.addEventListener('change', filterAndRenderTransactions);
+    }
+
+    // Adiciona listeners para ordenação nas colunas do grid
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const key = th.dataset.key;
+            // chamar função exportada de ui.js
+            try {
+                setSort(key);
+            } catch (err) {
+                console.error('Erro ao ordenar:', err);
+            }
+        });
     });
 });
 
@@ -174,7 +203,9 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
         amount: cleanAmount,
         category: finalCategory,
         date: document.getElementById('trans-date').value,
-        type: finalType
+        type: finalType,
+        paid_status: document.getElementById('trans-paid-status').value,
+        due_date: document.getElementById('trans-due-date').value || null
     };
 
     try {
@@ -197,6 +228,7 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
 
 document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
 document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
+document.getElementById('status-filter')?.addEventListener('change', filterAndRenderTransactions);
 
 async function loadDashboardData() {
     try {

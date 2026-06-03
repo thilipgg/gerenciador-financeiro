@@ -16,6 +16,10 @@
     --success-light: hsl(145, 63%, 95%);
     --danger: hsl(355, 78%, 56%);
     --danger-light: hsl(355, 78%, 95%);
+    --warning: hsl(40, 100%, 56%);
+    --warning-light: hsl(45, 100%, 92%);
+    --info: hsl(205, 84%, 44%);
+    --info-light: hsl(205, 86%, 93%);
     
     --bg-app: hsla(218, 5%, 54%, 0.46);
     --bg-card: hsl(0, 0%, 100%);
@@ -392,6 +396,41 @@ header {
 .widget-expense { border-left: 5px solid var(--danger); }
 .widget-expense .widget-icon { background-color: var(--danger-light); color: var(--danger); }
 .widget-expense .widget-value { color: var(--danger); }
+
+.widget-warning { border-left: 5px solid var(--warning); }
+.widget-warning .widget-icon { background-color: var(--warning-light); color: var(--warning); }
+.widget-warning .widget-value { color: var(--warning); }
+
+.widget-danger { border-left: 5px solid var(--danger); }
+.widget-danger .widget-icon { background-color: var(--danger-light); color: var(--danger); }
+.widget-danger .widget-value { color: var(--danger); }
+
+.widget-available { border-left: 5px solid var(--info); }
+.widget-available .widget-icon { background-color: var(--info-light); color: var(--info); }
+.widget-available .widget-value { color: var(--info); }
+
+.tx-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.status-paid { background-color: rgba(34, 197, 94, 0.12); color: var(--success); }
+.status-pending { background-color: rgba(245, 158, 11, 0.16); color: var(--warning); }
+
+.overdue {
+    position: relative;
+}
+
+.overdue::before {
+    content: '⚠️ ';
+}
 
 /* Gráficos */
 .charts-grid {

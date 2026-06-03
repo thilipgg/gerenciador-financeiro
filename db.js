@@ -49,7 +49,9 @@ export async function insertTransaction(transaction) {
         amount: parseFloat(String(transaction.amount).replace(',', '.')),
         type: transaction.type,
         category: transaction.category,
-        date: transaction.date
+        date: transaction.date,
+        paid_status: transaction.paid_status || 'pending',
+        due_date: transaction.due_date || null
     };
 
     const { data, error } = await supabase.from('transactions').insert([payload]).select();
