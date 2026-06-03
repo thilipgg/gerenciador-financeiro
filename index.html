@@ -60,192 +60,275 @@
          2. TELA DO DASHBOARD FINANCEIRO
          ========================================== -->
     <main id="dashboard-screen" style="display: none;">
-
-        <!-- Header Principal -->
-        <header class="glass animate-fade">
-            <div class="header-brand">
-                <div class="header-brand-icon">
-                    <i class="ri-safe-2-line"></i>
-                </div>
-                <div>
-                    <h2>Finanças Premium</h2>
-                    <span id="demo-badge" class="demo-badge" style="display: none;">Modo Teste</span>
-                </div>
-            </div>
-
-            <div class="header-actions">
-                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema escuro/claro"
-                    title="Alternar Tema">
-                    <i class="ri-sun-line sun-icon"></i>
-                    <i class="ri-moon-line moon-icon"></i>
-                </button>
-
-                <div class="user-profile">
-                    <img id="user-avatar" class="user-avatar" src="" alt="Foto do usuário">
-                    <div class="user-info">
-                        <span id="user-name" class="user-name">Carregando...</span>
+        <div class="dashboard-shell">
+            <aside class="dashboard-sidebar glass">
+                <div class="sidebar-brand">
+                    <div class="header-brand-icon">
+                        <i class="ri-bar-chart-box-line"></i>
                     </div>
-                    <button id="logout-btn" class="logout-btn" title="Encerrar Sessão" aria-label="Sair">
-                        <i class="ri-logout-box-r-line"></i>
+                    <div class="sidebar-brand-title">
+                        <h3>Painel</h3>
+                        <span>Selecione uma área para navegar</span>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav" aria-label="Menu do dashboard">
+                    <button type="button" class="sidebar-tab active" data-tab="overview">
+                        <i class="ri-home-5-line"></i>
+                        Visão Geral
                     </button>
-                </div>
-            </div>
-        </header>
+                    <button type="button" class="sidebar-tab" data-tab="transactions">
+                        <i class="ri-list-check-2"></i>
+                        Lançamentos
+                    </button>
+                    <button type="button" class="sidebar-tab" data-tab="monthly">
+                        <i class="ri-calendar-line"></i>
+                        Controle Mensal
+                    </button>
+                </nav>
 
-        <!-- Widgets de Resumo Financeiro -->
-        <section class="summary-container animate-fade">
-            <!-- Saldo Geral -->
-            <div class="widget-card widget-balance glass">
-                <div class="widget-icon">
-                    <i class="ri-bank-card-line"></i>
+                <div class="sidebar-footer">
+                    <p><strong>Atalho rápido:</strong> pressione <span class="shortcut-key">F1</span></p>
+                    <p>Use as abas para alternar entre dashboard, lançamentos e controle mensal.</p>
                 </div>
-                <div class="widget-info">
-                    <span class="widget-label">Saldo Geral</span>
-                    <span id="val-balance" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
+            </aside>
 
-            <!-- Receitas (Entradas) -->
-            <div class="widget-card widget-income glass">
-                <div class="widget-icon">
-                    <i class="ri-arrow-up-circle-line"></i>
-                </div>
-                <div class="widget-info">
-                    <span class="widget-label">Receitas</span>
-                    <span id="val-income" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
-
-            <!-- Despesas (Saídas) -->
-            <div class="widget-card widget-expense glass">
-                <div class="widget-icon">
-                    <i class="ri-arrow-down-circle-line"></i>
-                </div>
-                <div class="widget-info">
-                    <span class="widget-label">Despesas</span>
-                    <span id="val-expense" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
-
-            <!-- Contas Pendentes -->
-            <div class="widget-card widget-warning glass">
-                <div class="widget-icon">
-                    <i class="ri-clockwise-line"></i>
-                </div>
-                <div class="widget-info">
-                    <span class="widget-label">Contas Pendentes</span>
-                    <span id="val-pending" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
-
-            <!-- Contas Vencidas -->
-            <div class="widget-card widget-danger glass">
-                <div class="widget-icon">
-                    <i class="ri-alert-line"></i>
-                </div>
-                <div class="widget-info">
-                    <span class="widget-label">Contas Vencidas</span>
-                    <span id="val-overdue" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
-
-            <!-- Saldo Disponível -->
-            <div class="widget-card widget-available glass">
-                <div class="widget-icon">
-                    <i class="ri-shield-check-line"></i>
-                </div>
-                <div class="widget-info">
-                    <span class="widget-label">Saldo Disponível</span>
-                    <span id="val-available" class="widget-value">R$ 0,00</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seção de Análise e Gráficos -->
-        <section class="charts-grid animate-fade">
-            <!-- Gráfico de Despesas Mensais -->
-            <div class="chart-card glass">
-                <div class="chart-card-header">
-                    <h3 class="chart-card-title">Evolução Mensal de Despesas</h3>
-                    <i class="ri-bar-chart-fill" style="color: var(--primary);"></i>
-                </div>
-                <div class="chart-canvas-container">
-                    <canvas id="monthlyExpensesChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Gráfico de Distribuição por Categoria -->
-            <div class="chart-card glass">
-                <div class="chart-card-header">
-                    <h3 class="chart-card-title">Despesas por Categoria</h3>
-                    <i class="ri-pie-chart-fill" style="color: var(--primary);"></i>
-                </div>
-                <div class="chart-canvas-container">
-                    <canvas id="categoryExpensesChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Barra de Ações (Filtros, Busca e Cadastro) -->
-        <section class="transactions-section animate-fade">
-            <div class="transactions-toolbar">
-                <div class="search-filter-box">
-                    <div class="search-input-wrapper">
-                        <i class="ri-search-line"></i>
-                        <input id="search-input" class="search-input" type="text"
-                            placeholder="Buscar por descrição ou categoria...">
+            <div class="dashboard-main">
+                <!-- Header Principal -->
+                <header class="glass animate-fade">
+                    <div class="header-brand">
+                        <div class="header-brand-icon">
+                            <i class="ri-safe-2-line"></i>
+                        </div>
+                        <div>
+                            <h2>Finanças Premium</h2>
+                            <span id="demo-badge" class="demo-badge" style="display: none;">Modo Teste</span>
+                        </div>
                     </div>
 
-                    <select id="filter-select" class="filter-select">
-                        <option value="all">Todas as Transações</option>
-                        <option value="income">Entradas (Receitas)</option>
-                        <option value="expense">Saídas (Despesas)</option>
-                    </select>
+                    <div class="header-actions">
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema escuro/claro"
+                            title="Alternar Tema">
+                            <i class="ri-sun-line sun-icon"></i>
+                            <i class="ri-moon-line moon-icon"></i>
+                        </button>
 
-                    <select id="status-filter" class="filter-select" style="margin-left:8px;">
-                        <option value="all">Todos os Status</option>
-                        <option value="paid">Pagas</option>
-                        <option value="pending">Pendentes</option>
-                    </select>
-
-                    <div class="date-filter-wrapper" style="display:flex; gap:8px; align-items:center; margin-left:12px;">
-                        <input type="date" id="filter-start-date" class="form-input" title="Data início do filtro" />
-                        <input type="date" id="filter-end-date" class="form-input" title="Data fim do filtro" />
+                        <div class="user-profile">
+                            <img id="user-avatar" class="user-avatar" src="" alt="Foto do usuário">
+                            <div class="user-info">
+                                <span id="user-name" class="user-name">Carregando...</span>
+                            </div>
+                            <button id="logout-btn" class="logout-btn" title="Encerrar Sessão" aria-label="Sair">
+                                <i class="ri-logout-box-r-line"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </header>
 
-                <button id="open-add-modal-btn" class="btn-primary">
-                    <i class="ri-add-line"></i>
-                    Nova Transação
-                </button>
-            </div>
+                <div class="dashboard-page-content">
+                    <section id="tab-overview" class="tab-page active">
+                        <div class="section-header">
+                            <div>
+                                <h3>Visão Geral</h3>
+                                <p class="text-muted">Resumo rápido das finanças, principais indicadores e evolução.</p>
+                            </div>
+                        </div>
 
-            <!-- Histórico de Transações -->
-            <div class="transactions-card glass">
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-key="description">Descrição</th>
-                                <th class="sortable" data-key="amount">Valor</th>
-                                <th class="sortable" data-key="category">Categoria</th>
-                                <th>Status</th>
-                                <th class="sortable" data-key="date">Data</th>
-                                <th class="sortable" data-key="due_date">Vencimento</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactions-tbody">
-                            <!-- Inserido dinamicamente via JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Lista Mobile -->
-                <div id="mobile-transactions-list" class="mobile-transactions-list">
-                    <!-- Inserido dinamicamente via JS -->
+                        <section class="summary-container animate-fade">
+                            <div class="widget-card widget-balance glass">
+                                <div class="widget-icon">
+                                    <i class="ri-bank-card-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Saldo Geral</span>
+                                    <span id="val-balance" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="widget-card widget-income glass">
+                                <div class="widget-icon">
+                                    <i class="ri-arrow-up-circle-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Receitas</span>
+                                    <span id="val-income" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="widget-card widget-expense glass">
+                                <div class="widget-icon">
+                                    <i class="ri-arrow-down-circle-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Despesas</span>
+                                    <span id="val-expense" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="widget-card widget-warning glass">
+                                <div class="widget-icon">
+                                    <i class="ri-clockwise-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Contas Pendentes</span>
+                                    <span id="val-pending" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="widget-card widget-danger glass">
+                                <div class="widget-icon">
+                                    <i class="ri-alert-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Contas Vencidas</span>
+                                    <span id="val-overdue" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div class="widget-card widget-available glass">
+                                <div class="widget-icon">
+                                    <i class="ri-shield-check-line"></i>
+                                </div>
+                                <div class="widget-info">
+                                    <span class="widget-label">Saldo Disponível</span>
+                                    <span id="val-available" class="widget-value">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="charts-grid animate-fade">
+                            <div class="chart-card glass">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">Evolução Mensal de Despesas</h3>
+                                    <i class="ri-bar-chart-fill" style="color: var(--primary);"></i>
+                                </div>
+                                <div class="chart-canvas-container">
+                                    <canvas id="monthlyExpensesChart"></canvas>
+                                </div>
+                            </div>
+                        </section>
+                    </section>
+
+                    <section id="tab-transactions" class="tab-page">
+                        <div class="section-header">
+                            <div>
+                                <h3>Lançamentos</h3>
+                                <p class="text-muted">Buscar, filtrar e gerenciar todas as transações cadastradas.</p>
+                            </div>
+                        </div>
+
+                        <section class="transactions-section animate-fade">
+                            <div class="transactions-toolbar">
+                                <div class="search-filter-box">
+                                    <div class="search-input-wrapper">
+                                        <i class="ri-search-line"></i>
+                                        <input id="search-input" class="search-input" type="text"
+                                            placeholder="Buscar por descrição ou categoria...">
+                                    </div>
+
+                                    <select id="filter-select" class="filter-select">
+                                        <option value="all">Todas as Transações</option>
+                                        <option value="income">Entradas (Receitas)</option>
+                                        <option value="expense">Saídas (Despesas)</option>
+                                    </select>
+
+                                    <select id="status-filter" class="filter-select" style="margin-left:0px;">
+                                        <option value="all">Todos os Status</option>
+                                        <option value="paid">Pagas</option>
+                                        <option value="pending">Pendentes</option>
+                                    </select>
+
+                                    <div class="date-filter-wrapper" style="display:flex; gap:8px; align-items:center; margin-left:0px;">
+                                        <input type="date" id="filter-start-date" class="form-input" title="Data início do filtro" />
+                                        <input type="date" id="filter-end-date" class="form-input" title="Data fim do filtro" />
+                                    </div>
+                                </div>
+
+                                <button id="open-add-modal-btn" class="btn-primary">
+                                    <i class="ri-add-line"></i>
+                                    Nova Transação
+                                </button>
+                            </div>
+
+                            <div class="transactions-card glass">
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th class="sortable" data-key="description">Descrição</th>
+                                                <th class="sortable" data-key="amount">Valor</th>
+                                                <th class="sortable" data-key="category">Categoria</th>
+                                                <th>Status</th>
+                                                <th class="sortable" data-key="date">Data</th>
+                                                <th class="sortable" data-key="due_date">Vencimento</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactions-tbody">
+                                            <!-- Inserido dinamicamente via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="mobile-transactions-list" class="mobile-transactions-list">
+                                    <!-- Inserido dinamicamente via JS -->
+                                </div>
+                            </div>
+                        </section>
+                    </section>
+
+                    <section id="tab-monthly" class="tab-page">
+                        <div class="section-header">
+                            <div>
+                                <h3>Controle Mensal</h3>
+                                <p class="text-muted">Painel focado em metas, previsões e gestão do mês atual.</p>
+                            </div>
+                        </div>
+
+                        <section class="monthly-panel animate-fade">
+                            <div class="section-grid">
+                                <div class="widget-card widget-balance glass">
+                                    <div class="widget-icon">
+                                        <i class="ri-calendar-check-line"></i>
+                                    </div>
+                                    <div class="widget-info">
+                                        <span class="widget-label">Mês Atual</span>
+                                        <span class="widget-value">Jun 2026</span>
+                                    </div>
+                                </div>
+                                <div class="widget-card widget-income glass">
+                                    <div class="widget-icon">
+                                        <i class="ri-money-dollar-circle-line"></i>
+                                    </div>
+                                    <div class="widget-info">
+                                        <span class="widget-label">Meta de Economia</span>
+                                        <span class="widget-value">R$ 2.500,00</span>
+                                    </div>
+                                </div>
+                                <div class="widget-card widget-warning glass">
+                                    <div class="widget-icon">
+                                        <i class="ri-file-list-3-line"></i>
+                                    </div>
+                                    <div class="widget-info">
+                                        <span class="widget-label">Pagamentos Agendados</span>
+                                        <span class="widget-value">3 itens</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card glass">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">Despesas por Categoria</h3>
+                                    <i class="ri-pie-chart-fill" style="color: var(--primary);"></i>
+                                </div>
+                                <div class="chart-canvas-container">
+                                    <canvas id="categoryExpensesChart"></canvas>
+                                </div>
+                            </div>
+                        </section>
+                    </section>
                 </div>
             </div>
-        </section>
+        </div>
     </main>
 
     <!-- ==========================================

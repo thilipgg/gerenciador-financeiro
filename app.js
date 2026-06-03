@@ -144,6 +144,49 @@ document.getElementById('open-add-modal-btn')?.addEventListener('click', () => o
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
+const tabButtons = document.querySelectorAll('.sidebar-tab');
+tabButtons.forEach(tab => {
+    tab.addEventListener('click', () => {
+        const selectedTab = tab.dataset.tab;
+        if (selectedTab) {
+            activateDashboardTab(selectedTab);
+        }
+    });
+});
+
+function activateDashboardTab(tabId) {
+    document.querySelectorAll('.tab-page').forEach(page => {
+        page.classList.toggle('active', page.id === `tab-${tabId}`);
+    });
+
+    document.querySelectorAll('.sidebar-tab').forEach(button => {
+        button.classList.toggle('active', button.dataset.tab === tabId);
+    });
+
+    if (tabId === 'overview' || tabId === 'monthly') {
+        filterAndRenderTransactions();
+    }
+}
+
+activateDashboardTab('overview');
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('transaction-modal');
+        if (modal?.classList.contains('active')) {
+            closeModal();
+        }
+        return;
+    }
+
+    if (event.key === 'F1') {
+        event.preventDefault();
+        if (!document.getElementById('transaction-modal')?.classList.contains('active')) {
+            openModal(false);
+        }
+    }
+});
+
 // Alternância Receita/Despesa e Categorias Dinâmicas
 // Alternância Receita/Despesa e Categorias Dinâmicas
 const btnExpense = document.getElementById('btn-type-expense');
