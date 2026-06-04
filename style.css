@@ -306,6 +306,7 @@ select {
     position: sticky;
     top: 22px;
     padding: 5px;
+    border-radius: 20px;
 }
 
 .sidebar-brand {
@@ -431,6 +432,7 @@ select {
 
 .monthly-panel .chart-card {
     padding: 24px 24px 18px;
+    width: 95%;
 }
 
 header {
@@ -689,6 +691,7 @@ header {
     border-radius: var(--radius-md);
     padding: 24px;
     box-shadow: var(--shadow-sm);
+    margin-top: 20px;
 }
 
 .chart-canvas-container {
@@ -951,11 +954,13 @@ table td {
         top: 0;
         min-height: auto;
         order: 1;
+        border-radius: 20px;
+         /* Para manter o arredondamento */
     }
 
     /* No seu arquivo CSS, localize a classe da sidebar e adicione: */
     .dashboard-sidebar.glass {
-        border-radius: 16px;
+        border-radius: 25px;
         /* Para manter o arredondamento */
         margin: 0px;
         /* Para manter sem a margem que removemos */
@@ -1114,6 +1119,97 @@ table {
 
 .btn-edit:hover {
     transform: scale(1.2);
+}
+
+/* Mobile transactions list (cards) */
+.mobile-transactions-list {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.mobile-transaction-card {
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--border);
+}
+
+.mobile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.mobile-desc {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.mobile-amount {
+    font-weight: 800;
+}
+
+.mobile-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.mobile-actions button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--danger);
+}
+
+@media (max-width: 600px) {
+    /* Hide large table and show mobile list */
+    .transactions-card table,
+    .transactions-card thead,
+    .transactions-card tbody,
+    .transactions-card th,
+    .transactions-card td,
+    .transactions-card tr {
+        display: none !important;
+    }
+
+    .mobile-transactions-list {
+        display: flex !important;
+    }
+
+    /* Make toolbar compact and full-width */
+    .transactions-toolbar {
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-filter-box {
+        flex: 1 1 100%;
+    }
+
+    .dashboard-sidebar {
+        display: none;
+        border-radius: 20px;
+         /* Para manter o arredondamento */
+    }
+
+    header {
+        padding: 12px;
+    }
 }
 
 /* ==========================================================================
@@ -1299,28 +1395,78 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
+/* Ajustes para Celular (Mobile) */
 @media (max-width: 600px) {
+  
+  /* 1. Ajuste do Header (Simplificado e Alinhado) */
+  header.glass {
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 0 0 16px 0 !important;
+    padding: 10px 16px !important;
+    align-items: flex-start !important;
+  }
 
-    /* 1. Permite rolagem horizontal apenas na tabela */
-    .transactions-card {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        /* Melhora a fluidez do scroll no iPhone */
-    }
+  /* Esconde nome/email e ajusta perfil */
+  .user-profile {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
 
-    /* 2. Define uma largura mínima para a tabela não ficar espremida */
-    table {
-        min-width: 500px;
-    }
+  .user-info {
+    display: none !important;
+  }
 
-    /* 3. Reduz o espaçamento de células e fonte para ganhar espaço */
-    th,
-    td {
-        padding: 10px 8px !important;
-        font-size: 12px !important;
-    }
+  #user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
 
-    /* 4. Opcional: Oculta colunas menos importantes em telas minúsculas */
-    /* Se quiser esconder a data para ganhar ainda mais espaço, descomente a linha abaixo */
-    /* th:nth-child(3), td:nth-child(3) { display: none; } */
+  /* 2. Ajuste dos Cards de Resumo (Compactos e 1 Coluna) */
+  section.summary-container {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 0 !important;
+    padding: 0 16px !important;
+    gap: 10px !important;
+  }
+
+  .widget-card.glass {
+    flex-direction: row !important;
+    padding: 10px 16px !important;
+    gap: 12px !important;
+    align-items: center !important;
+    text-align: left !important;
+  }
+
+  .widget-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 18px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .widget-info {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 14px !important;
+  }
+
+  /* 3. Ajuste dos Gráficos */
+  section.charts-grid {
+    width: 100% !important;
+    max-width: 340px !important;
+    margin: 16px 0 0 0 !important;
+    padding: 0 16px !important;
+  }
+
+  .chart-card.glass {
+    padding: 16px !important;
+  }
 }

@@ -208,6 +208,8 @@ function renderTable(transactions) {
 
     if (transactions.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">Nenhuma transação encontrada.</td></tr>`;
+        const mobileListEmpty = document.getElementById('mobile-transactions-list');
+        if (mobileListEmpty) mobileListEmpty.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Nenhuma transação encontrada.</div>`;
         return;
     }
 
@@ -252,6 +254,41 @@ function renderTable(transactions) {
     }).join('');
 
     setupDeleteListeners();
+
+    // Render mobile-friendly cards for small screens
+    const mobileList = document.getElementById('mobile-transactions-list');
+    if (mobileList) {
+        mobileList.innerHTML = transactions.map(t => {
+            const icon = CATEGORY_ICONS[t.category] || '🏷️';
+            const normalizedType = String(t.type).toLowerCase().trim();
+            const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
+            const amountClass = isIncome ? 'amount-income' : 'amount-expense';
+            const amountPrefix = isIncome ? '+ ' : '- ';
+            const statusValue = String(t.paid_status || 'paid').toLowerCase().trim();
+
+            return `
+                <div class="mobile-transaction-card glass animate-fade" data-id="${t.id}">
+                    <div class="mobile-top">
+                        <div class="mobile-desc">${escapeHTML(t.description)}</div>
+                        <div class="mobile-amount ${amountClass}">${amountPrefix}${formatCurrency(t.amount)}</div>
+                    </div>
+                    <div class="mobile-bottom">
+                        <div class="mobile-meta">
+                            <span class="mobile-category">${icon} ${escapeHTML(t.category)}</span>
+                            <span class="tx-status ${statusValue === 'paid' ? 'status-paid' : 'status-pending'}">${statusValue === 'paid' ? 'Pago' : 'Pendente'}</span>
+                            <span class="mobile-date">${formatDate(t.date)}</span>
+                        </div>
+                        <div class="mobile-actions">
+                            <button class="btn-edit" onclick="window.prepararEdicao('${t.id}')"><i class="ri-pencil-line"></i></button>
+                            <button class="btn-delete" data-id="${t.id}"><i class="ri-delete-bin-line"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        // Re-attach delete listeners for mobile buttons
+        setupDeleteListeners();
+    }
 }
 
 // ATUALIZA O DROPDOWN DEPENDENDO DO TIPO (Receita/Despesa)
