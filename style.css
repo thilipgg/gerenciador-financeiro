@@ -1014,6 +1014,20 @@ table td {
         /* Texto um pouco menor para caber mais */
     }
 
+    /* Mobile transactions list (cards) */
+    .transactions-card table,
+    .transactions-card thead,
+    .transactions-card tbody,
+    .transactions-card th,
+    .transactions-card td,
+    .transactions-card tr {
+        display: none !important;
+    }
+
+    .mobile-transactions-list {
+        display: flex !important;
+    }
+
     /* 2. Compactação dos Cards de Resumo */
     .summary-container {
         grid-template-columns: 1fr;
@@ -1031,6 +1045,30 @@ table td {
         /* Fonte menor para evitar quebra de linha no valor */
     }
 
+    .widget-card.glass {
+        flex-direction: row !important;
+        padding: 10px 16px !important;
+        gap: 12px !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+
+    .widget-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 18px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .widget-info {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        font-size: 14px !important;
+    }
+
     /* 3. Ajuste do Modal para ocupar a tela toda com conforto */
     .modal-container {
         width: 95%;
@@ -1039,6 +1077,72 @@ table td {
 
     .modal-body {
         padding: 16px;
+    }
+
+    /* Make toolbar compact and full-width */
+    .transactions-toolbar {
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-filter-box {
+        flex: 1 1 100%;
+    }
+
+    .dashboard-sidebar {
+        display: none;
+        border-radius: 20px;
+         /* Para manter o arredondamento */
+    }
+
+    header {
+        padding: 12px;
+    }
+
+    /* Ajustes do header e perfil no mobile */
+    header.glass {
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 0 16px 0 !important;
+        padding: 10px 16px !important;
+        align-items: flex-start !important;
+    }
+
+    .user-profile {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+
+    .user-info {
+        display: none !important;
+    }
+
+    #user-avatar {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    section.summary-container {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 !important;
+        padding: 0 16px !important;
+        gap: 10px !important;
+    }
+
+    section.charts-grid {
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 16px 0 0 0 !important;
+        padding: 0 16px !important;
+    }
+
+    .chart-card.glass {
+        padding: 16px !important;
+        max-width: 340px !important;
     }
 }
 
@@ -1174,42 +1278,6 @@ table {
     border: none;
     cursor: pointer;
     color: var(--danger);
-}
-
-@media (max-width: 600px) {
-    /* Hide large table and show mobile list */
-    .transactions-card table,
-    .transactions-card thead,
-    .transactions-card tbody,
-    .transactions-card th,
-    .transactions-card td,
-    .transactions-card tr {
-        display: none !important;
-    }
-
-    .mobile-transactions-list {
-        display: flex !important;
-    }
-
-    /* Make toolbar compact and full-width */
-    .transactions-toolbar {
-        align-items: center;
-        gap: 8px;
-    }
-
-    .search-filter-box {
-        flex: 1 1 100%;
-    }
-
-    .dashboard-sidebar {
-        display: none;
-        border-radius: 20px;
-         /* Para manter o arredondamento */
-    }
-
-    header {
-        padding: 12px;
-    }
 }
 
 /* ==========================================================================
@@ -1395,78 +1463,9 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-/* Ajustes para Celular (Mobile) */
-@media (max-width: 600px) {
-  
-  /* 1. Ajuste do Header (Simplificado e Alinhado) */
-  header.glass {
-    width: 100% !important;
-    max-width: 340px !important;
-    margin: 0 0 16px 0 !important;
-    padding: 10px 16px !important;
-    align-items: flex-start !important;
-  }
-
-  /* Esconde nome/email e ajusta perfil */
-  .user-profile {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 12px !important;
-  }
-
-  .user-info {
-    display: none !important;
-  }
-
-  #user-avatar {
-    width: 36px !important;
-    height: 36px !important;
-  }
-
-  /* 2. Ajuste dos Cards de Resumo (Compactos e 1 Coluna) */
-  section.summary-container {
-    grid-template-columns: 1fr !important;
-    width: 100% !important;
-    max-width: 340px !important;
-    margin: 0 !important;
-    padding: 0 16px !important;
-    gap: 10px !important;
-  }
-
-  .widget-card.glass {
-    flex-direction: row !important;
-    padding: 10px 16px !important;
-    gap: 12px !important;
-    align-items: center !important;
-    text-align: left !important;
-  }
-
-  .widget-icon {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 18px !important;
-    flex-shrink: 0 !important;
-  }
-
-  .widget-info {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    font-size: 14px !important;
-  }
-
-  /* 3. Ajuste dos Gráficos */
-  section.charts-grid {
-    width: 100% !important;
-    max-width: 340px !important;
-    margin: 16px 0 0 0 !important;
-    padding: 0 16px !important;
-  }
-
-  .chart-card.glass {
-    padding: 16px !important;
-  }
+/* Remove as setas nativas do input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
