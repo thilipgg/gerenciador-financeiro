@@ -363,6 +363,25 @@ select {
     background: var(--border-hover);
 }
 
+.mobile-tab-bar {
+    display: none;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 16px;
+    margin-top: 12px;
+}
+
+.mobile-tab-bar .sidebar-tab {
+    flex: 1;
+    justify-content: center;
+    min-width: 120px;
+    text-align: center;
+}
+
+.mobile-tab-bar .sidebar-tab i {
+    margin-right: 6px;
+}
+
 .sidebar-footer {
     padding: 18px;
     border-radius: var(--radius-md);
@@ -1143,6 +1162,18 @@ table td {
     .chart-card.glass {
         padding: 16px !important;
         max-width: 340px !important;
+    }
+
+    .mobile-tab-bar {
+        display: flex;
+        gap: 10px;
+    }
+
+    .mobile-tab-bar .sidebar-tab {
+        flex: 1;
+        min-width: 110px;
+        padding: 12px 10px;
+        font-size: 13px;
     }
 }
 
