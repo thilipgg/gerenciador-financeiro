@@ -222,6 +222,37 @@
                                 </div>
                             </div>
                         </section>
+
+                        <section class="notes-section animate-fade">
+                            <div class="section-header">
+                                <div>
+                                    <h3>Anotações</h3>
+                                    <p class="text-muted">Registre observações financeiras e salve diretamente no banco de dados.</p>
+                                </div>
+                            </div>
+
+                            <div class="notes-grid">
+                                <div class="notes-input-card glass">
+                                    <h4>Nova anotação</h4>
+                                    <form id="note-form">
+                                        <textarea id="note-content" class="form-input note-textarea" placeholder="Escreva sua anotação aqui..." rows="7" required></textarea>
+                                        <div class="notes-actions">
+                                            <button type="submit" class="btn-primary">Salvar Anotação</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="notes-list-card glass">
+                                    <div class="section-header" style="margin-bottom: 14px;">
+                                        <div>
+                                            <h4>Últimas notas</h4>
+                                            <p class="text-muted">Suas notas salvas aparecem aqui com data de registro.</p>
+                                        </div>
+                                    </div>
+                                    <div id="notes-list" class="notes-list"></div>
+                                </div>
+                            </div>
+                        </section>
                     </section>
 
                     <section id="tab-transactions" class="tab-page">

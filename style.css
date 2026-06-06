@@ -713,6 +713,80 @@ header {
     margin-top: 20px;
 }
 
+.notes-section {
+    margin-top: 24px;
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+}
+
+.notes-input-card,
+.notes-list-card {
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.note-textarea {
+    min-height: 160px;
+    resize: vertical;
+}
+
+.notes-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.note-card {
+    border: 1px solid var(--border);
+    padding: 18px;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background-color: var(--bg-card);
+}
+
+.note-card-content {
+    white-space: pre-wrap;
+    line-height: 1.55;
+    color: var(--text-main);
+}
+
+.note-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.note-meta {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.note-delete-btn {
+    padding: 8px 14px;
+}
+
+.notes-empty {
+    color: var(--text-muted);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-input);
+    text-align: center;
+}
 .chart-canvas-container {
     position: relative;
     height: 300px;
@@ -1171,6 +1245,10 @@ table td {
         max-width: 355px !important;
         margin: 16px 0 0 0 !important;
         padding: 0 0px !important;
+    }
+
+    .notes-grid {
+        grid-template-columns: 1fr !important;
     }
 
     .chart-card.glass {

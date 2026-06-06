@@ -59,6 +59,40 @@ export async function insertTransaction(transaction) {
     return data[0];
 }
 
+export async function fetchNotes() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
+export async function insertNote(note) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const payload = {
+        user_id: user.id,
+        content: note.content,
+    };
+
+    const { data, error } = await supabase.from('notes').insert([payload]).select();
+    if (error) throw error;
+    return data[0];
+}
+
+export async function removeNote(id) {
+    const { error } = await supabase.from('notes').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+}
+
 export async function removeTransaction(id) {
     const { error } = await supabase.from('transactions').delete().eq('id', id);
     if (error) throw error;

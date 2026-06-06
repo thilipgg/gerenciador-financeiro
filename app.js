@@ -1,4 +1,4 @@
-import { fetchTransactions, insertTransaction, loginComEmail, logout, supabase } from './db.js';
+import { fetchTransactions, insertTransaction, fetchNotes, insertNote, removeNote, loginComEmail, logout, supabase } from './db.js';
 import { 
     showLoginScreen, 
     showDashboardScreen, 
@@ -276,11 +276,86 @@ document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => {
     setSort(e.target.value);
 });
 
+document.getElementById('note-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const contentEl = document.getElementById('note-content');
+    const content = contentEl?.value.trim();
+    if (!content) {
+        showToast('Digite uma anotação antes de salvar.', 'error');
+        return;
+    }
+
+    try {
+        await insertNote({ content });
+        if (contentEl) contentEl.value = '';
+        showToast('Anotação salva!', 'success');
+        await loadDashboardData();
+    } catch (err) {
+        console.error(err);
+        showToast('Erro ao salvar nota: ' + err.message, 'error');
+    }
+});
+
+document.getElementById('notes-list')?.addEventListener('click', async (event) => {
+    const deleteButton = event.target.closest('.note-delete-btn');
+    if (!deleteButton) return;
+
+    const noteId = deleteButton.dataset.id;
+    if (!noteId) return;
+
+    if (!confirm('Deseja excluir esta anotação?')) return;
+
+    try {
+        await removeNote(noteId);
+        showToast('Anotação excluída.', 'success');
+        await loadDashboardData();
+    } catch (err) {
+        console.error(err);
+        showToast('Erro ao excluir a anotação.', 'error');
+    }
+});
+
 async function loadDashboardData() {
     try {
-        const transactions = await fetchTransactions();
+        const [transactions, notes] = await Promise.all([fetchTransactions(), fetchNotes()]);
         updateDashboardUI(transactions);
+        renderNotes(notes);
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
     }
+}
+
+function renderNotes(notes) {
+    const notesList = document.getElementById('notes-list');
+    if (!notesList) return;
+
+    if (!notes || notes.length === 0) {
+        notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação registrada. Use o formulário ao lado para salvar uma nota.</div>`;
+        return;
+    }
+
+    notesList.innerHTML = notes.map(note => {
+        const createdAt = note.created_at ? new Date(note.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+        return `
+            <div class="note-card glass">
+                <div class="note-card-content">${sanitizeText(note.content)}</div>
+                <div class="note-card-footer">
+                    <span class="note-meta">${createdAt}</span>
+                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class="ri-delete-bin-line"></i> Excluir</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function sanitizeText(value) {
+    return String(value || '').replace(/[&<>"']/g, (char) => {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char];
+    });
 }
