@@ -272,6 +272,9 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
 document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
 document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
 document.getElementById('status-filter')?.addEventListener('change', filterAndRenderTransactions);
+document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => {
+    setSort(e.target.value);
+});
 
 async function loadDashboardData() {
     try {

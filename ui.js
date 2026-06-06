@@ -265,6 +265,9 @@ function renderTable(transactions) {
             const amountClass = isIncome ? 'amount-income' : 'amount-expense';
             const amountPrefix = isIncome ? '+ ' : '- ';
             const statusValue = String(t.paid_status || 'paid').toLowerCase().trim();
+            
+            // Exibe data de vencimento se disponível, senão exibe data normal
+            const displayDate = t.due_date ? formatDate(t.due_date) : formatDate(t.date);
 
             return `
                 <div class="mobile-transaction-card glass animate-fade" data-id="${t.id}">
@@ -276,7 +279,7 @@ function renderTable(transactions) {
                         <div class="mobile-meta">
                             <span class="mobile-category">${icon} ${escapeHTML(t.category)}</span>
                             <span class="tx-status ${statusValue === 'paid' ? 'status-paid' : 'status-pending'}">${statusValue === 'paid' ? 'Pago' : 'Pendente'}</span>
-                            <span class="mobile-date">${formatDate(t.date)}</span>
+                            <span class="mobile-date">${displayDate}</span>
                         </div>
                         <div class="mobile-actions">
                             <button class="btn-edit" onclick="window.prepararEdicao('${t.id}')"><i class="ri-pencil-line"></i></button>
