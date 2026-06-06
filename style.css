@@ -1040,7 +1040,9 @@ table td {
         /* Texto um pouco menor para caber mais */
     }
 
-   
+    .table-responsive {
+        display: none;
+    }
 
     .mobile-transactions-list {
         display: flex !important;
