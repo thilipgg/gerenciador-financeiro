@@ -217,21 +217,21 @@ select {
 #status-filter {
     flex: 0 1 120px;
     /* Reduz de 160px para 120px */
-    min-width: 170px;
+    min-width: 150px;
     /* Reduz de 330px para 200px */
 }
 
 #filter-select {
     flex: 0 1 120px;
     /* Reduz de 160px para 120px */
-    min-width: 210px;
+    min-width: 190px;
     /* Reduz de 330px para 200px */
 }
 
 .date-filter-wrapper {
     flex: 1 1 400px;
     /* Aumenta a base e permite que cresça (flex-grow: 1) */
-    min-width: 400px;
+    min-width: 170px;
     /* Garante um tamanho mínimo maior */
 }
 
@@ -451,7 +451,7 @@ select {
 
 .monthly-panel .chart-card {
     padding: 24px 24px 18px;
-    width: 95%;
+    width: 100%;
 }
 
 header {
@@ -734,10 +734,11 @@ header {
 
 .search-filter-box {
     display: flex;
-    gap: 12px;
+    /* gap: 12px; */
     flex: 1;
     flex-wrap: wrap;
-    align-items: stretch;
+    align-items: center;
+    justify-content: space-between;
     /* Garante que todos os inputs tenham a mesma altura */
     width: 100%;
 }
@@ -758,12 +759,12 @@ header {
 .search-input {
     padding-left: 42px;
     border-radius: var(--radius-sm);
-    max-width: 1300px;
+    max-width: 500px;
     ;
 }
 
 .filter-select {
-    padding: 12px 16px;
+    padding: 12px 5px;
     border-radius: var(--radius-sm);
     background-color: var(--bg-card);
     border: 1px solid var(--border);
@@ -963,7 +964,7 @@ table td {
 }
 
 /* Responsividade Geral */
-@media (max-width: 900px) {
+/* @media (max-width: 900px) {
     .dashboard-shell {
         grid-template-columns: 1fr;
     }
@@ -974,21 +975,20 @@ table td {
         min-height: auto;
         order: 1;
         border-radius: 20px;
-         /* Para manter o arredondamento */
     }
 
-    /* No seu arquivo CSS, localize a classe da sidebar e adicione: */
+   
     .dashboard-sidebar.glass {
         border-radius: 25px;
-        /* Para manter o arredondamento */
+       
         margin: 0px;
-        /* Para manter sem a margem que removemos */
+    
     }
 
-    /* E para a seção de gráficos: */
+   
     .charts-grid.animate-fade {
         margin-top: 24px;
-        /* Para manter o espaçamento superior */
+    
     }
 
     .sidebar-brand,
@@ -1000,9 +1000,9 @@ table td {
     .dashboard-main {
         order: 2;
     }
-}
+} */
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
     .charts-grid {
         grid-template-columns: 1fr;
     }
@@ -1020,11 +1020,18 @@ table td {
         width: 95%;
         padding: 24px;
     }
-}
+} */
 
 @media (max-width: 600px) {
 
-    /* 1. Ajuste da tabela para não ocupar espaço excessivo */
+    .section-header{
+        display: none;
+    }
+
+    .dashboard-shell {
+        display: block
+    }
+
     th,
     td {
         padding: 12px 8px !important;
@@ -1033,15 +1040,7 @@ table td {
         /* Texto um pouco menor para caber mais */
     }
 
-    /* Mobile transactions list (cards) */
-    .transactions-card table,
-    .transactions-card thead,
-    .transactions-card tbody,
-    .transactions-card th,
-    .transactions-card td,
-    .transactions-card tr {
-        display: none !important;
-    }
+   
 
     .mobile-transactions-list {
         display: flex !important;
@@ -1118,10 +1117,19 @@ table td {
         padding: 12px;
     }
 
+    #dashboard-screen {
+        padding-bottom: 96px;
+    }
+
+    .dashboard-main {
+        width: 100%;
+        padding: 0 8px;
+    }
+
     /* Ajustes do header e perfil no mobile */
     header.glass {
         width: 100% !important;
-        max-width: 340px !important;
+        max-width: 355px !important;
         margin: 0 0 16px 0 !important;
         padding: 10px 16px !important;
         align-items: flex-start !important;
@@ -1146,34 +1154,62 @@ table td {
     section.summary-container {
         grid-template-columns: 1fr !important;
         width: 100% !important;
-        max-width: 340px !important;
+        max-width: 370px !important;
         margin: 0 !important;
-        padding: 0 16px !important;
+        padding: 0 0px !important;
         gap: 10px !important;
     }
 
     section.charts-grid {
         width: 100% !important;
-        max-width: 340px !important;
+        max-width: 355px !important;
         margin: 16px 0 0 0 !important;
-        padding: 0 16px !important;
+        padding: 0 0px !important;
     }
 
     .chart-card.glass {
         padding: 16px !important;
-        max-width: 340px !important;
+        max-width: 370px !important;
     }
 
     .mobile-tab-bar {
         display: flex;
-        gap: 10px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        gap: 8px;
+        overflow: hidden;
+        padding: 10px 12px;
+        border-radius: 0;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.08);
+        margin: 0;
     }
 
     .mobile-tab-bar .sidebar-tab {
         flex: 1;
-        min-width: 110px;
-        padding: 12px 10px;
-        font-size: 13px;
+        min-width: 0;
+        padding: 12px 8px;
+        font-size: 12px;
+        justify-content: center;
+        gap: 6px;
+        white-space: normal;
+    }
+
+    .mobile-tab-bar .sidebar-tab span {
+        display: block;
+        font-size: 11px;
+        line-height: 1.1;
+        text-transform: uppercase;
+    }
+
+    .mobile-tab-bar .sidebar-tab span {
+        display: inline-block;
+        white-space: nowrap;
     }
 }
 
@@ -1220,7 +1256,7 @@ table td {
 .filter-select,
 .date-filter-wrapper {
     flex: 0 1 160px;
-    min-width: 330px;
+    min-width: 355px;
 }
 
 .date-filter-wrapper {

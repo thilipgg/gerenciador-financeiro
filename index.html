@@ -24,37 +24,37 @@
          1. TELA DE LOGIN (Google OAuth / Modo Demo)
          ========================================== -->
     <main id="login-screen" style="display: flex;">
-    <div class="login-card glass">
-        <div class="login-header">
-            <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
-            <h1>Finanças Premium</h1>
-            <p>Acesse sua conta para continuar</p>
+        <div class="login-card glass">
+            <div class="login-header">
+                <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
+                <h1>Finanças Premium</h1>
+                <p>Acesse sua conta para continuar</p>
+            </div>
+
+            <form id="login-form" class="login-options">
+                <div class="input-group">
+                    <i class="ri-mail-line"></i>
+                    <input type="email" id="user-email" placeholder="E-mail" class="form-input" required>
+                </div>
+                <div class="input-group">
+                    <i class="ri-lock-line"></i>
+                    <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btn-login-real">
+                    Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
+                </button>
+
+                <div class="divider">
+                    <span>ou</span>
+                </div>
+
+                <button type="button" id="btn-login-visitante" class="btn-secondary">
+                    <i class="ri-user-smile-line"></i> Acessar como Visitante
+                </button>
+            </form>
         </div>
-
-        <form id="login-form" class="login-options">
-            <div class="input-group">
-                <i class="ri-mail-line"></i>
-                <input type="email" id="user-email" placeholder="E-mail" class="form-input" required>
-            </div>
-            <div class="input-group">
-                <i class="ri-lock-line"></i>
-                <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
-            </div>
-
-            <button type="submit" class="btn-primary" id="btn-login-real">
-                Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
-            </button>
-
-            <div class="divider">
-                <span>ou</span>
-            </div>
-
-            <button type="button" id="btn-login-visitante" class="btn-secondary">
-                <i class="ri-user-smile-line"></i> Acessar como Visitante
-            </button>
-        </form>
-    </div>
-</main>
+    </main>
 
     <!-- ==========================================
          2. TELA DO DASHBOARD FINANCEIRO
@@ -124,6 +124,21 @@
                         </div>
                     </div>
                 </header>
+
+                <div class="mobile-tab-bar" role="tablist" aria-label="Navegação do painel mobile">
+                    <button type="button" class="sidebar-tab active" data-tab="overview" aria-controls="tab-overview">
+                        <i class="ri-home-5-line"></i>
+                        <span>Visão</span>
+                    </button>
+                    <button type="button" class="sidebar-tab" data-tab="transactions" aria-controls="tab-transactions">
+                        <i class="ri-list-check-2"></i>
+                        <span>Lançamentos</span>
+                    </button>
+                    <button type="button" class="sidebar-tab" data-tab="monthly" aria-controls="tab-monthly">
+                        <i class="ri-calendar-line"></i>
+                        <span>Mensal</span>
+                    </button>
+                </div>
 
                 <div class="dashboard-page-content">
                     <section id="tab-overview" class="tab-page active">
@@ -211,10 +226,11 @@
 
                     <section id="tab-transactions" class="tab-page">
                         <div class="section-header">
-                            <div>
+                            <div id="info-header">
                                 <h3>Lançamentos</h3>
                                 <p class="text-muted">Buscar, filtrar e gerenciar todas as transações cadastradas.</p>
                             </div>
+
                         </div>
 
                         <section class="transactions-section animate-fade">
@@ -238,9 +254,12 @@
                                         <option value="pending">Pendentes</option>
                                     </select>
 
-                                    <div class="date-filter-wrapper" style="display:flex; gap:8px; align-items:center; margin-left:0px;">
-                                        <input type="date" id="filter-start-date" class="form-input" title="Data início do filtro" />
-                                        <input type="date" id="filter-end-date" class="form-input" title="Data fim do filtro" />
+                                    <div class="date-filter-wrapper"
+                                        style="display:flex; gap:8px; align-items:center; margin-left:0px;">
+                                        <input type="date" id="filter-start-date" class="form-input"
+                                            title="Data início do filtro" />
+                                        <input type="date" id="filter-end-date" class="form-input"
+                                            title="Data fim do filtro" />
                                     </div>
                                 </div>
 
@@ -335,63 +354,66 @@
          3. MODAL: ADICIONAR NOVA TRANSAÇÃO
          ========================================== -->
     <div id="transaction-modal" class="modal-overlay">
-    <div class="modal-container glass">
-        <div class="modal-header">
-            <h3 class="modal-title">Nova Transação</h3>
-            <button id="close-modal-btn" class="modal-close" aria-label="Fechar Modal">
-                <i class="ri-close-line"></i>
-            </button>
+        <div class="modal-container glass">
+            <div class="modal-header">
+                <h3 class="modal-title">Nova Transação</h3>
+                <button id="close-modal-btn" class="modal-close" aria-label="Fechar Modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <form id="transaction-form" autocomplete="off">
+                <input type="hidden" id="trans-type" value="expense">
+
+                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active"
+                        style="flex: 1;">Despesa</button>
+                    <button type="button" id="btn-type-income" class="type-btn type-btn-income"
+                        style="flex: 1;">Receita</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-desc" class="form-label">Descrição</label>
+                    <input type="text" id="trans-desc" class="form-input" placeholder="Ex: Aluguel, Salário" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-amount" class="form-label">Valor (R$)</label>
+                    <input type="number" id="trans-amount" class="form-input" placeholder="0.00" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-date" class="form-label">Data</label>
+                    <input type="date" id="trans-date" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-due-date" class="form-label">Data de Vencimento</label>
+                    <input type="date" id="trans-due-date" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-category" class="form-label">Categoria</label>
+                    <select id="trans-category" class="form-input"></select>
+                    <input type="text" id="trans-custom-category" class="form-input"
+                        style="display: none; margin-top: 12px;" placeholder="Qual?">
+                </div>
+
+                <div class="form-group">
+                    <label for="trans-paid-status" class="form-label">Status</label>
+                    <select id="trans-paid-status" class="form-input">
+                        <option value="paid">Pago</option>
+                        <option value="pending">Pendente</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="cancel-modal-btn" class="btn-secondary">Cancelar</button>
+                    <button type="submit" id="save-transaction-btn" class="btn-primary">Salvar Transação</button>
+                </div>
+            </form>
         </div>
-
-        <form id="transaction-form" autocomplete="off">
-            <input type="hidden" id="trans-type" value="expense">
-
-            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active" style="flex: 1;">Despesa</button>
-                <button type="button" id="btn-type-income" class="type-btn type-btn-income" style="flex: 1;">Receita</button>
-            </div>
-
-            <div class="form-group">
-                <label for="trans-desc" class="form-label">Descrição</label>
-                <input type="text" id="trans-desc" class="form-input" placeholder="Ex: Aluguel, Salário" required>
-            </div>
-
-            <div class="form-group">
-                <label for="trans-amount" class="form-label">Valor (R$)</label>
-                <input type="number" id="trans-amount" class="form-input" placeholder="0.00" step="0.01" required>
-            </div>
-
-            <div class="form-group">
-                <label for="trans-date" class="form-label">Data</label>
-                <input type="date" id="trans-date" class="form-input" required>
-            </div>
-
-            <div class="form-group">
-                <label for="trans-due-date" class="form-label">Data de Vencimento</label>
-                <input type="date" id="trans-due-date" class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="trans-category" class="form-label">Categoria</label>
-                <select id="trans-category" class="form-input"></select>
-                <input type="text" id="trans-custom-category" class="form-input" style="display: none; margin-top: 12px;" placeholder="Qual?">
-            </div>
-
-            <div class="form-group">
-                <label for="trans-paid-status" class="form-label">Status</label>
-                <select id="trans-paid-status" class="form-input">
-                    <option value="paid">Pago</option>
-                    <option value="pending">Pendente</option>
-                </select>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" id="cancel-modal-btn" class="btn-secondary">Cancelar</button>
-                <button type="submit" id="save-transaction-btn" class="btn-primary">Salvar Transação</button>
-            </div>
-        </form>
     </div>
-</div>
 
     <!-- Container de Toasts -->
     <div id="toast-container" class="toast-container"></div>
