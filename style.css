@@ -787,6 +787,7 @@ header {
     background-color: var(--bg-input);
     text-align: center;
 }
+
 .chart-canvas-container {
     position: relative;
     height: 300px;
@@ -955,18 +956,24 @@ table td {
 }
 
 .modal-container {
-    width: 100%;
-    max-width: 480px;
+    width: 30%;
+    max-width: 900px;
     border-radius: var(--radius-lg);
     background: hsl(0deg 0% 100% / 61%);
     overflow: hidden;
 }
 
+.modal-title {
+    padding: 5px 0px 10px 0px;
+    justify-self: center;
+}
+
 .modal-header {
-    padding: 10px 10px 10px 24px;
+    padding: 10px 10px 10px 10px;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr;
+    /* justify-content: space-between; */
 }
 
 .modal-body {
@@ -1002,11 +1009,17 @@ table td {
     border-color: var(--success);
 }
 
-.modal-footer {
-    padding: 10px;
-    border-top: 1px solid var(--border);
+#transaction-form .modal-footer {
+    /* Faz o rodapé ocupar as duas colunas do grid */
+    grid-column: 1 / -1;
+
+    /* Garante que o conteúdo (botão) vá para o fim (direita) */
     display: flex;
     justify-content: flex-end;
+
+    /* Ajustes adicionais de estilo que você já parece ter */
+    padding: 10px;
+    border-top: 1px solid var(--border);
     gap: 12px;
 }
 
@@ -1037,68 +1050,9 @@ table td {
     background: var(--danger);
 }
 
-/* Responsividade Geral */
-/* @media (max-width: 900px) {
-    .dashboard-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-sidebar {
-        position: relative;
-        top: 0;
-        min-height: auto;
-        order: 1;
-        border-radius: 20px;
-    }
-
-   
-    .dashboard-sidebar.glass {
-        border-radius: 25px;
-       
-        margin: 0px;
-    
-    }
-
-   
-    .charts-grid.animate-fade {
-        margin-top: 24px;
-    
-    }
-
-    .sidebar-brand,
-    .sidebar-footer,
-    .sidebar-tab {
-        width: 100%;
-    }
-
-    .dashboard-main {
-        order: 2;
-    }
-} */
-
-/* @media (max-width: 768px) {
-    .charts-grid {
-        grid-template-columns: 1fr;
-    }
-
-    header {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .transactions-toolbar {
-        flex-direction: column;
-    }
-
-    #login-screen .login-card {
-        width: 95%;
-        padding: 24px;
-    }
-} */
-
 @media (max-width: 600px) {
 
-    .section-header{
+    .section-header {
         display: none;
     }
 
@@ -1190,7 +1144,7 @@ table td {
     .dashboard-sidebar {
         display: none;
         border-radius: 20px;
-         /* Para manter o arredondamento */
+        /* Para manter o arredondamento */
     }
 
     header {
@@ -1511,15 +1465,6 @@ table {
     transform: scale(1.05);
 }
 
-/* 2. Espaçamento dos campos no Modal (Desembolar) */
-.form-group {
-    margin-bottom: 20px;
-}
-
-/* .form-label {
-    font-style: italic;
-} */
-
 /* 3. Contraste Total no Modo Escuro */
 :root.dark .modal-content,
 :root.dark .login-card {
@@ -1579,11 +1524,18 @@ table {
 /* Adiciona respiro interno no formulário */
 #transaction-form {
     padding: 10px 10px 0px 10px !important;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    /* Evita que o padding "estoure" a largura */
 }
 
 /* Aumenta a distância entre um campo e outro */
 .form-group {
-    margin-bottom: 10px !important;
+    margin-bottom: 5px !important;
+    max-width: 100%;
 }
 
 /* Ajusta o espaçamento dos botões de tipo (Despesa/Receita) */

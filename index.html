@@ -395,13 +395,7 @@
         <div class="modal-container glass">
             <div class="modal-header">
                 <h3 class="modal-title">Nova Transação</h3>
-                <button id="close-modal-btn" class="modal-close" aria-label="Fechar Modal">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-
-            <form id="transaction-form" autocomplete="off">
-                <input type="hidden" id="trans-type" value="expense">
+                
 
                 <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active"
@@ -409,6 +403,13 @@
                     <button type="button" id="btn-type-income" class="type-btn type-btn-income"
                         style="flex: 1;">Receita</button>
                 </div>
+
+            </div>
+
+            <form id="transaction-form" autocomplete="off">
+                <input type="hidden" id="trans-type" value="expense">
+
+                
 
                 <div class="form-group">
                     <label for="trans-desc" class="form-label">Descrição</label>
