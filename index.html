@@ -142,6 +142,18 @@
 
                 <div class="dashboard-page-content">
                     <section id="tab-overview" class="tab-page active">
+
+                        <div class="month-selector-container glass"
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin-bottom: 20px; border-radius: 12px;">
+                            <button type="button" id="btn-prev-month" class="btn-secondary"
+                                style="padding: 6px 12px;"><i class="ri-arrow-left-s-line"></i></button>
+                            <h3 id="current-month-display"
+                                style="margin: 0; font-family: var(--font-heading); font-size: 1.2rem; min-width: 150px; text-align: center;">
+                                Junho de 2026</h3>
+                            <button type="button" id="btn-next-month" class="btn-secondary"
+                                style="padding: 6px 12px;"><i class="ri-arrow-right-s-line"></i></button>
+                        </div>
+
                         <div class="section-header">
                             <div>
                                 <h3>Visão Geral</h3>
@@ -227,7 +239,8 @@
                             <div class="section-header">
                                 <div>
                                     <h3>Anotações</h3>
-                                    <p class="text-muted">Registre observações financeiras e salve diretamente no banco de dados.</p>
+                                    <p class="text-muted">Registre observações financeiras e salve diretamente no banco
+                                        de dados.</p>
                                 </div>
                             </div>
 
@@ -235,7 +248,8 @@
                                 <div class="notes-input-card glass">
                                     <h4>Nova anotação</h4>
                                     <form id="note-form">
-                                        <textarea id="note-content" class="form-input note-textarea" placeholder="Escreva sua anotação aqui..." rows="7" required></textarea>
+                                        <textarea id="note-content" class="form-input note-textarea"
+                                            placeholder="Escreva sua anotação aqui..." rows="7" required></textarea>
                                         <div class="notes-actions">
                                             <button type="submit" class="btn-primary">Salvar Anotação</button>
                                         </div>
@@ -246,7 +260,8 @@
                                     <div class="section-header" style="margin-bottom: 14px;">
                                         <div>
                                             <h4>Últimas notas</h4>
-                                            <p class="text-muted">Suas notas salvas aparecem aqui com data de registro.</p>
+                                            <p class="text-muted">Suas notas salvas aparecem aqui com data de registro.
+                                            </p>
                                         </div>
                                     </div>
                                     <div id="notes-list" class="notes-list"></div>
@@ -285,7 +300,8 @@
                                         <option value="pending">Pendentes</option>
                                     </select>
 
-                                    <select id="sort-by-mobile" class="filter-select mobile-sort-select" style="display: none;">
+                                    <select id="sort-by-mobile" class="filter-select mobile-sort-select"
+                                        style="display: none;">
                                         <option value="date">Ordenar por Data</option>
                                         <option value="due_date">Ordenar por Vencimento</option>
                                         <option value="amount">Ordenar por Valor</option>
@@ -395,7 +411,7 @@
         <div class="modal-container glass">
             <div class="modal-header">
                 <h3 class="modal-title">Nova Transação</h3>
-                
+
 
                 <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active"
@@ -409,7 +425,7 @@
             <form id="transaction-form" autocomplete="off">
                 <input type="hidden" id="trans-type" value="expense">
 
-                
+
 
                 <div class="form-group">
                     <label for="trans-desc" class="form-label">Descrição</label>

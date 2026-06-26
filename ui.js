@@ -29,6 +29,9 @@ window.allTransactions = [];
 // Ordenação atual do grid
 let currentSort = { key: null, dir: 'asc' };
 
+// Estado do mês selecionado (Inicia com o mês/ano atual do sistema)
+let currentDateSelection = new Date();
+
 export function setSort(key) {
     if (!key) return;
     if (currentSort.key === key) {
@@ -100,11 +103,89 @@ export function showDashboardScreen(user, isDemo) {
 }
 
 export function updateDashboardUI(transactions) {
-    currentTransactionsList = transactions;
-    window.allTransactions = transactions; 
+    const listToUse = transactions || window.allTransactions || [];
     
-    calculateSummary(transactions);
+    if (transactions && transactions.length > 0) {
+        window.allTransactions = transactions;
+    }
+
+    // 1. Filtra as transações apenas do mês selecionado na barra
+    const transactionsForSelectedMonth = listToUse.filter(t => {
+        if (!t.date) return false;
+        const txDate = new Date(t.date + 'T12:00:00');
+        return txDate.getMonth() === currentDateSelection.getMonth() &&
+               txDate.getFullYear() === currentDateSelection.getFullYear();
+    });
+
+    // Atualiza a listagem global interna usada pela tabela e roda os gráficos
+    currentTransactionsList = transactionsForSelectedMonth;
     filterAndRenderTransactions();
+
+    // 2. Variáveis para somar os cartões do mês selecionado
+    let totalIncome = 0;      // Receitas
+    let totalExpense = 0;     // Despesas
+    let pendingExpenses = 0;  // Contas Pendentes
+    let overdueExpenses = 0;  // Contas Vencidas
+
+    const hojeStr = new Date().toISOString().split('T')[0]; // Data de hoje (AAAA-MM-DD)
+
+    transactionsForSelectedMonth.forEach(t => {
+        const amt = parseFloat(t.amount) || 0;
+        const normalizedType = String(t.type).toLowerCase().trim();
+        const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
+        const status = String(t.paid_status || 'paid').toLowerCase().trim();
+
+        if (isIncome) {
+            totalIncome += amt;
+        } else {
+            totalExpense += amt;
+            // Se for despesa e não estiver paga
+            if (status === 'pending') {
+                pendingExpenses += amt;
+                
+                // Se a data de vencimento passou de hoje, é vencida
+                if (t.date && t.date < hojeStr) {
+                    overdueExpenses += amt;
+                }
+            }
+        }
+    });
+
+    // Cálculos de saldos
+    const balance = totalIncome - totalExpense; // Saldo Geral do mês
+    const availableBalance = totalIncome - (totalExpense - pendingExpenses); // Saldo Disponível
+
+    // 3. Injeta as informações usando os IDs CORRETOS do seu index.html (val-...)
+    
+    // Card: Saldo Geral
+    const balEl = document.getElementById('val-balance');
+    if (balEl) {
+        balEl.textContent = formatCurrency(balance);
+        balEl.className = balance >= 0 ? 'widget-value text-success' : 'widget-value text-danger';
+    }
+
+    // Card: Receitas
+    const incEl = document.getElementById('val-income');
+    if (incEl) incEl.textContent = formatCurrency(totalIncome);
+
+    // Card: Despesas
+    const expEl = document.getElementById('val-expense');
+    if (expEl) expEl.textContent = formatCurrency(totalExpense);
+
+    // Card: Contas Pendentes
+    const pendingEl = document.getElementById('val-pending');
+    if (pendingEl) pendingEl.textContent = formatCurrency(pendingExpenses);
+
+    // Card: Contas Vencidas
+    const overdueEl = document.getElementById('val-overdue');
+    if (overdueEl) overdueEl.textContent = formatCurrency(overdueExpenses);
+
+    // Card: Saldo Disponível
+    const availEl = document.getElementById('val-available');
+    if (availEl) {
+        availEl.textContent = formatCurrency(availableBalance);
+        availEl.className = availableBalance >= 0 ? 'widget-value text-success' : 'widget-value text-danger';
+    }
 }
 
 function calculateSummary(transactions) {
@@ -169,7 +250,10 @@ export function filterAndRenderTransactions() {
     const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
     const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
 
-    const filtered = currentTransactionsList.filter(t => {
+    // CORREÇÃO: Buscamos sempre da base completa (window.allTransactions) para não perder dados históricos nos gráficos
+    const baseList = window.allTransactions || [];
+
+    const filtered = baseList.filter(t => {
         const matchesSearch = t.description.toLowerCase().includes(searchTerm) || 
                               t.category.toLowerCase().includes(searchTerm);
         
@@ -185,8 +269,18 @@ export function filterAndRenderTransactions() {
                               (filterStatus === 'paid' && status === 'paid') ||
                               (filterStatus === 'pending' && status === 'pending');
 
-        // Filtra por intervalo de datas, se fornecido
-        if (startDate || endDate) {
+        // REGRA DE FILTRO POR COMPETÊNCIA (MÊS SELECIONADO NA BARRA)
+        // Se o usuário não colocou datas manuais de início/fim, filtra pelo mês ativo da barra
+        if (!startVal && !endVal) {
+            if (!t.date) return false;
+            const txDate = new Date(t.date + 'T12:00:00');
+            
+            const matchesMonth = txDate.getMonth() === currentDateSelection.getMonth() &&
+                                 txDate.getFullYear() === currentDateSelection.getFullYear();
+                                 
+            if (!matchesMonth) return false;
+        } else {
+            // Filtra por intervalo de datas customizado, se fornecido manualmente
             if (!t.date) return false;
             const txDate = new Date(t.date + 'T12:00:00');
             if (startDate && txDate < startDate) return false;
@@ -196,10 +290,15 @@ export function filterAndRenderTransactions() {
         return matchesSearch && matchesType && matchesStatus;
     });
 
+    // A tabela recebe apenas os dados ordenados e filtrados daquele mês
     const sorted = applySorting(filtered);
     renderTable(sorted);
+    
     const isDarkTheme = document.documentElement.classList.contains('dark');
-    renderCharts(sorted, isDarkTheme);
+    
+    // CORREÇÃO MESTRA: Passamos a base inteira (todos os meses) para o gráfico, 
+    // garantindo que ele desenhe barras para Junho, Julho e qualquer outro mês registrado!
+    renderCharts(baseList, isDarkTheme);
 }
 
 function renderTable(transactions) {
@@ -452,7 +551,12 @@ export function toggleTheme() {
 
 function setupDeleteListeners() {
     document.querySelectorAll('.btn-delete').forEach(b => {
-        b.addEventListener('click', async (e) => {
+        // Remove ouvintes duplicados clonando o elemento (limpa a memória de eventos)
+        const novoBotao = b.cloneNode(true);
+        b.replaceWith(novoBotao);
+
+        // Adiciona o listener único de clique no botão limpo
+        novoBotao.addEventListener('click', async (e) => {
             const id = e.currentTarget.dataset.id;
             if (id && confirm("Deseja excluir essa transação?")) {
                 await removeTransaction(id);
@@ -484,4 +588,32 @@ function formatDate(d) {
 
 function escapeHTML(s) { 
     return s ? s.replace(/[&<>'\"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":"&#39;",'"':'&quot;'}[t]||t)) : ''; 
+}
+
+export function getCurrentSelection() {
+    return {
+        month: currentDateSelection.getMonth(), // 0 = Jan, 11 = Dez
+        year: currentDateSelection.getFullYear()
+    };
+}
+
+export function changeSelectedMonth(offset) {
+    currentDateSelection.setMonth(currentDateSelection.getMonth() + offset);
+    updateMonthDisplay();
+    // CORREÇÃO: Força a atualização de todos os cartões e gráficos do mês selecionado
+    updateDashboardUI(window.allTransactions); 
+}
+
+export function updateMonthDisplay() {
+    const displayEl = document.getElementById('current-month-display');
+    if (!displayEl) return;
+    
+    const meses = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    
+    const mesNome = meses[currentDateSelection.getMonth()];
+    const ano = currentDateSelection.getFullYear();
+    displayEl.textContent = `${mesNome} de ${ano}`;
 }

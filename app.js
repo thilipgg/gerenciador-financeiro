@@ -1,4 +1,14 @@
-import { fetchTransactions, insertTransaction, fetchNotes, insertNote, removeNote, loginComEmail, logout, supabase } from './db.js';
+import { 
+    fetchTransactions, 
+    insertTransaction, 
+    fetchNotes, 
+    insertNote, 
+    removeNote, 
+    loginComEmail, 
+    logout, 
+    supabase 
+} from './db.js';
+
 import { 
     showLoginScreen, 
     showDashboardScreen, 
@@ -10,45 +20,60 @@ import {
     closeModal,
     filterAndRenderTransactions,
     updateCategoryDropdown,
-    setSort
+    setSort,
+    changeSelectedMonth, 
+    updateMonthDisplay   
 } from './ui.js';
-
-// ... seus imports
 
 // Adiciona os ouvintes de evento assim que a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const btnVisitante = document.getElementById('btn-login-visitante');
 
-    // Listener para o botão Entrar (Formulário)
+    // Listener único e centralizado para o Formulário de Login
     loginForm?.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Impede o recarregamento da página
-        const email = document.getElementById('user-email').value;
-        const password = document.getElementById('user-pass').value;
+        e.preventDefault(); 
+        const email = document.getElementById('user-email')?.value.trim();
+        const password = document.getElementById('user-pass')?.value;
+
+        if (!email || !password) {
+            showToast("Por favor, preencha e-mail e senha.", "error");
+            return;
+        }
 
         try {
             await loginComEmail(email, password);
         } catch (err) {
-            showToast("Erro no login: " + err.message, "error");
+            console.error(err);
+            showToast("E-mail ou senha incorretos.", "error");
         }
     });
 
-    // Listener para o botão Visitante
+    // Listener para o botão Visitante (Modo Demo)
     btnVisitante?.addEventListener('click', () => {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
         updateDashboardUI([]); 
     });
 
-    // Ajusta filtros de data para o mês atual por padrão
+    // --- NOVA LÓGICA DO SELETOR DE MÊS ---
+    // Inicializa o texto da barra de meses (Ex: "Junho de 2026")
+    updateMonthDisplay();
+
+    // Listener para voltar o mês
+    document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+        changeSelectedMonth(-1);
+    });
+
+    // Listener para avançar o mês
+    document.getElementById('btn-next-month')?.addEventListener('click', () => {
+        changeSelectedMonth(1);
+    });
+    // -------------------------------------
+
+    // Escuta alterações nos inputs de data manuais (se preenchidos, eles sobrescrevem o seletor de mês)
     const startInput = document.getElementById('filter-start-date');
     const endInput = document.getElementById('filter-end-date');
     if (startInput && endInput) {
-        const hoje = new Date();
-        const primeiro = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-        const toYMD = d => d.toISOString().split('T')[0];
-        startInput.value = toYMD(primeiro);
-        endInput.value = toYMD(ultimo);
         startInput.addEventListener('change', filterAndRenderTransactions);
         endInput.addEventListener('change', filterAndRenderTransactions);
     }
@@ -58,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         th.style.cursor = 'pointer';
         th.addEventListener('click', () => {
             const key = th.dataset.key;
-            // chamar função exportada de ui.js
             try {
                 setSort(key);
             } catch (err) {
@@ -68,7 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ... resto do seu código
+// Garante que o display visual do mês se atualize quando novos dados forem salvos ou excluídos
+window.addEventListener('transactions-updated', () => {
+    updateMonthDisplay();
+});
 
 // ==========================================
 // 1. INICIALIZAÇÃO E MONITORAMENTO
@@ -87,31 +114,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 window.addEventListener('transactions-updated', loadDashboardData);
 
 // ==========================================
-// 2. AUTENTICAÇÃO
-// ==========================================
-window.tentarLogin = async (tipo) => {
-    if (tipo === 'Visitante') {
-        showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
-        updateDashboardUI([]); 
-    } else {
-        const emailInput = document.getElementById('user-email').value;
-        const passInput = document.getElementById('user-pass').value;
-        
-        if (!emailInput || !passInput) {
-            showToast("Por favor, preencha e-mail e senha.", "error");
-            return;
-        }
-
-        try {
-            await loginComEmail(emailInput, passInput);
-        } catch (err) {
-            showToast("E-mail ou senha incorretos.", "error");
-        }
-    }
-};
-
-// ==========================================
-// 3. ATUALIZAÇÃO DE AVATAR (Perfil)
+// 2. ATUALIZAÇÃO DE AVATAR (Perfil)
 // ==========================================
 document.getElementById('user-avatar')?.addEventListener('click', async () => {
     const novaUrl = prompt("Cole aqui o link (URL) da nova imagem para o seu perfil:");
@@ -122,7 +125,7 @@ document.getElementById('user-avatar')?.addEventListener('click', async () => {
             });
             if (error) throw error;
             document.getElementById('user-avatar').src = novaUrl;
-            showToast("Avatar atualizado com sucesso!", "success");
+            showToast("Avatar updated successfully!", "success");
         } catch (err) {
             showToast("Erro ao atualizar o avatar.", "error");
         }
@@ -132,14 +135,13 @@ document.getElementById('user-avatar')?.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 4. EVENTOS DA INTERFACE
+// 3. EVENTOS DA INTERFACE
 // ==========================================
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await logout();
 });
 
 document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
-
 document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
 document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
 document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
@@ -170,6 +172,7 @@ function activateDashboardTab(tabId) {
 
 activateDashboardTab('overview');
 
+// Atalhos de teclado
 window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         const modal = document.getElementById('transaction-modal');
@@ -188,7 +191,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 // Alternância Receita/Despesa e Categorias Dinâmicas
-// Alternância Receita/Despesa e Categorias Dinâmicas
 const btnExpense = document.getElementById('btn-type-expense');
 const btnIncome = document.getElementById('btn-type-income');
 const transTypeInput = document.getElementById('trans-type');
@@ -196,7 +198,6 @@ const transTypeInput = document.getElementById('trans-type');
 btnExpense?.addEventListener('click', () => {
     btnExpense.classList.add('active');
     btnIncome.classList.remove('active');
-
     if (transTypeInput) transTypeInput.value = 'expense';
     updateCategoryDropdown('expense');
 });
@@ -204,7 +205,6 @@ btnExpense?.addEventListener('click', () => {
 btnIncome?.addEventListener('click', () => {
     btnIncome.classList.add('active');
     btnExpense.classList.remove('active');
-
     if (transTypeInput) transTypeInput.value = 'income';
     updateCategoryDropdown('income');
 });
@@ -212,6 +212,8 @@ btnIncome?.addEventListener('click', () => {
 // Mostrar/Ocultar campo de Categoria Customizada ("Outros")
 document.getElementById('trans-category')?.addEventListener('change', (e) => {
     const customInput = document.getElementById('trans-custom-category');
+    if (!customInput) return;
+    
     if (e.target.value === 'Outros') {
         customInput.style.display = 'block';
         customInput.required = true;
@@ -234,14 +236,13 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
     const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
     const finalType = transTypeInput ? transTypeInput.value : fallbackType;
 
-    // Lógica para pegar a categoria padrão ou a categoria digitada
     let finalCategory = document.getElementById('trans-category').value;
     if (finalCategory === 'Outros') {
         const customValue = document.getElementById('trans-custom-category').value.trim();
         if (customValue) finalCategory = customValue;
     }
 
-    const data = {
+    const transactionData = {
         description: document.getElementById('trans-desc').value,
         amount: cleanAmount,
         category: finalCategory,
@@ -253,16 +254,17 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
 
     try {
         if (editId) {
-            const { error } = await supabase.from('transactions').update(data).eq('id', editId);
+            // Atualizando dados via Supabase
+            const { error } = await supabase.from('transactions').update(transactionData).eq('id', editId);
             if (error) throw error;
             showToast("Transação atualizada!", "success");
         } else {
-            await insertTransaction(data);
+            await insertTransaction(transactionData);
             showToast("Lançamento realizado!", "success");
         }
         
         closeModal();
-        loadDashboardData();
+        await loadDashboardData();
     } catch (err) {
         console.error(err);
         showToast("Erro ao processar: " + err.message, "error");
@@ -276,6 +278,7 @@ document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => {
     setSort(e.target.value);
 });
 
+// Bloco de Notas
 document.getElementById('note-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const contentEl = document.getElementById('note-content');
@@ -322,6 +325,7 @@ async function loadDashboardData() {
         renderNotes(notes);
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
+        showToast("Não foi possível carregar os dados do painel.", "error");
     }
 }
 
@@ -341,7 +345,7 @@ function renderNotes(notes) {
                 <div class="note-card-content">${sanitizeText(note.content)}</div>
                 <div class="note-card-footer">
                     <span class="note-meta">${createdAt}</span>
-                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class="ri-delete-bin-line"></i> Excluir</button>
+                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class=\"ri-delete-bin-line\"></i> Excluir</button>
                 </div>
             </div>
         `;

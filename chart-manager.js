@@ -42,25 +42,50 @@ function getLastSixMonths() {
 // ----------------------------------------------------
 
 function processMonthlyExpenses(transactions) {
-    const { labels, dates } = getLastSixMonths();
-    const data = new Array(6).fill(0);
-    
-    const expenses = transactions.filter(t => t.type === 'expense');
-    
-    expenses.forEach(t => {
-        const tDate = new Date(t.date + 'T00:00:00'); // Evita problemas de timezone
-        const tYear = tDate.getFullYear();
-        const tMonth = tDate.getMonth();
-        
-        // Verifica se a transação está dentro dos últimos 6 meses
-        for (let i = 0; i < 6; i++) {
-            if (dates[i].year === tYear && dates[i].month === tMonth) {
-                data[i] += parseFloat(t.amount);
-                break;
-            }
-        }
+    const expenses = transactions.filter(t => {
+        const normalizedType = String(t.type).toLowerCase().trim();
+        return normalizedType !== 'income' && normalizedType !== 'receita';
     });
-    
+
+    // Objeto para acumular os valores por chave "ANO-MES" (ex: "2026-06")
+    const dataByMonth = {};
+
+    expenses.forEach(t => {
+        if (!t.date) return;
+        // Corta a string "YYYY-MM-DD" para pegar apenas "YYYY-MM"
+        const yearMonth = t.date.substring(0, 7); 
+        const amt = parseFloat(t.amount) || 0;
+        
+        dataByMonth[yearMonth] = (dataByMonth[yearMonth] || 0) + amt;
+    });
+
+    // Captura todos os meses que possuem lançamentos e ordena cronologicamente
+    const sortedMonths = Object.keys(dataByMonth).sort();
+
+    // Se o banco estiver vazio, coloca pelo menos o mês atual para o gráfico não quebrar
+    if (sortedMonths.length === 0) {
+        const hoje = new Date();
+        const mesAtualStr = hoje.toISOString().substring(0, 7);
+        sortedMonths.push(mesAtualStr);
+        dataByMonth[mesAtualStr] = 0;
+    }
+
+    // Nomes dos meses para exibição amigável nas labels do gráfico
+    const nomeMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+    const labels = [];
+    const data = [];
+
+    // Monta o array final que o Chart.js vai ler
+    sortedMonths.forEach(ym => {
+        const [year, month] = ym.split('-');
+        const idx = parseInt(month, 10) - 1;
+        
+        // Exemplo de label resultante: "Jun/26", "Jul/26"
+        labels.push(`${nomeMeses[idx]}/${year.substring(2)}`);
+        data.push(dataByMonth[ym]);
+    });
+
     return { labels, data };
 }
 
@@ -93,8 +118,14 @@ export function renderCharts(transactions, isDarkTheme) {
     const textColor = isDarkTheme ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
     const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
     
-    const monthlyData = processMonthlyExpenses(transactions);
+    // --- CORREÇÃO DE ESCOPO DOS DADOS ---
+    // 1. O gráfico de barras (Evolução) DEVE olhar todo o histórico (window.allTransactions)
+    const allTx = window.allTransactions || transactions || [];
+    const monthlyData = processMonthlyExpenses(allTx);
+    
+    // 2. O gráfico de rosca (Categorias) DEVE olhar apenas o mês que você está visualizando na tela
     const categoryData = processCategoryExpenses(transactions);
+    // ------------------------------------
     
     // 1. Gráfico de Evolução de Despesas Mensais (Barras com Gradiente)
     const ctxMonthly = document.getElementById('monthlyExpensesChart');
@@ -169,7 +200,6 @@ export function renderCharts(transactions, isDarkTheme) {
         }
 
         if (categoryData.data.length === 0) {
-            // Se não houver despesas, mostra gráfico com estado vazio
             categoryChartInstance = new Chart(ctxCategory, {
                 type: 'doughnut',
                 data: {
