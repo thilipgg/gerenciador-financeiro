@@ -725,6 +725,12 @@ header {
 .note-textarea {
     min-height: 160px;
     resize: vertical;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    transition: var(--transition);
 }
 
 .notes-actions {
@@ -809,11 +815,9 @@ header {
 }
 
 .search-input {
-    padding-left: 42px;
     border-radius: var(--radius-sm);
-    width: 350px;
     width: 100%;
-    padding: 12px 0px 12px 40px !important;
+    padding: 12px 12px 12px 30px !important;
     background-color: var(--bg-input) !important;
     color: var(--text-main) !important;
 }
@@ -1038,8 +1042,8 @@ table td {
 
 .search-input-wrapper i {
     position: absolute;
-    left: 14px;
-    top: 50%;
+    left: 10px;
+    top: 23px;
     transform: translateY(-50%);
     color: var(--text-muted);
     position: absolute;
