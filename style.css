@@ -806,13 +806,12 @@ header {
     align-items: center;
     gap: 5px;
     min-width: 0;
-    border: red 1px solid;
 }
 
 .search-input {
     padding-left: 42px;
     border-radius: var(--radius-sm);
-    /* width: 350px; */
+    width: 350px;
     width: 100%;
     padding: 12px 0px 12px 40px !important;
     background-color: var(--bg-input) !important;

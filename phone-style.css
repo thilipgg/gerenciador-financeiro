@@ -203,16 +203,20 @@
     }
 
     #sort-by-mobile {
-        width: 143px;
+        width: 100%
     }
 
     .date-filter-wrapper {
         width: 160px;
     }
 
-    #transacao-filter {
+    .filter-select {
         width: 100%;
         text-align: center;
+    }
+
+    .btn-primary {
+        /* margin-left: 20px; */
     }
 
 }
