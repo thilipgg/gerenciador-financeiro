@@ -6,7 +6,7 @@ import {
     removeNote, 
     loginComEmail, 
     logout, 
-    supabase 
+    supabase,
 } from './db.js';
 
 import { 
@@ -22,7 +22,7 @@ import {
     updateCategoryDropdown,
     setSort,
     changeSelectedMonth, 
-    updateMonthDisplay   
+    updateMonthDisplay,   
 } from './ui.js';
 
 // Adiciona os ouvintes de evento assim que a página carregar
@@ -91,6 +91,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// --- LÓGICA DO SELETOR DE MÊS (VISÃO GERAL) ---
+    updateMonthDisplay();
+
+    document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+        changeSelectedMonth(-1);
+    });
+
+    document.getElementById('btn-next-month')?.addEventListener('click', () => {
+        changeSelectedMonth(1);
+    });
+
+    // --- NOVA LÓGICA DO SELETOR DE MÊS (LANÇAMENTOS) ---
+    document.getElementById('btn-prev-month-list')?.addEventListener('click', () => {
+        changeSelectedMonth(-1);
+    });
+
+    document.getElementById('btn-next-month-list')?.addEventListener('click', () => {
+        changeSelectedMonth(1);
+    });
 
 // Garante que o display visual do mês se atualize quando novos dados forem salvos ou excluídos
 window.addEventListener('transactions-updated', () => {

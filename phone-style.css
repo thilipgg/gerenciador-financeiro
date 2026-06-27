@@ -1,0 +1,213 @@
+@media (max-width: 600px) {
+
+    .section-header {
+        display: none;
+    }
+
+    .dashboard-shell {
+        display: block
+    }
+
+    .mobile-sort-select {
+        display: flex !important;
+    }
+
+    th,
+    td {
+        padding: 12px 8px !important;
+        /* Reduzindo drasticamente o padding */
+        font-size: 12px;
+        /* Texto um pouco menor para caber mais */
+    }
+
+    .table-responsive {
+        display: none;
+    }
+
+    .mobile-transactions-list {
+        display: flex !important;
+    }
+
+    /* 2. Compactação dos Cards de Resumo */
+    .summary-container {
+        grid-template-columns: 1fr;
+        /* Empilha os cards um sobre o outro */
+        gap: 12px;
+    }
+
+    .widget-card {
+        padding: 16px;
+        /* Menos padding interno nos cards */
+    }
+
+    .widget-value {
+        font-size: 22px;
+        /* Fonte menor para evitar quebra de linha no valor */
+    }
+
+    .widget-card.glass {
+        flex-direction: row !important;
+        padding: 10px 16px !important;
+        gap: 12px !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+
+    .widget-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 18px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .widget-info {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        font-size: 14px !important;
+    }
+
+    /* 3. Ajuste do Modal para ocupar a tela toda com conforto */
+    .modal-container {
+        width: 95%;
+        margin: 0 auto;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    /* Make toolbar compact and full-width */
+    .transactions-toolbar {
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-filter-box {
+        flex: 1 1 100%;
+    }
+
+    .dashboard-sidebar {
+        display: none;
+        border-radius: 20px;
+        /* Para manter o arredondamento */
+    }
+
+    header {
+        padding: 12px;
+    }
+
+    #dashboard-screen {
+        padding-bottom: 96px;
+    }
+
+    .dashboard-main {
+        width: 100%;
+        padding: 0 8px;
+    }
+
+    /* Ajustes do header e perfil no mobile */
+    header.glass {
+        width: 100% !important;
+        max-width: 355px !important;
+        margin: 0 0 16px 0 !important;
+        padding: 10px 16px !important;
+        align-items: flex-start !important;
+    }
+
+    .user-profile {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+
+    .user-info {
+        display: none !important;
+    }
+
+    #user-avatar {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    section.summary-container {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 370px !important;
+        margin: 0 !important;
+        padding: 0 0px !important;
+        gap: 10px !important;
+    }
+
+    section.charts-grid {
+        width: 100% !important;
+        max-width: 355px !important;
+        margin: 16px 0 0 0 !important;
+        padding: 0 0px !important;
+    }
+
+    .notes-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .chart-card.glass {
+        padding: 16px !important;
+        max-width: 370px !important;
+    }
+
+    .mobile-tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        gap: 8px;
+        overflow: hidden;
+        padding: 10px 12px;
+        border-radius: 0;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.08);
+        margin: 0;
+    }
+
+    .mobile-tab-bar .sidebar-tab {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 8px;
+        font-size: 12px;
+        justify-content: center;
+        gap: 6px;
+        white-space: normal;
+    }
+
+    .mobile-tab-bar .sidebar-tab span {
+        display: block;
+        font-size: 11px;
+        line-height: 1.1;
+        text-transform: uppercase;
+    }
+
+    .mobile-tab-bar .sidebar-tab span {
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .search-input {
+        width: 84vw;
+    }
+
+    #sort-by-mobile {
+        width: 143px;
+    }
+
+    .date-filter-wrapper {
+        width: 150px;
+    }
+
+}

@@ -13,6 +13,7 @@
 
     <!-- Estilos Customizados -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="phone-style.css">
 
     <!-- Bibliotecas Necessárias via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -272,9 +273,19 @@
 
                     <section id="tab-transactions" class="tab-page">
 
-                        
-                        <div class="section-header">
+                        <div class="month-selector-container glass animate-fade"
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin-bottom: 20px; border-radius: 12px;">
+                            <button type="button" id="btn-prev-month-list" class="btn-secondary" title="Mês Anterior">
+                                <i class="ri-arrow-left-s-line"></i>
+                            </button>
+                            <h3 id="current-month-display-list"
+                                style="margin: 0; min-width: 160px; text-align: center;">Junho de 2026</h3>
+                            <button type="button" id="btn-next-month-list" class="btn-secondary" title="Próximo Mês">
+                                <i class="ri-arrow-right-s-line"></i>
+                            </button>
+                        </div>
 
+                        <div class="section-header">
                             <div id="info-header">
                                 <h3>Lançamentos</h3>
                                 <p class="text-muted">Buscar, filtrar e gerenciar todas as transações cadastradas.</p>
@@ -284,7 +295,9 @@
 
                         <section class="transactions-section animate-fade">
                             <div class="transactions-toolbar">
+
                                 <div class="search-filter-box">
+
                                     <div class="search-input-wrapper">
                                         <i class="ri-search-line"></i>
                                         <input id="search-input" class="search-input" type="text"
@@ -305,25 +318,28 @@
 
                                     <select id="sort-by-mobile" class="filter-select mobile-sort-select"
                                         style="display: none;">
-                                        <option value="date">Ordenar por Data</option>
-                                        <option value="due_date">Ordenar por Vencimento</option>
-                                        <option value="amount">Ordenar por Valor</option>
-                                        <option value="description">Ordenar por Descrição</option>
+                                        <option value="date">Por Data</option>
+                                        <option value="due_date">Por Vencimento</option>
+                                        <option value="amount">Por Valor</option>
+                                        <option value="description">Por Descrição</option>
                                     </select>
 
-                                    <div class="date-filter-wrapper"
-                                        style="display:flex; gap:8px; align-items:center; margin-left:0px;">
+                                    <div id="date-filter-phone" class="date-filter-wrapper">
                                         <input type="date" id="filter-start-date" class="form-input"
                                             title="Data início do filtro" />
                                         <input type="date" id="filter-end-date" class="form-input"
                                             title="Data fim do filtro" />
                                     </div>
+
+                                    <div id="div-btn-novo-reg">
+                                    <button id="open-add-modal-btn" class="btn-primary">
+                                        <i class="ri-add-line"></i>
+                                        Nova Transação
+                                    </button>
                                 </div>
 
-                                <button id="open-add-modal-btn" class="btn-primary">
-                                    <i class="ri-add-line"></i>
-                                    Nova Transação
-                                </button>
+                                </div>
+                                
                             </div>
 
                             <div class="transactions-card glass">

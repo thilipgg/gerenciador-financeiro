@@ -600,13 +600,12 @@ export function getCurrentSelection() {
 export function changeSelectedMonth(offset) {
     currentDateSelection.setMonth(currentDateSelection.getMonth() + offset);
     updateMonthDisplay();
-    // CORREÇÃO: Força a atualização de todos os cartões e gráficos do mês selecionado
+    // Força a atualização de tabelas, gráficos e cards de forma sincronizada
     updateDashboardUI(window.allTransactions); 
 }
 
 export function updateMonthDisplay() {
-    const displayEl = document.getElementById('current-month-display');
-    if (!displayEl) return;
+    if (!currentDateSelection) currentDateSelection = new Date();
     
     const meses = [
         "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -615,5 +614,13 @@ export function updateMonthDisplay() {
     
     const mesNome = meses[currentDateSelection.getMonth()];
     const ano = currentDateSelection.getFullYear();
-    displayEl.textContent = `${mesNome} de ${ano}`;
+    const textoFinal = `${mesNome} de ${ano}`;
+    
+    // Atualiza o display da aba "Visão Geral"
+    const displayOverview = document.getElementById('current-month-display');
+    if (displayOverview) displayOverview.textContent = textoFinal;
+    
+    // Atualiza o display da aba "Lançamentos"
+    const displayList = document.getElementById('current-month-display-list');
+    if (displayList) displayList.textContent = textoFinal;
 }
