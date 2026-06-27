@@ -108,3 +108,28 @@ export async function updateTransaction(id, updates) {
     if (error) throw error;
     return data;
 }
+
+export async function replicarTransacoesParaProximoMes(transacoes) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const payloads = transacoes.map(t => ({
+        user_id: user.id,
+        description: t.description,
+        amount: t.amount,
+        category: t.category,
+        type: t.type || 'expense',
+        paid_status: 'pending', 
+        due_date: t.due_date,
+        created_at: t.created_at, // <-- Diz para o Supabase gravar a data que calculamos acima
+        date: t.date             // <-- Garante se a coluna da tabela se chamar 'date'
+    }));
+
+    const { data, error } = await supabase
+        .from('transactions')
+        .insert(payloads)
+        .select();
+
+    if (error) throw error;
+    return data;
+}

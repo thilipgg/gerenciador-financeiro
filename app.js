@@ -1,18 +1,19 @@
-import { 
-    fetchTransactions, 
-    insertTransaction, 
-    fetchNotes, 
-    insertNote, 
-    removeNote, 
-    loginComEmail, 
-    logout, 
+import {
+    fetchTransactions,
+    insertTransaction,
+    fetchNotes,
+    insertNote,
+    removeNote,
+    loginComEmail,
+    logout,
     supabase,
+    replicarTransacoesParaProximoMes,
 } from './db.js';
 
-import { 
-    showLoginScreen, 
-    showDashboardScreen, 
-    updateDashboardUI, 
+import {
+    showLoginScreen,
+    showDashboardScreen,
+    updateDashboardUI,
     showToast,
     initTheme,
     toggleTheme,
@@ -21,8 +22,8 @@ import {
     filterAndRenderTransactions,
     updateCategoryDropdown,
     setSort,
-    changeSelectedMonth, 
-    updateMonthDisplay,   
+    changeSelectedMonth,
+    updateMonthDisplay,
 } from './ui.js';
 
 // Adiciona os ouvintes de evento assim que a página carregar
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener único e centralizado para o Formulário de Login
     loginForm?.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         const email = document.getElementById('user-email')?.value.trim();
         const password = document.getElementById('user-pass')?.value;
 
@@ -52,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listener para o botão Visitante (Modo Demo)
     btnVisitante?.addEventListener('click', () => {
         showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
-        updateDashboardUI([]); 
+        updateDashboardUI([]);
     });
 
     // --- NOVA LÓGICA DO SELETOR DE MÊS ---
@@ -90,27 +91,129 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Ouvinte para replicar lançamentos de forma blindada
+    const btnReplicar = document.getElementById('btn-copy-next-month');
+    
+    // Removemos qualquer clone ou clique fantasma anterior limpando o elemento se necessário, 
+    // ou apenas tratando diretamente com e.stopImmediatePropagation()
+    btnReplicar?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // Evita que o evento rode 2 vezes no mesmo clique!
+
+        const { getCurrentSelection, updateDashboardUI, showToast } = await import('./ui.js');
+        const { fetchTransactions, replicarTransacoesParaProximoMes } = await import('./db.js');
+        
+        // 1. Pegamos a seleção da aba VISUAL da tela (Ex: Junho retorna month: 5)
+        const { month, year } = getCurrentSelection(); 
+
+        if (!window.allTransactions || window.allTransactions.length === 0) {
+            showToast("Nenhum lançamento carregado para copiar.", "error");
+            return;
+        }
+
+        // 2. Filtramos apenas o que pertence estritamente a este mês/ano que você está vendo
+        const transacoesDoMes = window.allTransactions.filter(t => {
+            if (!t.due_date) return false;
+            const [y, m] = t.due_date.split('-');
+            return parseInt(m, 10) - 1 === month && parseInt(y, 10) === year;
+        });
+
+        if (transacoesDoMes.length === 0) {
+            showToast("Não há lançamentos nesta aba para replicar.", "error");
+            return;
+        }
+
+        // 3. Calculamos rigidamente o próximo mês humano (1 a 12)
+        // Se a aba é Junho (month = 5), o próximo mês deve ser Julho (mês 7 no formato humano: "07")
+        let proximoMesHumano = month + 2; 
+        let anoAlvo = year;
+
+        if (proximoMesHumano > 12) {
+            proximoMesHumano = 1; // Janeiro
+            anoAlvo += 1;
+        }
+
+        const nomesMeses = [
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ];
+
+        // Mês alvo em texto para a mensagem
+        const mesAlvoNome = nomesMeses[proximoMesHumano - 1];
+
+        const confirmacao = confirm(`Deseja clonar os ${transacoesDoMes.length} lançamentos de ${nomesMeses[month]} diretamente para ${mesAlvoNome} de ${anoAlvo}?`);
+        if (!confirmacao) return;
+
+        // 4. Forçamos a string de texto pura da data sem deixar brecha para o fuso horário
+        // 4. Forçamos as strings de texto puras para o vencimento E para a data de lançamento
+        const transacoesReplicadas = transacoesDoMes.map(t => {
+            // Descobre o dia original da transação
+            const parts = t.due_date.split('-');
+            const diaOriginal = parts[2] ? parts[2].padStart(2, '0') : "10"; 
+
+            const mesString = String(proximoMesHumano).padStart(2, '0');
+            const anoString = String(anoAlvo);
+            
+            // Resultado montado de forma estática: "2026-07-25"
+            const novaDataFinal = `${anoString}-${mesString}-${diaOriginal}`;
+
+            return {
+                description: t.description,
+                amount: t.amount,
+                category: t.category,
+                type: t.type || 'expense',
+                paid_status: 'pending', // Sempre entra como pendente
+                due_date: novaDataFinal, // Coluna de Vencimento
+                
+                // AJUSTE AQUI: Força a coluna de "Data" (created_at ou o campo equivalente) a nascer no mês correto
+                created_at: `${novaDataFinal}T12:00:00.000Z`, 
+                date: novaDataFinal // Enviamos também como 'date' caso seu ui.js use esse campo específico
+            };
+        });
+
+        try {
+            btnReplicar.disabled = true;
+            btnReplicar.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> Replicando...`;
+
+            // Envia o lote estático e corrigido
+            await replicarTransacoesParaProximoMes(transacoesReplicadas);
+
+            showToast(`Sucesso! Lançamentos replicados em ${mesAlvoNome}.`, "success");
+
+            // Força a recarga completa dos dados do banco e redesenha a tela
+            window.allTransactions = await fetchTransactions();
+            updateDashboardUI(window.allTransactions);
+
+        } catch (err) {
+            console.error(err);
+            showToast("Erro ao replicar transações.", "error");
+        } finally {
+            btnReplicar.disabled = false;
+            btnReplicar.innerHTML = `<i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês`;
+        }
+    });
 });
 
 // --- LÓGICA DO SELETOR DE MÊS (VISÃO GERAL) ---
-    updateMonthDisplay();
+updateMonthDisplay();
 
-    document.getElementById('btn-prev-month')?.addEventListener('click', () => {
-        changeSelectedMonth(-1);
-    });
+document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+    changeSelectedMonth(-1);
+});
 
-    document.getElementById('btn-next-month')?.addEventListener('click', () => {
-        changeSelectedMonth(1);
-    });
+document.getElementById('btn-next-month')?.addEventListener('click', () => {
+    changeSelectedMonth(1);
+});
 
-    // --- NOVA LÓGICA DO SELETOR DE MÊS (LANÇAMENTOS) ---
-    document.getElementById('btn-prev-month-list')?.addEventListener('click', () => {
-        changeSelectedMonth(-1);
-    });
+// --- NOVA LÓGICA DO SELETOR DE MÊS (LANÇAMENTOS) ---
+document.getElementById('btn-prev-month-list')?.addEventListener('click', () => {
+    changeSelectedMonth(-1);
+});
 
-    document.getElementById('btn-next-month-list')?.addEventListener('click', () => {
-        changeSelectedMonth(1);
-    });
+document.getElementById('btn-next-month-list')?.addEventListener('click', () => {
+    changeSelectedMonth(1);
+});
 
 // Garante que o display visual do mês se atualize quando novos dados forem salvos ou excluídos
 window.addEventListener('transactions-updated', () => {
@@ -233,7 +336,7 @@ btnIncome?.addEventListener('click', () => {
 document.getElementById('trans-category')?.addEventListener('change', (e) => {
     const customInput = document.getElementById('trans-custom-category');
     if (!customInput) return;
-    
+
     if (e.target.value === 'Outros') {
         customInput.style.display = 'block';
         customInput.required = true;
@@ -282,7 +385,7 @@ document.getElementById('transaction-form')?.addEventListener('submit', async (e
             await insertTransaction(transactionData);
             showToast("Lançamento realizado!", "success");
         }
-        
+
         closeModal();
         await loadDashboardData();
     } catch (err) {

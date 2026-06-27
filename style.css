@@ -807,11 +807,9 @@ header {
 
 .search-filter-box {
     display: flex;
-    flex: 1;
+    /* flex: 1; */
     flex-wrap: wrap;
     align-items: center;
-    gap: 5px;
-    min-width: 0;
 }
 
 .search-input {

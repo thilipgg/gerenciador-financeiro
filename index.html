@@ -5,17 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças Premium - Seu Painel de Controle Financeiro</title>
-    <meta name="description"
-        content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
+    <meta name="description" content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
 
-    <!-- Estilos de Ícones Premium (Remix Icon) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanças Premium">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png">
+
+    <link rel="manifest" href="manifest.json">
+
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- Estilos Customizados -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="phone-style.css">
 
-    <!-- Bibliotecas Necessárias via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -333,12 +339,18 @@
                                             title="Data fim do filtro" />
                                     </div>
 
-                                    <div id="div-btn-novo-reg">
+                                    <div id="div-btn-novo-reg" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <button id="btn-copy-next-month" class="btn-secondary" type="button" title="Espelhar lançamentos deste mês no próximo mês">
+                                            <i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês
+                                        </button>
+                                        
                                         <button id="open-add-modal-btn" class="btn-primary">
                                             <i class="ri-add-line"></i>
                                             Nova Transação
                                         </button>
                                     </div>
+
+                                    
 
                                 </div>
 

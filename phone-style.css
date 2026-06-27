@@ -218,12 +218,24 @@
     .filter-select {
         width: 100%;
         text-align: center;
+    } 
+
+    .actions-bar {
+        display: flex;
+        flex-direction: column; /* Faz os botões empilharem no celular */
+        gap: 8px;
+        width: 100%;
+    }
+    .actions-bar button {
+        width: 100%; /* Botões ocupam largura total no celular */
     }
 
-    .btn-primary {
-        /* margin-left: 20px; */
+    #filter-end-date {
+        width: 30vw;
     }
 
-    
+    #filter-start-date {
+        width: 30vw;
+    }
 
 }
