@@ -66,17 +66,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDashboardUI([]);
     });
 
-    // --- NOVA LÓGICA DO SELETOR DE MÊS ---
+    // --- LÓGICA CENTRALIZADA DOS SELETORES DE MÊS ---
     // Inicializa o texto da barra de meses (Ex: "Junho de 2026")
     updateMonthDisplay();
 
-    // Listener para voltar o mês
+    // Listeners da aba Visão Geral
     document.getElementById('btn-prev-month')?.addEventListener('click', () => {
         changeSelectedMonth(-1);
     });
 
-    // Listener para avançar o mês
     document.getElementById('btn-next-month')?.addEventListener('click', () => {
+        changeSelectedMonth(1);
+    });
+
+    // CORREÇÃO: Listeners da aba Lançamentos agora protegidos dentro do DOMContentLoaded
+    document.getElementById('btn-prev-month-list')?.addEventListener('click', () => {
+        changeSelectedMonth(-1);
+    });
+
+    document.getElementById('btn-next-month-list')?.addEventListener('click', () => {
         changeSelectedMonth(1);
     });
     // -------------------------------------
@@ -105,8 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ouvinte para replicar lançamentos de forma blindada
     const btnReplicar = document.getElementById('btn-copy-next-month');
     
-    // Removemos qualquer clone ou clique fantasma anterior limpando o elemento se necessário, 
-    // ou apenas tratando diretamente com e.stopImmediatePropagation()
     btnReplicar?.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopImmediatePropagation(); // Evita que o evento rode 2 vezes no mesmo clique!
@@ -135,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 3. Calculamos rigidamente o próximo mês humano (1 a 12)
-        // Se a aba é Junho (month = 5), o próximo mês deve ser Julho (mês 7 no formato humano: "07")
         let proximoMesHumano = month + 2; 
         let anoAlvo = year;
 
@@ -155,17 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmacao = confirm(`Deseja clonar os ${transacoesDoMes.length} lançamentos de ${nomesMeses[month]} diretamente para ${mesAlvoNome} de ${anoAlvo}?`);
         if (!confirmacao) return;
 
-        // 4. Forçamos a string de texto pura da data sem deixar brecha para o fuso horário
         // 4. Forçamos as strings de texto puras para o vencimento E para a data de lançamento
         const transacoesReplicadas = transacoesDoMes.map(t => {
-            // Descobre o dia original da transação
             const parts = t.due_date.split('-');
             const diaOriginal = parts[2] ? parts[2].padStart(2, '0') : "10"; 
 
             const mesString = String(proximoMesHumano).padStart(2, '0');
             const anoString = String(anoAlvo);
             
-            // Resultado montado de forma estática: "2026-07-25"
             const novaDataFinal = `${anoString}-${mesString}-${diaOriginal}`;
 
             return {
@@ -175,10 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: t.type || 'expense',
                 paid_status: 'pending', // Sempre entra como pendente
                 due_date: novaDataFinal, // Coluna de Vencimento
-                
-                // AJUSTE AQUI: Força a coluna de "Data" (created_at ou o campo equivalente) a nascer no mês correto
                 created_at: `${novaDataFinal}T12:00:00.000Z`, 
-                date: novaDataFinal // Enviamos também como 'date' caso seu ui.js use esse campo específico
+                date: novaDataFinal 
             };
         });
 
@@ -186,12 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btnReplicar.disabled = true;
             btnReplicar.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> Replicando...`;
 
-            // Envia o lote estático e corrigido
             await replicarTransacoesParaProximoMes(transacoesReplicadas);
 
             showToast(`Sucesso! Lançamentos replicados em ${mesAlvoNome}.`, "success");
 
-            // Força a recarga completa dos dados do banco e redesenha a tela
             window.allTransactions = await fetchTransactions();
             updateDashboardUI(window.allTransactions);
 
@@ -203,26 +201,153 @@ document.addEventListener('DOMContentLoaded', () => {
             btnReplicar.innerHTML = `<i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês`;
         }
     });
-});
 
-// --- LÓGICA DO SELETOR DE MÊS (VISÃO GERAL) ---
-updateMonthDisplay();
+    // --- CONFIGURAÇÃO DA INTERFACE (MANDATÓRIO DENTRO DO DOM) ---
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        await logout();
+    });
 
-document.getElementById('btn-prev-month')?.addEventListener('click', () => {
-    changeSelectedMonth(-1);
-});
+    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
+    document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
 
-document.getElementById('btn-next-month')?.addEventListener('click', () => {
-    changeSelectedMonth(1);
-});
+    const tabButtons = document.querySelectorAll('.sidebar-tab');
+    tabButtons.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const selectedTab = tab.dataset.tab;
+            if (selectedTab) {
+                activateDashboardTab(selectedTab);
+            }
+        });
+    });
 
-// --- NOVA LÓGICA DO SELETOR DE MÊS (LANÇAMENTOS) ---
-document.getElementById('btn-prev-month-list')?.addEventListener('click', () => {
-    changeSelectedMonth(-1);
-});
+    document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
+    document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
+    document.getElementById('status-filter')?.addEventListener('change', filterAndRenderTransactions);
+    document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => {
+        setSort(e.target.value);
+    });
 
-document.getElementById('btn-next-month-list')?.addEventListener('click', () => {
-    changeSelectedMonth(1);
+    // Bloco de Notas
+    document.getElementById('note-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contentEl = document.getElementById('note-content');
+        const content = contentEl?.value.trim();
+        if (!content) {
+            showToast('Digite uma anotação antes de salvar.', 'error');
+            return;
+        }
+
+        try {
+            await insertNote({ content });
+            if (contentEl) contentEl.value = '';
+            showToast('Anotação salva!', 'success');
+            await loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao salvar nota: ' + err.message, 'error');
+        }
+    });
+
+    document.getElementById('notes-list')?.addEventListener('click', async (event) => {
+        const deleteButton = event.target.closest('.note-delete-btn');
+        if (!deleteButton) return;
+
+        const noteId = deleteButton.dataset.id;
+        if (!noteId) return;
+
+        if (!confirm('Deseja excluir esta anotação?')) return;
+
+        try {
+            await removeNote(noteId);
+            showToast('Anotação excluída.', 'success');
+            await loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao excluir a anotação.', 'error');
+        }
+    });
+
+    // Alternância Receita/Despesa e Categorias Dinâmicas
+    const btnExpense = document.getElementById('btn-type-expense');
+    const btnIncome = document.getElementById('btn-type-income');
+    const transTypeInput = document.getElementById('trans-type');
+
+    btnExpense?.addEventListener('click', () => {
+        btnExpense.classList.add('active');
+        btnIncome.classList.remove('active');
+        if (transTypeInput) transTypeInput.value = 'expense';
+        updateCategoryDropdown('expense');
+    });
+
+    btnIncome?.addEventListener('click', () => {
+        btnIncome.classList.add('active');
+        btnExpense.classList.remove('active');
+        if (transTypeInput) transTypeInput.value = 'income';
+        updateCategoryDropdown('income');
+    });
+
+    // Mostrar/Ocultar campo de Categoria Customizada ("Outros")
+    document.getElementById('trans-category')?.addEventListener('change', (e) => {
+        const customInput = document.getElementById('trans-custom-category');
+        if (!customInput) return;
+
+        if (e.target.value === 'Outros') {
+            customInput.style.display = 'block';
+            customInput.required = true;
+        } else {
+            customInput.style.display = 'none';
+            customInput.required = false;
+            customInput.value = '';
+        }
+    });
+
+    // SUBMIT DO FORMULÁRIO (Criação ou Edição)
+    document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const editId = form.dataset.editId;
+
+        const rawAmount = document.getElementById('trans-amount').value;
+        const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, '')) || 0;
+
+        const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
+        const finalType = transTypeInput ? transTypeInput.value : fallbackType;
+
+        let finalCategory = document.getElementById('trans-category').value;
+        if (finalCategory === 'Outros') {
+            const customValue = document.getElementById('trans-custom-category').value.trim();
+            if (customValue) finalCategory = customValue;
+        }
+
+        const transactionData = {
+            description: document.getElementById('trans-desc').value,
+            amount: cleanAmount,
+            category: finalCategory,
+            date: document.getElementById('trans-date').value,
+            type: finalType,
+            paid_status: document.getElementById('trans-paid-status').value,
+            due_date: document.getElementById('trans-due-date').value || null
+        };
+
+        try {
+            if (editId) {
+                const { error } = await supabase.from('transactions').update(transactionData).eq('id', editId);
+                if (error) throw error;
+                showToast("Transação updated!", "success");
+            } else {
+                await insertTransaction(transactionData);
+                showToast("Lançamento realizado!", "success");
+            }
+
+            closeModal();
+            await loadDashboardData();
+        } catch (err) {
+            console.error(err);
+            showToast("Erro ao processar: " + err.message, "error");
+        }
+    });
 });
 
 // Garante que o display visual do mês se atualize quando novos dados forem salvos ou excluídos
@@ -230,9 +355,7 @@ window.addEventListener('transactions-updated', () => {
     updateMonthDisplay();
 });
 
-// ==========================================
-// 1. INICIALIZAÇÃO E MONITORAMENTO
-// ==========================================
+// INICIALIZAÇÃO E MONITORAMENTO
 initTheme();
 
 supabase.auth.onAuthStateChange((event, session) => {
@@ -246,9 +369,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 window.addEventListener('transactions-updated', loadDashboardData);
 
-// ==========================================
-// 2. ATUALIZAÇÃO DE AVATAR (Perfil)
-// ==========================================
+// ATUALIZAÇÃO DE AVATAR (Perfil)
 document.getElementById('user-avatar')?.addEventListener('click', async () => {
     const novaUrl = prompt("Cole aqui o link (URL) da nova imagem para o seu perfil:");
     if (novaUrl && novaUrl.startsWith('http')) {
@@ -267,28 +388,6 @@ document.getElementById('user-avatar')?.addEventListener('click', async () => {
     }
 });
 
-// ==========================================
-// 3. EVENTOS DA INTERFACE
-// ==========================================
-document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    await logout();
-});
-
-document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
-document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
-document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
-document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
-
-const tabButtons = document.querySelectorAll('.sidebar-tab');
-tabButtons.forEach(tab => {
-    tab.addEventListener('click', () => {
-        const selectedTab = tab.dataset.tab;
-        if (selectedTab) {
-            activateDashboardTab(selectedTab);
-        }
-    });
-});
-
 function activateDashboardTab(tabId) {
     document.querySelectorAll('.tab-page').forEach(page => {
         page.classList.toggle('active', page.id === `tab-${tabId}`);
@@ -305,7 +404,7 @@ function activateDashboardTab(tabId) {
 
 activateDashboardTab('overview');
 
-// Atalhos de teclado
+// Shortcuts
 window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         const modal = document.getElementById('transaction-modal');
@@ -320,134 +419,6 @@ window.addEventListener('keydown', (event) => {
         if (!document.getElementById('transaction-modal')?.classList.contains('active')) {
             openModal(false);
         }
-    }
-});
-
-// Alternância Receita/Despesa e Categorias Dinâmicas
-const btnExpense = document.getElementById('btn-type-expense');
-const btnIncome = document.getElementById('btn-type-income');
-const transTypeInput = document.getElementById('trans-type');
-
-btnExpense?.addEventListener('click', () => {
-    btnExpense.classList.add('active');
-    btnIncome.classList.remove('active');
-    if (transTypeInput) transTypeInput.value = 'expense';
-    updateCategoryDropdown('expense');
-});
-
-btnIncome?.addEventListener('click', () => {
-    btnIncome.classList.add('active');
-    btnExpense.classList.remove('active');
-    if (transTypeInput) transTypeInput.value = 'income';
-    updateCategoryDropdown('income');
-});
-
-// Mostrar/Ocultar campo de Categoria Customizada ("Outros")
-document.getElementById('trans-category')?.addEventListener('change', (e) => {
-    const customInput = document.getElementById('trans-custom-category');
-    if (!customInput) return;
-
-    if (e.target.value === 'Outros') {
-        customInput.style.display = 'block';
-        customInput.required = true;
-    } else {
-        customInput.style.display = 'none';
-        customInput.required = false;
-        customInput.value = '';
-    }
-});
-
-// SUBMIT DO FORMULÁRIO (Criação ou Edição)
-document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const editId = form.dataset.editId;
-
-    const rawAmount = document.getElementById('trans-amount').value;
-    const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, '')) || 0;
-
-    const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active') ? 'income' : 'expense';
-    const finalType = transTypeInput ? transTypeInput.value : fallbackType;
-
-    let finalCategory = document.getElementById('trans-category').value;
-    if (finalCategory === 'Outros') {
-        const customValue = document.getElementById('trans-custom-category').value.trim();
-        if (customValue) finalCategory = customValue;
-    }
-
-    const transactionData = {
-        description: document.getElementById('trans-desc').value,
-        amount: cleanAmount,
-        category: finalCategory,
-        date: document.getElementById('trans-date').value,
-        type: finalType,
-        paid_status: document.getElementById('trans-paid-status').value,
-        due_date: document.getElementById('trans-due-date').value || null
-    };
-
-    try {
-        if (editId) {
-            // Atualizando dados via Supabase
-            const { error } = await supabase.from('transactions').update(transactionData).eq('id', editId);
-            if (error) throw error;
-            showToast("Transação atualizada!", "success");
-        } else {
-            await insertTransaction(transactionData);
-            showToast("Lançamento realizado!", "success");
-        }
-
-        closeModal();
-        await loadDashboardData();
-    } catch (err) {
-        console.error(err);
-        showToast("Erro ao processar: " + err.message, "error");
-    }
-});
-
-document.getElementById('search-input')?.addEventListener('input', filterAndRenderTransactions);
-document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
-document.getElementById('status-filter')?.addEventListener('change', filterAndRenderTransactions);
-document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => {
-    setSort(e.target.value);
-});
-
-// Bloco de Notas
-document.getElementById('note-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const contentEl = document.getElementById('note-content');
-    const content = contentEl?.value.trim();
-    if (!content) {
-        showToast('Digite uma anotação antes de salvar.', 'error');
-        return;
-    }
-
-    try {
-        await insertNote({ content });
-        if (contentEl) contentEl.value = '';
-        showToast('Anotação salva!', 'success');
-        await loadDashboardData();
-    } catch (err) {
-        console.error(err);
-        showToast('Erro ao salvar nota: ' + err.message, 'error');
-    }
-});
-
-document.getElementById('notes-list')?.addEventListener('click', async (event) => {
-    const deleteButton = event.target.closest('.note-delete-btn');
-    if (!deleteButton) return;
-
-    const noteId = deleteButton.dataset.id;
-    if (!noteId) return;
-
-    if (!confirm('Deseja excluir esta anotação?')) return;
-
-    try {
-        await removeNote(noteId);
-        showToast('Anotação excluída.', 'success');
-        await loadDashboardData();
-    } catch (err) {
-        console.error(err);
-        showToast('Erro ao excluir a anotação.', 'error');
     }
 });
 
@@ -478,7 +449,7 @@ function renderNotes(notes) {
                 <div class="note-card-content">${sanitizeText(note.content)}</div>
                 <div class="note-card-footer">
                     <span class="note-meta">${createdAt}</span>
-                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class=\"ri-delete-bin-line\"></i> Excluir</button>
+                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class="ri-delete-bin-line"></i> Excluir</button>
                 </div>
             </div>
         `;
