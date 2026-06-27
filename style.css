@@ -803,7 +803,7 @@ header {
 
 .transactions-toolbar {
     display: flex;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     gap: 16px;
 }
 
@@ -1064,6 +1064,7 @@ table td {
         display: flex !important;
     }
 
+
     th,
     td {
         padding: 12px 8px !important;
@@ -1272,8 +1273,8 @@ table td {
 
 .search-input-wrapper {
     position: relative;
-    flex: 1 1 280px;
-    min-width: 350px;
+    /* flex: 1 1 280px; */
+    max-width: 750px;
 }
 
 .search-input-wrapper i {
@@ -1293,8 +1294,8 @@ table td {
 
 .filter-select,
 .date-filter-wrapper {
-    flex: 0 1 160px;
-    min-width: 355px;
+    /* flex: 0 1 200px; */
+    max-width: 355px;
 }
 
 .date-filter-wrapper {
