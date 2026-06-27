@@ -85,10 +85,6 @@
         gap: 8px;
     }
 
-    .search-filter-box {
-        flex: 1 1 100%;
-    }
-
     .dashboard-sidebar {
         display: none;
         border-radius: 20px;
@@ -212,7 +208,18 @@
 
     .date-filter-wrapper {
         /* width: 100%px; */
-        width: 42.3vw;
+        width: 540vw;
+    
+    }
+
+    #date-filter-phone-ini {
+        width: 49%;
+        /* border:red 1px solid; */
+    }
+
+    #date-filter-phone-fim {
+        width: 49%;
+        /* border: red 1px solid; */
     }
 
     .filter-select {
@@ -230,12 +237,23 @@
         width: 100%; /* Botões ocupam largura total no celular */
     }
 
-    #filter-end-date {
-        width: 30vw;
-    }
-
     #filter-start-date {
-        width: 30vw;
+        width: 42vw;
+        /* border: rgb(9, 255, 0) 1px solid; */
     }
 
+    #filter-end-date {
+        width: 42vw;
+        /* border: rgb(0, 17, 255) 1px solid; */
+    }
+
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #open-add-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
