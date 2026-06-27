@@ -558,8 +558,8 @@ function setupDeleteListeners() {
         // Adiciona o listener único de clique no botão limpo
         novoBotao.addEventListener('click', async (e) => {
             const id = e.currentTarget.dataset.id;
-            if (id && confirm("Deseja excluir essa transação?")) {
-                await removeTransaction(id);
+            if (confirm("⚠️ Atenção: Você tem certeza que deseja apagar esta transação? Esta ação não poderá ser desfeita.")) {
+    await removeTransaction(id);
                 window.dispatchEvent(new Event('transactions-updated'));
             }
         });

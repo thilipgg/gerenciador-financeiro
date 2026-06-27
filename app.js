@@ -26,6 +26,16 @@ import {
     updateMonthDisplay,
 } from './ui.js';
 
+
+// Registra o Service Worker para habilitar o modo Tela Cheia (PWA) no Android
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+      .catch(err => console.error('Erro ao registrar Service Worker:', err));
+  });
+}
+
 // Adiciona os ouvintes de evento assim que a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
