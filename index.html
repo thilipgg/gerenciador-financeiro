@@ -304,7 +304,7 @@
                                             placeholder="Buscar por descrição ou categoria...">
                                     </div>
 
-                                    <select id="filter-select" class="filter-select">
+                                    <select id="transacao-filter" class="filter-select">
                                         <option value="all">Todas as Transações</option>
                                         <option value="income">Entradas (Receitas)</option>
                                         <option value="expense">Saídas (Despesas)</option>
@@ -324,22 +324,24 @@
                                         <option value="description">Por Descrição</option>
                                     </select>
 
-                                    <div id="date-filter-phone" class="date-filter-wrapper">
+                                    <div id="date-filter-phone-ini" class="date-filter-wrapper">
                                         <input type="date" id="filter-start-date" class="form-input"
                                             title="Data início do filtro" />
+                                    </div>
+                                    <div id="date-filter-phone-fim" class="date-filter-wrapper">
                                         <input type="date" id="filter-end-date" class="form-input"
                                             title="Data fim do filtro" />
                                     </div>
 
                                     <div id="div-btn-novo-reg">
-                                    <button id="open-add-modal-btn" class="btn-primary">
-                                        <i class="ri-add-line"></i>
-                                        Nova Transação
-                                    </button>
-                                </div>
+                                        <button id="open-add-modal-btn" class="btn-primary">
+                                            <i class="ri-add-line"></i>
+                                            Nova Transação
+                                        </button>
+                                    </div>
 
                                 </div>
-                                
+
                             </div>
 
                             <div class="transactions-card glass">

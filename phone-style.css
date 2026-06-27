@@ -207,7 +207,12 @@
     }
 
     .date-filter-wrapper {
-        width: 150px;
+        width: 160px;
+    }
+
+    #transacao-filter {
+        width: 100%;
+        text-align: center;
     }
 
 }

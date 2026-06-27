@@ -218,9 +218,13 @@ select {
     min-width: 150px;
 }
 
-#filter-select {
-    flex: 0 1 120px;
-    min-width: 190px;
+
+
+.filter-select {
+    padding: 12px 5px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
 }
 
 .form-input:focus {
@@ -800,37 +804,22 @@ header {
     flex: 1;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: 5px;
     min-width: 0;
-}
-
-.search-input-wrapper {
-    position: relative;
-    flex: 1;
-}
-
-.search-input-wrapper i {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
+    border: red 1px solid;
 }
 
 .search-input {
     padding-left: 42px;
     border-radius: var(--radius-sm);
-    max-width: 500px;
-    ;
+    /* width: 350px; */
+    width: 100%;
+    padding: 12px 0px 12px 40px !important;
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
 }
 
-.filter-select {
-    padding: 12px 5px;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-card);
-    border: 1px solid var(--border);
-}
+
 
 .transactions-card {
     border-radius: var(--radius-md);
@@ -1048,25 +1037,15 @@ table td {
     flex-wrap: wrap;
 }
 
-.search-input-wrapper {
-    position: relative;
-    flex: 1 1 280px;
-    min-width: 350px;
-}
-
 .search-input-wrapper i {
     position: absolute;
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
-}
-
-.search-input {
-    width: 100%;
-    padding: 12px 12px 12px 42px !important;
-    background-color: var(--bg-input) !important;
-    color: var(--text-main) !important;
+    position: absolute;
+    transform: translateY(-50%);
+    color: var(--text-muted);
 }
 
 .date-filter-wrapper {
