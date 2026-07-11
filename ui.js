@@ -127,10 +127,12 @@ export function updateDashboardUI(transactions) {
     let pendingExpenses = 0;  // Contas Pendentes
     let overdueExpenses = 0;  // Contas Vencidas
 
-    const hojeStr = new Date().toISOString().split('T')[0]; // Data de hoje (AAAA-MM-DD)
+    // Data de hoje (sem hora) usada para comparar vencimentos
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     transactionsForSelectedMonth.forEach(t => {
-        const amt = parseFloat(t.amount) || 0;
+        const amt = Math.abs(parseFloat(t.amount)) || 0;
         const normalizedType = String(t.type).toLowerCase().trim();
         const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
         const status = String(t.paid_status || 'paid').toLowerCase().trim();
@@ -142,10 +144,14 @@ export function updateDashboardUI(transactions) {
             // Se for despesa e não estiver paga
             if (status === 'pending') {
                 pendingExpenses += amt;
-                
-                // Se a data de vencimento passou de hoje, é vencida
-                if (t.date && t.date < hojeStr) {
-                    overdueExpenses += amt;
+
+                // Verifica o due_date (data de vencimento). Se for anterior a hoje, está vencida.
+                if (t.due_date) {
+                    const dueDate = new Date(t.due_date + 'T00:00:00');
+                    dueDate.setHours(0, 0, 0, 0);
+                    if (dueDate < today) {
+                        overdueExpenses += amt;
+                    }
                 }
             }
         }
