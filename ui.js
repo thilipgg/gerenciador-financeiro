@@ -127,12 +127,10 @@ export function updateDashboardUI(transactions) {
     let pendingExpenses = 0;  // Contas Pendentes
     let overdueExpenses = 0;  // Contas Vencidas
 
-    // Data de hoje (sem hora) usada para comparar vencimentos
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const hojeStr = new Date().toISOString().split('T')[0]; // Data de hoje (AAAA-MM-DD)
 
     transactionsForSelectedMonth.forEach(t => {
-        const amt = Math.abs(parseFloat(t.amount)) || 0;
+        const amt = parseFloat(t.amount) || 0;
         const normalizedType = String(t.type).toLowerCase().trim();
         const isIncome = (normalizedType === 'income' || normalizedType === 'receita');
         const status = String(t.paid_status || 'paid').toLowerCase().trim();
@@ -144,14 +142,10 @@ export function updateDashboardUI(transactions) {
             // Se for despesa e não estiver paga
             if (status === 'pending') {
                 pendingExpenses += amt;
-
-                // Verifica o due_date (data de vencimento). Se for anterior a hoje, está vencida.
-                if (t.due_date) {
-                    const dueDate = new Date(t.due_date + 'T00:00:00');
-                    dueDate.setHours(0, 0, 0, 0);
-                    if (dueDate < today) {
-                        overdueExpenses += amt;
-                    }
+                
+                // Se a data de vencimento passou de hoje, é vencida
+                if (t.date && t.date < hojeStr) {
+                    overdueExpenses += amt;
                 }
             }
         }
@@ -166,7 +160,7 @@ export function updateDashboardUI(transactions) {
     // Card: Saldo Geral
     const balEl = document.getElementById('val-balance');
     if (balEl) {
-        balEl.textContent = formatCurrency(balance);
+        balEl.textContent = formatSignedCurrency(balance);
         balEl.className = balance >= 0 ? 'widget-value text-success' : 'widget-value text-danger';
     }
 
@@ -189,7 +183,7 @@ export function updateDashboardUI(transactions) {
     // Card: Saldo Disponível
     const availEl = document.getElementById('val-available');
     if (availEl) {
-        availEl.textContent = formatCurrency(availableBalance);
+        availEl.textContent = formatSignedCurrency(availableBalance);
         availEl.className = availableBalance >= 0 ? 'widget-value text-success' : 'widget-value text-danger';
     }
 }
@@ -234,12 +228,12 @@ function calculateSummary(transactions) {
     const overdueEl = document.getElementById('val-overdue');
     const availableEl = document.getElementById('val-available');
 
-    if (balanceEl) balanceEl.textContent = formatCurrency(balance);
+    if (balanceEl) balanceEl.textContent = formatSignedCurrency(balance);
     if (incomeEl) incomeEl.textContent = formatCurrency(income);
     if (expenseEl) expenseEl.textContent = formatCurrency(expense);
     if (pendingEl) pendingEl.textContent = formatCurrency(pendingExpense);
     if (overdueEl) overdueEl.textContent = formatCurrency(overdueExpense);
-    if (availableEl) availableEl.textContent = formatCurrency(available);
+    if (availableEl) availableEl.textContent = formatSignedCurrency(available);
 }
 
 export function filterAndRenderTransactions() {
@@ -580,6 +574,13 @@ export function showToast(message, type = "success") {
     toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
+}
+
+function formatSignedCurrency(v) {
+    return Number(v || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
 }
 
 function formatCurrency(v) { 

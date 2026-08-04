@@ -386,52 +386,137 @@
                     <section id="tab-monthly" class="tab-page">
                         <div class="section-header">
                             <div>
-                                <h3>Controle Mensal</h3>
-                                <p class="text-muted">Painel focado em metas, previsões e gestão do mês atual.</p>
+                                <h3>Carteira de FIIs</h3>
+                                <p class="text-muted">Acompanhe seus fundos imobiliários, dividendos e distribuição de carteira.</p>
                             </div>
                         </div>
 
-                        <section class="monthly-panel animate-fade">
-                            <div class="section-grid">
+                        <div class="fii-portfolio animate-fade">
+                            <div class="fii-summary-grid">
                                 <div class="widget-card widget-balance glass">
                                     <div class="widget-icon">
-                                        <i class="ri-calendar-check-line"></i>
+                                        <i class="ri-building-4-line"></i>
                                     </div>
                                     <div class="widget-info">
-                                        <span class="widget-label">Mês Atual</span>
-                                        <span class="widget-value">Jun 2026</span>
+                                        <span class="widget-label">Patrimônio Total</span>
+                                        <span id="fii-total-value" class="widget-value">R$ 0,00</span>
                                     </div>
                                 </div>
+
                                 <div class="widget-card widget-income glass">
                                     <div class="widget-icon">
                                         <i class="ri-money-dollar-circle-line"></i>
                                     </div>
                                     <div class="widget-info">
-                                        <span class="widget-label">Meta de Economia</span>
-                                        <span class="widget-value">R$ 2.500,00</span>
+                                        <span class="widget-label">Dividendos Mensais</span>
+                                        <span id="fii-monthly-dividends" class="widget-value">R$ 0,00</span>
                                     </div>
                                 </div>
-                                <div class="widget-card widget-warning glass">
+
+                                <div class="widget-card widget-expense glass">
                                     <div class="widget-icon">
-                                        <i class="ri-file-list-3-line"></i>
+                                        <i class="ri-trending-up-line"></i>
                                     </div>
                                     <div class="widget-info">
-                                        <span class="widget-label">Pagamentos Agendados</span>
-                                        <span class="widget-value">3 itens</span>
+                                        <span class="widget-label">Rendimento Médio</span>
+                                        <span id="fii-average-yield" class="widget-value">0,00%</span>
+                                    </div>
+                                </div>
+
+                                <div class="widget-card widget-warning glass">
+                                    <div class="widget-icon">
+                                        <i class="ri-list-check-2"></i>
+                                    </div>
+                                    <div class="widget-info">
+                                        <span class="widget-label">Quantidade de FIIs</span>
+                                        <span id="fii-count" class="widget-value">0</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="chart-card glass">
-                                <div class="chart-card-header">
-                                    <h3 class="chart-card-title">Despesas por Categoria</h3>
-                                    <i class="ri-pie-chart-fill" style="color: var(--primary);"></i>
-                                </div>
-                                <div class="chart-canvas-container">
-                                    <canvas id="categoryExpensesChart"></canvas>
+                            <div class="charts-grid">
+                                <div class="chart-card glass">
+                                    <div class="chart-card-header">
+                                        <h3 class="chart-card-title">Alocação por Fundo</h3>
+                                        <i class="ri-pie-chart-line" style="color: var(--primary);"></i>
+                                    </div>
+                                    <div class="chart-canvas-container">
+                                        <canvas id="fiiAllocationChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
-                        </section>
+
+                            <section class="fii-holdings-section glass">
+                                <div class="section-header" style="margin-bottom: 18px;">
+                                    <div>
+                                        <h4>Posição de FIIs</h4>
+                                        <p class="text-muted">Cadastre seus fundos e acompanhe valores, dividendos e rendimento.</p>
+                                    </div>
+                                </div>
+
+                                <div class="fii-content-grid">
+                                    <div class="fii-holdings-card glass">
+                                        <div class="table-responsive">
+                                            <table class="fii-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fundo</th>
+                                                        <th>Quantidade</th>
+                                                        <th>Preço Médio</th>
+                                                        <th>Preço Atual</th>
+                                                        <th>Valor Total</th>
+                                                        <th>Dividendos/Mês</th>
+                                                        <th>Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="fii-holdings-tbody">
+                                                </tbody>
+                                            </table>
+                                            <div id="fii-empty-state" class="text-muted" style="padding: 20px; text-align: center; display: none;">Nenhum fundo registrado. Use o formulário ao lado para cadastrar sua carteira de FIIs.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="fii-form-card glass">
+                                        <h4>Adicionar / Atualizar FII</h4>
+                                        <form id="fii-form" autocomplete="off">
+                                            <div class="form-group">
+                                                <label for="fii-ticker" class="form-label">Cód. do Fundo</label>
+                                                <input type="text" id="fii-ticker" class="form-input" placeholder="Ex: HGLG11" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fii-name" class="form-label">Nome do Fundo</label>
+                                                <input type="text" id="fii-name" class="form-input" placeholder="Ex: Hedge Logistics" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fii-quantity" class="form-label">Quantidade de Cotas</label>
+                                                <input type="number" id="fii-quantity" class="form-input" placeholder="0" min="0" step="1" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fii-average-price" class="form-label">Preço Médio (R$)</label>
+                                                <input type="number" id="fii-average-price" class="form-input" placeholder="0.00" step="0.01" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fii-current-price" class="form-label">Preço Atual (R$)</label>
+                                                <input type="number" id="fii-current-price" class="form-input" placeholder="0.00" step="0.01" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fii-dividends" class="form-label">Dividendos Mensais (R$)</label>
+                                                <input type="number" id="fii-dividends" class="form-input" placeholder="0.00" step="0.01" required>
+                                            </div>
+
+                                            <div class="notes-actions" style="justify-content: flex-start; margin-top: 16px;">
+                                                <button type="submit" class="btn-primary">Salvar FII</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
                     </section>
                 </div>
             </div>

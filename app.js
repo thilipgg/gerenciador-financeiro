@@ -25,7 +25,14 @@ import {
     changeSelectedMonth,
     updateMonthDisplay,
 } from './ui.js';
+import {
+    renderFiiAllocationChart,
+    updateFiiAllocationChartTheme,
+} from './chart-manager.js';
 
+
+// Estado do usuário atual, usado para persistir FIIs por perfil
+let currentAppUser = null;
 
 // Registra o Service Worker para habilitar o modo Tela Cheia (PWA) no Android
 if ('serviceWorker' in navigator) {
@@ -62,8 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener para o botão Visitante (Modo Demo)
     btnVisitante?.addEventListener('click', () => {
-        showDashboardScreen({ user_metadata: { full_name: "Visitante" }, email: "demo@demo.com" }, true);
+        currentAppUser = { email: "demo@demo.com", user_metadata: { full_name: "Visitante" } };
+        showDashboardScreen(currentAppUser, true);
         updateDashboardUI([]);
+        loadFiiData();
     });
 
     // --- LÓGICA CENTRALIZADA DOS SELETORES DE MÊS ---
@@ -207,7 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
         await logout();
     });
 
-    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        toggleTheme();
+        const isDark = document.documentElement.classList.contains('dark');
+        updateFiiAllocationChartTheme(isDark);
+    });
     document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
     document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
@@ -267,6 +280,46 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
             showToast('Erro ao excluir a anotação.', 'error');
         }
+    });
+
+    const fiiForm = document.getElementById('fii-form');
+    fiiForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const ticker = normalizeFiiTicker(document.getElementById('fii-ticker')?.value);
+        const name = document.getElementById('fii-name')?.value.trim();
+        const quantity = parseInt(document.getElementById('fii-quantity')?.value, 10) || 0;
+        const averagePrice = parseFloat(document.getElementById('fii-average-price')?.value) || 0;
+        const currentPrice = parseFloat(document.getElementById('fii-current-price')?.value) || 0;
+        const dividends = parseFloat(document.getElementById('fii-dividends')?.value) || 0;
+
+        if (!ticker || !name || quantity < 0 || averagePrice < 0 || currentPrice < 0 || dividends < 0) {
+            showToast('Preencha corretamente todos os campos do FII.', 'error');
+            return;
+        }
+
+        const holdings = loadFiiHoldings(currentAppUser);
+        const existingIndex = holdings.findIndex(item => normalizeFiiTicker(item.ticker) === ticker);
+        const newHolding = {
+            ticker,
+            name,
+            quantity,
+            averagePrice,
+            currentPrice,
+            dividends
+        };
+
+        if (existingIndex >= 0) {
+            holdings[existingIndex] = newHolding;
+            showToast('FII atualizado com sucesso!', 'success');
+        } else {
+            holdings.push(newHolding);
+            showToast('FII salvo com sucesso!', 'success');
+        }
+
+        saveFiiHoldings(currentAppUser, holdings);
+        updateFiiUI(holdings);
+        resetFiiForm();
     });
 
     // Alternância Receita/Despesa e Categorias Dinâmicas
@@ -360,8 +413,10 @@ initTheme();
 
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
+        currentAppUser = session.user;
         showDashboardScreen(session.user, false);
         loadDashboardData();
+        loadFiiData();
     } else {
         showLoginScreen();
     }
@@ -454,6 +509,114 @@ function renderNotes(notes) {
             </div>
         `;
     }).join('');
+}
+
+function normalizeFiiTicker(value) {
+    return String(value || '').trim().toUpperCase();
+}
+
+function loadFiiHoldings(user) {
+    try {
+        const storageKey = user?.email ? `fii-holdings:${user.email}` : 'fii-holdings:anon';
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return [];
+        const holdings = JSON.parse(raw);
+        return Array.isArray(holdings) ? holdings : [];
+    } catch (err) {
+        console.error('Erro ao carregar holdings de FIIs:', err);
+        return [];
+    }
+}
+
+function saveFiiHoldings(user, holdings) {
+    try {
+        const storageKey = user?.email ? `fii-holdings:${user.email}` : 'fii-holdings:anon';
+        localStorage.setItem(storageKey, JSON.stringify(holdings));
+    } catch (err) {
+        console.error('Erro ao salvar holdings de FIIs:', err);
+    }
+}
+
+function formatFiiCurrency(value) {
+    return Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function updateFiiUI(holdings) {
+    const totalValue = holdings.reduce((sum, item) => sum + (Number(item.currentPrice || 0) * Number(item.quantity || 0)), 0);
+    const totalDividends = holdings.reduce((sum, item) => sum + Number(item.dividends || 0), 0);
+    const averageYield = totalValue > 0 ? (totalDividends / totalValue) * 100 : 0;
+
+    const totalValueEl = document.getElementById('fii-total-value');
+    const monthlyDividendsEl = document.getElementById('fii-monthly-dividends');
+    const averageYieldEl = document.getElementById('fii-average-yield');
+    const countEl = document.getElementById('fii-count');
+    const tbody = document.getElementById('fii-holdings-tbody');
+    const emptyState = document.getElementById('fii-empty-state');
+
+    if (totalValueEl) totalValueEl.textContent = `R$ ${formatFiiCurrency(totalValue)}`;
+    if (monthlyDividendsEl) monthlyDividendsEl.textContent = `R$ ${formatFiiCurrency(totalDividends)}`;
+    if (averageYieldEl) averageYieldEl.textContent = `${averageYield.toFixed(2)}%`;
+    if (countEl) countEl.textContent = String(holdings.length);
+
+    if (!tbody) return;
+
+    if (holdings.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        renderFiiAllocationChart([]);
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    tbody.innerHTML = holdings.map(item => {
+        const totalItem = Number(item.currentPrice || 0) * Number(item.quantity || 0);
+        return `
+            <tr class="animate-fade">
+                <td>${sanitizeText(item.name)} (${sanitizeText(item.ticker)})</td>
+                <td>${Number(item.quantity || 0).toLocaleString('pt-BR')}</td>
+                <td>R$ ${formatFiiCurrency(item.averagePrice)}</td>
+                <td>R$ ${formatFiiCurrency(item.currentPrice)}</td>
+                <td>R$ ${formatFiiCurrency(totalItem)}</td>
+                <td>R$ ${formatFiiCurrency(item.dividends)}</td>
+                <td><button type="button" class="btn-secondary btn-edit-fii" data-ticker="${sanitizeText(item.ticker)}">Editar</button></td>
+            </tr>
+        `;
+    }).join('');
+
+    setupFiiEditButtons();
+    renderFiiAllocationChart(holdings);
+}
+
+function setupFiiEditButtons() {
+    document.querySelectorAll('.btn-edit-fii').forEach(btn => {
+        btn.removeEventListener('click', handleFiiEditClick);
+        btn.addEventListener('click', handleFiiEditClick);
+    });
+}
+
+function handleFiiEditClick(event) {
+    const ticker = normalizeFiiTicker(event.currentTarget.dataset.ticker);
+    const holdings = loadFiiHoldings(currentAppUser);
+    const holding = holdings.find(item => normalizeFiiTicker(item.ticker) === ticker);
+    if (!holding) return;
+
+    document.getElementById('fii-ticker').value = holding.ticker;
+    document.getElementById('fii-name').value = holding.name;
+    document.getElementById('fii-quantity').value = holding.quantity;
+    document.getElementById('fii-average-price').value = holding.averagePrice;
+    document.getElementById('fii-current-price').value = holding.currentPrice;
+    document.getElementById('fii-dividends').value = holding.dividends;
+}
+
+function resetFiiForm() {
+    const fiiForm = document.getElementById('fii-form');
+    if (fiiForm) fiiForm.reset();
+}
+
+function loadFiiData() {
+    const holdings = loadFiiHoldings(currentAppUser);
+    updateFiiUI(holdings);
 }
 
 function sanitizeText(value) {

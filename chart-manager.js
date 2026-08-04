@@ -1,6 +1,7 @@
 // Gerenciador de Gráficos (Chart.js)
 let monthlyChartInstance = null;
 let categoryChartInstance = null;
+let fiiChartInstance = null;
 
 // Paleta de cores premium para os gráficos
 const CATEGORY_COLORS = {
@@ -302,4 +303,84 @@ export function updateChartsTheme(isDarkTheme) {
         }
         categoryChartInstance.update();
     }
+}
+
+export function renderFiiAllocationChart(holdings) {
+    const ctx = document.getElementById('fiiAllocationChart');
+    if (!ctx) return;
+
+    const isDarkTheme = document.documentElement.classList.contains('dark');
+    const textColor = isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.75)';
+    const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+
+    const categories = holdings.reduce((acc, item) => {
+        const key = `${item.name} (${item.ticker})`;
+        acc[key] = (acc[key] || 0) + Number(item.currentPrice || 0) * Number(item.quantity || 0);
+        return acc;
+    }, {});
+
+    const labels = Object.keys(categories);
+    const data = Object.values(categories);
+    const backgroundColors = labels.map((label, index) => COLOR_PALETTE[index % COLOR_PALETTE.length]);
+
+    if (fiiChartInstance) {
+        fiiChartInstance.destroy();
+    }
+
+    fiiChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.length ? labels : ['Sem FIIs'],
+            datasets: [{
+                data: labels.length ? data : [1],
+                backgroundColor: labels.length ? backgroundColors : [isDarkTheme ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'],
+                borderColor: isDarkTheme ? '#1f2937' : '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        font: { family: 'Inter', size: 12, weight: 500 },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: isDarkTheme ? 'hsl(220, 25%, 15%)' : '#ffffff',
+                    titleColor: isDarkTheme ? '#ffffff' : '#111827',
+                    bodyColor: isDarkTheme ? '#e5e7eb' : '#374151',
+                    borderColor: isDarkTheme ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed;
+                            const formattedValue = value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return `R$ ${formattedValue}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+export function updateFiiAllocationChartTheme(isDarkTheme) {
+    if (!fiiChartInstance) return;
+    const textColor = isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.75)';
+    const borderColor = isDarkTheme ? '#1f2937' : '#ffffff';
+
+    if (fiiChartInstance.options.plugins?.legend?.labels) {
+        fiiChartInstance.options.plugins.legend.labels.color = textColor;
+    }
+
+    fiiChartInstance.data.datasets[0].borderColor = borderColor;
+    fiiChartInstance.update();
 }

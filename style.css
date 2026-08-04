@@ -587,6 +587,18 @@ header {
     font-weight: 700;
 }
 
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
 .widget-balance {
     border-left: 5px solid var(--primary);
 }
@@ -609,6 +621,10 @@ header {
     color: var(--success);
 }
 
+:root.dark .widget-income .widget-value {
+    color: hsl(145, 72%, 56%) !important;
+}
+
 .widget-expense {
     border-left: 5px solid var(--danger);
 }
@@ -620,6 +636,10 @@ header {
 
 .widget-expense .widget-value {
     color: var(--danger);
+}
+
+:root.dark .widget-expense .widget-value {
+    color: hsl(355, 80%, 68%) !important;
 }
 
 .widget-warning {
@@ -894,13 +914,30 @@ table td {
 }
 
 .amount-income {
-    color: var(--success);
+    color: var(--success) !important;
     font-weight: 700;
 }
 
 .amount-expense {
-    color: var(--danger);
+    color: var(--danger) !important;
     font-weight: 700;
+}
+
+:root.dark .amount-income {
+    color: hsl(145, 72%, 56%) !important;
+}
+
+:root.dark .amount-expense {
+    color: hsl(355, 80%, 68%) !important;
+}
+
+.mobile-amount.amount-income,
+.mobile-amount.amount-expense,
+.amount-income,
+.amount-expense,
+.text-success,
+.text-danger {
+    transition: color 0.2s ease;
 }
 
 .btn-delete {
