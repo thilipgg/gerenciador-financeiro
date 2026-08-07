@@ -32,6 +32,21 @@ let currentSort = { key: null, dir: 'asc' };
 // Estado do mês selecionado (Inicia com o mês/ano atual do sistema)
 let currentDateSelection = new Date();
 
+function getComparisonDate(transaction) {
+    return transaction?.due_date || transaction?.date || null;
+}
+
+function isOverdueTransaction(transaction) {
+    const comparisonDate = getComparisonDate(transaction);
+    if (!comparisonDate) return false;
+
+    const dueDate = new Date(`${comparisonDate}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return dueDate < today;
+}
+
 export function setSort(key) {
     if (!key) return;
     if (currentSort.key === key) {
@@ -127,8 +142,6 @@ export function updateDashboardUI(transactions) {
     let pendingExpenses = 0;  // Contas Pendentes
     let overdueExpenses = 0;  // Contas Vencidas
 
-    const hojeStr = new Date().toISOString().split('T')[0]; // Data de hoje (AAAA-MM-DD)
-
     transactionsForSelectedMonth.forEach(t => {
         const amt = parseFloat(t.amount) || 0;
         const normalizedType = String(t.type).toLowerCase().trim();
@@ -142,9 +155,9 @@ export function updateDashboardUI(transactions) {
             // Se for despesa e não estiver paga
             if (status === 'pending') {
                 pendingExpenses += amt;
-                
+
                 // Se a data de vencimento passou de hoje, é vencida
-                if (t.date && t.date < hojeStr) {
+                if (isOverdueTransaction(t)) {
                     overdueExpenses += amt;
                 }
             }
@@ -208,11 +221,8 @@ function calculateSummary(transactions) {
             if (status === 'pending') {
                 pendingExpense += amount;
                 // Verifica se está vencida
-                if (t.due_date) {
-                    const dueDate = new Date(t.due_date + 'T00:00:00');
-                    if (dueDate < today) {
-                        overdueExpense += amount;
-                    }
+                if (isOverdueTransaction(t)) {
+                    overdueExpense += amount;
                 }
             }
         }
