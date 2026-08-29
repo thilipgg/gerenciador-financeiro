@@ -1393,7 +1393,7 @@ input::-webkit-inner-spin-button {
     border-radius: 5px;
     font-size: 1.2rem;
     padding: 5px;
-    border-left: 6px solid rgb(83, 161, 83);
+    border-left: 6px solid #593ee0;
 }
 
 .valor-negativo {
