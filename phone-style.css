@@ -303,5 +303,22 @@
     margin-right: 10px;
   }
 
-  
+
+  .form-input {
+    width: 100%;
+    padding: 0px;
+    height: 5dvh;
+  }
+
+  .modal-footer button {
+    height: 80%;
+  }
+
+  .modal-footer {
+    padding-top: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+
 }
