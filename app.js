@@ -242,6 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
     document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('transaction-modal')?.addEventListener('click', (event) => {
+        if (event.target === event.currentTarget) {
+            closeModal();
+        }
+    });
 
     const tabButtons = document.querySelectorAll('.sidebar-tab');
     tabButtons.forEach(tab => {
