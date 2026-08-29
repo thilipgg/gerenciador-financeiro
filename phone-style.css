@@ -1,4 +1,4 @@
-@media (max-width: 600px) {
+@media (max-width: 900px) {
 
     .section-header {
         display: none;
@@ -107,7 +107,6 @@
     /* Ajustes do header e perfil no mobile */
     header.glass {
         width: 100% !important;
-        max-width: 355px !important;
         margin: 0 0 16px 0 !important;
         padding: 10px 16px !important;
         align-items: flex-start !important;
@@ -124,6 +123,12 @@
         display: none !important;
     }
 
+    .search-filter-box {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
     #user-avatar {
         width: 36px !important;
         height: 36px !important;
@@ -132,7 +137,6 @@
     section.summary-container {
         grid-template-columns: 1fr !important;
         width: 100% !important;
-        max-width: 370px !important;
         margin: 0 !important;
         padding: 0 0px !important;
         gap: 10px !important;
@@ -140,7 +144,6 @@
 
     section.charts-grid {
         width: 100% !important;
-        max-width: 355px !important;
         margin: 16px 0 0 0 !important;
         padding: 0 0px !important;
     }
@@ -151,7 +154,16 @@
 
     .chart-card.glass {
         padding: 16px !important;
-        max-width: 370px !important;
+    }
+
+    #filtro-data {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #div-btn-novo-reg {
+        min-width: 100%;
     }
 
     .mobile-tab-bar {
@@ -194,10 +206,6 @@
         white-space: nowrap;
     }
 
-    .search-input {
-        width: 86vw;
-    }
-
     .search-input-wrapper {
         width: 100%;
     }
@@ -209,7 +217,7 @@
     .date-filter-wrapper {
         /* width: 100%px; */
         width: 540vw;
-    
+
     }
 
     #date-filter-phone-ini {
@@ -219,22 +227,26 @@
 
     #date-filter-phone-fim {
         width: 49%;
+        justify-content: end;
         /* border: red 1px solid; */
     }
 
     .filter-select {
         width: 100%;
         text-align: center;
-    } 
+    }
 
     .actions-bar {
         display: flex;
-        flex-direction: column; /* Faz os botões empilharem no celular */
+        flex-direction: column;
+        /* Faz os botões empilharem no celular */
         gap: 8px;
         width: 100%;
     }
+
     .actions-bar button {
-        width: 100%; /* Botões ocupam largura total no celular */
+        width: 100%;
+        /* Botões ocupam largura total no celular */
     }
 
     #filter-start-date {
@@ -255,5 +267,35 @@
     #open-add-modal-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .card-calculo {
+        display: flex;
+        flex-direction: column;
+        gap: 2dvh;
+
+    }
+
+    .card-valores {
+        width: 100%;
+    }
+
+    .div-saldo {
+        padding: 10px;
+        display: flex;
+        text-align: center;
+        border-left: 6px solid black;
+
+        gap: 2dvh;
+        font-size: 1.3rem;
+    }
+
+    .div-saldo input {
+        width: 100%;
+        text-align: center;
+    }
+
+    .card-valores span {
+        flex-wrap: wrap;
     }
 }

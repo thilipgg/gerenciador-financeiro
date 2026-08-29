@@ -135,6 +135,7 @@ export function updateDashboardUI(transactions) {
     // Atualiza a listagem global interna usada pela tabela e roda os gráficos
     currentTransactionsList = transactionsForSelectedMonth;
     filterAndRenderTransactions();
+    refreshMonthlyBudgetDashboard();
 
     // 2. Variáveis para somar os cartões do mês selecionado
     let totalIncome = 0;      // Receitas
@@ -199,6 +200,62 @@ export function updateDashboardUI(transactions) {
         availEl.textContent = formatSignedCurrency(availableBalance);
         availEl.className = availableBalance >= 0 ? 'widget-value text-success' : 'widget-value text-danger';
     }
+}
+
+export function refreshMonthlyBudgetDashboard() {
+    const pendingValueEl = document.querySelector('#card-pendencias .span-valor');
+    const banksValueEl = document.querySelector('#card-total-bancos .span-valor');
+    const finalValueEl = document.querySelector('#card-resultado .span-valor');
+
+    if (!pendingValueEl || !banksValueEl || !finalValueEl) return;
+
+    const selectedMonth = getCurrentSelection();
+    const monthTransactions = (window.allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const txDate = new Date(t.date + 'T12:00:00');
+        return txDate.getMonth() === selectedMonth.month && txDate.getFullYear() === selectedMonth.year;
+    });
+
+    const pendingThisMonth = monthTransactions.reduce((sum, t) => {
+        const amount = Number(t.amount) || 0;
+        const normalizedType = String(t.type || '').toLowerCase().trim();
+        const isExpense = normalizedType !== 'income' && normalizedType !== 'receita';
+        const status = String(t.paid_status || 'paid').toLowerCase().trim();
+
+        if (isExpense && status === 'pending') {
+            return sum + amount;
+        }
+
+        return sum;
+    }, 0);
+
+    const bankInputs = [
+        document.getElementById('banco-1-valor'),
+        document.getElementById('banco-2-valor'),
+        document.getElementById('banco-3-valor')
+    ].filter(Boolean);
+
+    const bankTotal = bankInputs.reduce((sum, input) => {
+        const parsed = parseFloat(String(input.value || '').replace(',', '.'));
+        return sum + (Number.isFinite(parsed) ? parsed : 0);
+    }, 0);
+
+    const finalBalance = bankTotal - pendingThisMonth;
+
+    pendingValueEl.textContent = formatCurrency(pendingThisMonth);
+    pendingValueEl.classList.toggle('valor-negativo', pendingThisMonth > 0);
+    pendingValueEl.classList.toggle('valor-positivo', pendingThisMonth === 0);
+
+    banksValueEl.textContent = formatCurrency(bankTotal);
+    banksValueEl.classList.toggle('valor-positivo', bankTotal >= 0);
+    banksValueEl.classList.remove('valor-negativo');
+
+    finalValueEl.textContent = formatCurrency(finalBalance);
+    finalValueEl.classList.toggle('valor-negativo', finalBalance < 0);
+    finalValueEl.classList.toggle('valor-positivo', finalBalance >= 0);
+
+    const savedBalances = bankInputs.map(input => input.value || '0');
+    localStorage.setItem('monthly-bank-balances', JSON.stringify(savedBalances));
 }
 
 function calculateSummary(transactions) {
@@ -640,4 +697,12 @@ export function updateMonthDisplay() {
     // Atualiza o display da aba "Lançamentos"
     const displayList = document.getElementById('current-month-display-list');
     if (displayList) displayList.textContent = textoFinal;
+}
+
+
+function salvarDadosLocal() {
+    const valorBancoUm = localStorage.getItem(bancoUm)
+    const valorBancoDois = localStorage.getItem(bancoDois)
+    const valorBancoTres = localStorage.getItem(bancoTres)
+   // const valorDivida = 
 }

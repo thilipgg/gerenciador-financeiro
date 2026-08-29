@@ -75,6 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
         loadFiiData();
     });
 
+    const savedBankBalances = JSON.parse(localStorage.getItem('monthly-bank-balances') || '[]');
+    const monthlyBankInputs = [
+        document.getElementById('banco-1-valor'),
+        document.getElementById('banco-2-valor'),
+        document.getElementById('banco-3-valor')
+    ].filter(Boolean);
+
+    monthlyBankInputs.forEach((input, index) => {
+        const value = Number.parseFloat(String(savedBankBalances[index] ?? '0').replace(',', '.'));
+        input.value = Number.isFinite(value) && value >= 0 ? String(value) : '';
+        input.addEventListener('input', async () => {
+            const isEmpty = String(input.value).trim() === '';
+            input.value = isEmpty ? '' : String(input.value).replace(/[^\d,.-]/g, '').replace(',', '.');
+            const { refreshMonthlyBudgetDashboard } = await import('./ui.js');
+            refreshMonthlyBudgetDashboard();
+        });
+    });
+
     // --- LÓGICA CENTRALIZADA DOS SELETORES DE MÊS ---
     // Inicializa o texto da barra de meses (Ex: "Junho de 2026")
     updateMonthDisplay();
@@ -454,6 +472,10 @@ function activateDashboardTab(tabId) {
 
     if (tabId === 'overview' || tabId === 'monthly') {
         filterAndRenderTransactions();
+    }
+
+    if (tabId === 'monthly') {
+        import('./ui.js').then(({ refreshMonthlyBudgetDashboard }) => refreshMonthlyBudgetDashboard());
     }
 }
 

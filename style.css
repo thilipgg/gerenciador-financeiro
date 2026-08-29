@@ -1358,3 +1358,54 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+.borda {
+    border: 1px solid red;
+}
+
+.div-saldo {
+    display: flex;
+    width: 100%;
+    height: auto;
+    padding: 10px 0px;
+    justify-content: space-around;
+    background-color: var(--glass-bg);
+    border-radius: 10px;
+}
+
+.card-calculo {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 3dvh;
+
+}
+
+.div-saldo input {
+    border-radius: 5px;
+}
+
+.card-valores {
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    background-color: var(--glass-bg);
+    border-radius: 5px;
+    font-size: 1.2rem;
+    padding: 5px;
+    border-left: 6px solid rgb(42, 44, 42);
+}
+
+.valor-negativo {
+    color: red;
+}
+
+
+.valor-positivo {
+    color: green;
+}
+ #filtro-data {
+    display: flex;
+    gap: 5px;
+ }

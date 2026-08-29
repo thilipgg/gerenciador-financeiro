@@ -5,14 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças Premium - Seu Painel de Controle Financeiro</title>
-    <meta name="description" content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
+    <meta name="description"
+        content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Finanças Premium">
-    
+
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    
+
     <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png">
 
     <link rel="manifest" href="manifest.json">
@@ -155,8 +156,8 @@
                             <button type="button" id="btn-prev-month" class="btn-secondary" title="Mês Anterior">
                                 <i class="ri-arrow-left-s-line"></i>
                             </button>
-                            <h3 id="current-month-display"
-                                style="margin: 0; min-width: 160px; text-align: center;">Junho de 2026</h3>
+                            <h3 id="current-month-display" style="margin: 0; min-width: 160px; text-align: center;">
+                                Junho de 2026</h3>
                             <button type="button" id="btn-next-month" class="btn-secondary" title="Próximo Mês">
                                 <i class="ri-arrow-right-s-line"></i>
                             </button>
@@ -330,28 +331,29 @@
                                         <option value="amount">Por Valor</option>
                                         <option value="description">Por Descrição</option>
                                     </select>
-
-                                    <div id="date-filter-phone-ini" class="date-filter-wrapper">
-                                        <input type="date" id="filter-start-date" class="form-input"
-                                            title="Data início do filtro" />
+                                    <div id="filtro-data">
+                                        <div id="date-filter-phone-ini" class="date-filter-wrapper">
+                                            <input type="date" id="filter-start-date" class="form-input"
+                                                title="Data início do filtro" />
+                                        </div>
+                                        <div id="date-filter-phone-fim" class="date-filter-wrapper">
+                                            <input type="date" id="filter-end-date" class="form-input"
+                                                title="Data fim do filtro" />
+                                        </div>
                                     </div>
-                                    <div id="date-filter-phone-fim" class="date-filter-wrapper">
-                                        <input type="date" id="filter-end-date" class="form-input"
-                                            title="Data fim do filtro" />
-                                    </div>
-
                                     <div id="div-btn-novo-reg" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                        <button id="btn-copy-next-month" class="btn-secondary" type="button" title="Espelhar lançamentos deste mês no próximo mês">
+                                        <button id="btn-copy-next-month" class="btn-secondary" type="button"
+                                            title="Espelhar lançamentos deste mês no próximo mês">
                                             <i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês
                                         </button>
-                                        
+
                                         <button id="open-add-modal-btn" class="btn-primary">
                                             <i class="ri-add-line"></i>
                                             Nova Transação
                                         </button>
                                     </div>
 
-                                    
+
 
                                 </div>
 
@@ -385,14 +387,52 @@
 
                     <section id="tab-monthly" class="tab-page">
                         <div class="section-header">
-
-
                             <div>
-                                <h3>Plano de Contas</h3>
-                                <p class="text-muted">Acompanhe seus fundos imobiliários, dividendos e distribuição de carteira.</p>
+                                Calcule em tempo real o seu Saldo. Insira os valores atuais de suas contas bancárias
+                                para que seja calculado o valor que estará sobrando ou não para quitar suas despesas
+                                mensais.
                             </div>
                         </div>
-                        
+                        <div class="selection-conteudo">
+                            <div id="card-calculo" class="card-calculo">
+                                <div id="card-pendencias" class="card-valores">
+                                    <span>Não Pago: </span>
+                                    <span>R$</span>
+                                    <span class="span-valor valor-negativo">0,00</span>
+                                </div>
+                                <div id="card-total-bancos" class="card-valores">
+                                    <span>Total em Bancos: </span>
+                                    <span>R$</span>
+                                    <span class="span-valor valor-positivo">0,00</span>
+                                </div>
+                                <div id="card-resultado" class="card-valores">
+                                    <span>Saldo Final: </span>
+                                    <span>R$</span>
+                                    <span class="span-valor">0,00</span>
+                                </div>
+                            </div>
+
+                            <div id="div-saldo" class="div-saldo">
+                                <div>
+                                    <label for="banco-1-valor">Banco 1</label>
+                                    <input id="banco-1-valor" type="number" step="0.01" min="0" inputmode="decimal"
+                                        placeholder="Saldo Atual">
+                                </div>
+
+                                <div>
+                                    <label for="banco-2-valor">Banco 2</label>
+                                    <input id="banco-2-valor" type="number" step="0.01" min="0" inputmode="decimal"
+                                        placeholder="Saldo Atual">
+                                </div>
+
+                                <div>
+                                    <label for="banco-3-valor">Banco 3</label>
+                                    <input id="banco-3-valor" type="number" step="0.01" min="0" inputmode="decimal"
+                                        placeholder="Saldo Atual">
+                                </div>
+                            </div>
+                        </div>
+
                     </section>
                 </div>
             </div>
