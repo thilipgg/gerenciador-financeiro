@@ -500,6 +500,38 @@ export function updateCategoryDropdown(type) {
     }
 }
 
+function formatDateInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getDefaultDateForSelectedMonth() {
+    const selected = new Date(currentDateSelection);
+    const now = new Date();
+    const lastDayOfMonth = new Date(selected.getFullYear(), selected.getMonth() + 1, 0).getDate();
+    const day = Math.min(now.getDate(), lastDayOfMonth);
+
+    return formatDateInput(new Date(selected.getFullYear(), selected.getMonth(), day));
+}
+
+function syncNewTransactionDateToSelectedMonth() {
+    const modal = document.getElementById('transaction-modal');
+    const form = document.getElementById('transaction-form');
+    const dateInput = document.getElementById('trans-date');
+
+    if (!modal || !dateInput || !modal.classList.contains('active')) return;
+    if (form?.dataset.editId) return;
+
+    dateInput.value = getDefaultDateForSelectedMonth();
+
+    const dueDateInput = document.getElementById('trans-due-date');
+    if (dueDateInput && !dueDateInput.value) {
+        dueDateInput.value = getDefaultDateForSelectedMonth();
+    }
+}
+
 window.prepararEdicao = (id) => {
     const transacao = window.allTransactions.find(t => String(t.id) === String(id));
     if (!transacao) return;
@@ -562,13 +594,8 @@ export function openModal(isEditing = false) {
     if (modal) modal.classList.add('active');
 
     if (!isEditing) {
-        const dateInput = document.getElementById('trans-date');
-        if (dateInput) {
-            const hoje = new Date();
-            const offset = hoje.getTimezoneOffset() * 60000;
-            const dataLocal = new Date(hoje.getTime() - offset);
-            dateInput.value = dataLocal.toISOString().split('T')[0];
-        }
+        syncNewTransactionDateToSelectedMonth();
+
         // Foque no campo de descrição para inserções rápidas
         const desc = document.getElementById('trans-desc');
         if (desc) desc.focus();
@@ -674,6 +701,7 @@ export function getCurrentSelection() {
 export function changeSelectedMonth(offset) {
     currentDateSelection.setMonth(currentDateSelection.getMonth() + offset);
     updateMonthDisplay();
+    syncNewTransactionDateToSelectedMonth();
     // Força a atualização de tabelas, gráficos e cards de forma sincronizada
     updateDashboardUI(window.allTransactions); 
 }
