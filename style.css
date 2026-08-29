@@ -828,9 +828,11 @@ header {
 
 .search-filter-box {
     display: flex;
-    gap: 5px;
+    width: 100%;
+    /* gap: 5px; */
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
 }
 
 .search-input {
