@@ -1377,7 +1377,6 @@ input::-webkit-inner-spin-button {
     display: flex;
     justify-content: space-around;
     margin-bottom: 3dvh;
-
 }
 
 .div-saldo input {
@@ -1394,7 +1393,7 @@ input::-webkit-inner-spin-button {
     border-radius: 5px;
     font-size: 1.2rem;
     padding: 5px;
-    border-left: 6px solid rgb(42, 44, 42);
+    border-left: 6px solid rgb(83, 161, 83);
 }
 
 .valor-negativo {
@@ -1408,4 +1407,8 @@ input::-webkit-inner-spin-button {
  #filtro-data {
     display: flex;
     gap: 5px;
+ }
+
+ .margin-left-span {
+    margin-left: 10px;
  }

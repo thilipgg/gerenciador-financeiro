@@ -284,7 +284,7 @@
         padding: 10px;
         display: flex;
         text-align: center;
-        border-left: 6px solid black;
+        border-left: 6px solid rgb(83, 161, 83);
 
         gap: 2dvh;
         font-size: 1.3rem;
@@ -293,6 +293,7 @@
     .div-saldo input {
         width: 100%;
         text-align: center;
+        color: black;
     }
 
     .card-valores span {
