@@ -386,46 +386,70 @@
                     </section>
 
                     <section id="tab-monthly" class="tab-page">
-                        <div class="section-header">
+                        <div class="section-header monthly-header">
                             <div>
-                                Calcule em tempo real o seu Saldo. Insira os valores atuais de suas contas bancárias
-                                para que seja calculado o valor que estará sobrando ou não para quitar suas despesas
-                                mensais.
+                                <h3>Controle Mensal</h3>
+                                <p class="text-muted">Acompanhe o saldo disponível em cada conta e veja quanto sobra após as despesas pendentes.</p>
                             </div>
                         </div>
-                        <div class="selection-conteudo">
-                            <div id="card-calculo" class="card-calculo">
-                                <div id="card-pendencias" class="card-valores">
-                                    <span>Não Pago: </span>
-                                    <span class="span-valor valor-negativo">0,00</span>
+                        <div class="monthly-dashboard">
+                            <div id="card-calculo" class="card-calculo glass">
+                                <div id="card-pendencias" class="card-valores monthly-summary-card">
+                                    <div class="monthly-summary-icon"><i class="ri-time-line"></i></div>
+                                    <div>
+                                        <span class="monthly-summary-label">Despesas pendentes</span>
+                                        <strong class="span-valor valor-negativo">R$ 0,00</strong>
+                                    </div>
                                 </div>
-                                <div id="card-total-bancos" class="card-valores">
-                                    <span>Total em Bancos: </span>
-                                    <span class="span-valor valor-positivo">0,00</span>
+                                <div id="card-total-bancos" class="card-valores monthly-summary-card">
+                                    <div class="monthly-summary-icon"><i class="ri-wallet-3-line"></i></div>
+                                    <div>
+                                        <span class="monthly-summary-label">Total em contas</span>
+                                        <strong class="span-valor valor-positivo">R$ 0,00</strong>
+                                    </div>
                                 </div>
-                                <div id="card-resultado" class="card-valores">
-                                    <span>Saldo Final: </span>
-                                    <span class="span-valor">0,00</span>
+                                <div id="card-resultado" class="card-valores monthly-summary-card">
+                                    <div class="monthly-summary-icon"><i class="ri-line-chart-line"></i></div>
+                                    <div>
+                                        <span class="monthly-summary-label">Saldo após pendências</span>
+                                        <strong class="span-valor">R$ 0,00</strong>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div id="div-saldo" class="div-saldo">
-                                <div>
-                                    <label style="display: block; margin-bottom: 10px;" for="banco-1-valor">Banco 1</label> 
-                                    <input id="banco-1-valor" type="text" step="0.01" min="0" inputmode="decimal"
-                                        placeholder="Saldo Atual">
+                            <div class="monthly-accounts-panel glass">
+                                <div class="monthly-panel-heading">
+                                    <div>
+                                        <h4>Saldos das contas</h4>
+                                        <p>Atualize os valores para manter o cálculo em dia.</p>
+                                    </div>
+                                    <i class="ri-bank-card-line" aria-hidden="true"></i>
                                 </div>
-
-                                <div>
-                                    <label style="display: block; margin-bottom: 10px;" for="banco-2-valor">Banco 2</label>
-                                    <input id="banco-2-valor" type="text" step="0.01" min="0" inputmode="decimal"
-                                        placeholder="Saldo Atual">
-                                </div>
-
-                                <div>
-                                    <label style="display: block; margin-bottom: 10px;" for="banco-3-valor">Banco 3</label>
-                                    <input id="banco-3-valor" type="text" step="0.01" min="0" inputmode="decimal"
-                                        placeholder="Saldo Atual">
+                                <div id="div-saldo" class="div-saldo">
+                                    <label class="monthly-account-card" for="carteira-valor">
+                                        <span class="monthly-account-name"><i class="ri-wallet-3-line"></i>CARTEIRA</span>
+                                        <input class="monthly-account-input form-input" id="carteira-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
+                                    <label class="monthly-account-card" for="itau-valor">
+                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>ITAU</span>
+                                        <input class="monthly-account-input form-input" id="itau-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
+                                    <label class="monthly-account-card" for="nubank-valor">
+                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>NUBANK</span>
+                                        <input class="monthly-account-input form-input" id="nubank-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
+                                    <label class="monthly-account-card" for="merc-pg-valor">
+                                        <span class="monthly-account-name"><i class="ri-smartphone-line"></i>MERC. PG</span>
+                                        <input class="monthly-account-input form-input" id="merc-pg-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
+                                    <label class="monthly-account-card" for="inter-valor">
+                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>INTER</span>
+                                        <input class="monthly-account-input form-input" id="inter-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
+                                    <label class="monthly-account-card" for="bradesco-valor">
+                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>BRADESCO</span>
+                                        <input class="monthly-account-input form-input" id="bradesco-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
+                                    </label>
                                 </div>
                             </div>
                         </div>

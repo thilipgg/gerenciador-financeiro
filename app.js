@@ -76,15 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const savedBankBalances = JSON.parse(localStorage.getItem('monthly-bank-balances') || '[]');
-    const monthlyBankInputs = [
-        document.getElementById('banco-1-valor'),
-        document.getElementById('banco-2-valor'),
-        document.getElementById('banco-3-valor')
-    ].filter(Boolean);
+    const monthlyBankInputs = [...document.querySelectorAll('.monthly-account-input')];
 
     monthlyBankInputs.forEach((input, index) => {
         const value = Number.parseFloat(String(savedBankBalances[index] ?? '0').replace(',', '.'));
         input.value = Number.isFinite(value) && value >= 0 ? String(value) : '';
+        input.addEventListener('focus', () => {
+            const currentValue = String(input.value).trim().replace(',', '.');
+            if (currentValue !== '' && Number.parseFloat(currentValue) === 0) {
+                input.value = '';
+            }
+        });
         input.addEventListener('input', async () => {
             const isEmpty = String(input.value).trim() === '';
             input.value = isEmpty ? '' : String(input.value).replace(/[^\d,.-]/g, '').replace(',', '.');

@@ -229,11 +229,7 @@ export function refreshMonthlyBudgetDashboard() {
         return sum;
     }, 0);
 
-    const bankInputs = [
-        document.getElementById('banco-1-valor'),
-        document.getElementById('banco-2-valor'),
-        document.getElementById('banco-3-valor')
-    ].filter(Boolean);
+    const bankInputs = [...document.querySelectorAll('.monthly-account-input')];
 
     const bankTotal = bankInputs.reduce((sum, input) => {
         const parsed = parseFloat(String(input.value || '').replace(',', '.'));

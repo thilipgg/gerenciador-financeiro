@@ -1367,51 +1367,34 @@ input::-webkit-inner-spin-button {
     border: 1px solid red;
 }
 
-.div-saldo {
-    display: flex;
-    width: 100%;
-    height: auto;
-    padding: 10px 0px;
-    justify-content: space-around;
-    background-color: var(--glass-bg);
-    border-radius: 10px;
-}
-
-.card-calculo {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 3dvh;
-}
-
-.div-saldo input {
-    border-radius: 5px;
-    color: black;
-}
-
-.card-valores {
-    display: flex;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    width: auto;
-    background-color: var(--glass-bg);
-    border-radius: 5px;
-    font-size: 1.2rem;
-    padding: 5px;
-    border-left: 6px solid #593ee0;
-}
-
-.card-valores span:first-child {
-    margin-right: 10px;
-}
+.monthly-dashboard { display: grid; gap: 20px; }
+.monthly-header { margin-bottom: 4px; }
+.monthly-header h3 { margin-bottom: 6px; }
+.card-calculo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 16px; border-radius: var(--radius-md); }
+.monthly-summary-card { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); }
+.monthly-summary-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 12px; color: var(--primary); background: var(--primary-light); font-size: 21px; }
+.monthly-summary-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.monthly-summary-card .span-valor { display: block; font-size: 20px; font-weight: 700; }
+.monthly-accounts-panel { padding: 20px; border-radius: var(--radius-md); }
+.monthly-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.monthly-panel-heading h4 { font-family: var(--font-heading); font-size: 18px; margin-bottom: 4px; }
+.monthly-panel-heading p { color: var(--text-muted); font-size: 13px; }
+.monthly-panel-heading > i { color: var(--primary); font-size: 28px; }
+.div-saldo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.monthly-account-card { display: block; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); cursor: text; transition: var(--transition); }
+.monthly-account-card:focus-within, .monthly-account-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.monthly-account-name { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; font-size: 13px; font-weight: 700; }
+.monthly-account-name i { color: var(--primary); font-size: 17px; }
+.monthly-account-input { padding: 11px 12px; }
+.monthly-account-input::placeholder { color: var(--text-muted); }
 
 .valor-negativo {
-    color: red;
+    color: var(--danger);
 }
 
 
 .valor-positivo {
-    color: green;
+    color: var(--success);
 }
  #filtro-data {
     display: flex;

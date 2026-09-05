@@ -270,38 +270,30 @@
   }
 
   .card-calculo {
-    display: flex;
-    flex-direction: column;
-    gap: 2dvh;
+    grid-template-columns: 1fr;
+    padding: 12px;
   }
 
-  .card-valores {
-    width: 100%;
-    border-left: 6px solid #593ee0;
+  .monthly-accounts-panel {
+    padding: 16px;
   }
 
   .div-saldo {
-    padding: 10px;
-    display: flex;
-    text-align: center;
-    border-left: 6px solid #593ee0;
-
-    gap: 2dvh;
-    font-size: 1.3rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
-  .div-saldo input {
-    width: 100%;
-    text-align: center;
-    color: black;
+  .monthly-account-card {
+    padding: 12px;
   }
 
-  .card-valores span {
-    flex-wrap: wrap;
+  .monthly-account-input {
+    height: auto;
+    padding: 11px 10px;
   }
 
-  .card-valores span:first-child {
-    margin-right: 10px;
+  .monthly-summary-card .span-valor {
+    font-size: 18px;
   }
 
 
