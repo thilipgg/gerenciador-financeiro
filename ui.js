@@ -666,6 +666,61 @@ export function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 3000);
 }
 
+export function showConfirmToast(message) {
+    return new Promise(resolve => {
+        const container = document.getElementById('toast-container');
+        if (!container) {
+            resolve(false);
+            return;
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-confirmation';
+
+        const icon = document.createElement('span');
+        icon.className = 'toast-confirmation-icon';
+        icon.innerHTML = '<i class="ri-file-copy-2-line"></i>';
+
+        const content = document.createElement('div');
+        content.className = 'toast-confirmation-content';
+
+        const text = document.createElement('p');
+        text.textContent = message;
+
+        const actions = document.createElement('div');
+        actions.className = 'toast-confirmation-actions';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'toast-action toast-action-secondary';
+        cancelButton.textContent = 'Cancelar';
+
+        const confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'toast-action toast-action-primary';
+        confirmButton.textContent = 'Replicar';
+
+        let resolved = false;
+        const finish = value => {
+            if (resolved) return;
+            resolved = true;
+            toast.classList.add('toast-leaving');
+            setTimeout(() => toast.remove(), 220);
+            resolve(value);
+        };
+
+        cancelButton.addEventListener('click', () => finish(false));
+        confirmButton.addEventListener('click', () => finish(true));
+
+        actions.append(cancelButton, confirmButton);
+        content.append(text, actions);
+        toast.append(icon, content);
+        container.appendChild(toast);
+
+        setTimeout(() => finish(false), 8000);
+    });
+}
+
 function formatSignedCurrency(v) {
     return Number(v || 0).toLocaleString('pt-BR', {
         style: 'currency',

@@ -315,3 +315,43 @@
 
 
 }
+
+/* Interface Vaulta — ajustes exclusivos para telas pequenas */
+@media (max-width: 900px) {
+  body { background: radial-gradient(circle at 85% 0, #267bd5 0, transparent 29%), #07152d; }
+  #dashboard-screen { padding: 10px 10px 92px; }
+  .dashboard-main { padding: 0 !important; }
+  header.glass { min-height: 62px; margin: 0 0 12px !important; padding: 10px 12px !important; border-radius: 18px; align-items: center !important; }
+  .header-brand-icon { width: 36px; height: 36px; border-radius: 12px; font-size: 17px; }
+  .header-kicker { display: none; }
+  .header-brand h2 { font-size: 22px; }
+  .theme-toggle { width: 36px; height: 36px; }
+  .user-profile { padding: 2px; background: transparent; }
+  .user-info, .logout-btn { display: none; }
+  .user-avatar { width: 34px !important; height: 34px !important; }
+  .month-selector-container { max-width: none; margin: 0 0 14px !important; padding: 7px 10px !important; }
+  .month-selector-container h3 { font-size: 12px; }
+  .section-header { display: flex; margin: 3px 4px 13px; }
+  .section-header h3 { font-size: 22px; }
+  .section-header p { display: none; }
+  section.summary-container { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .widget-card.glass { min-height: 130px; padding: 14px !important; gap: 8px !important; text-align: left !important; }
+  .widget-balance.glass { grid-column: 1 / -1; grid-row: auto; min-height: 188px; padding: 21px !important; }
+  .widget-balance .widget-value { font-size: 34px; }
+  .widget-balance .widget-info { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+  .widget-income.glass, .widget-expense.glass, .widget-warning.glass { flex-direction: column !important; align-items: flex-start !important; justify-content: center !important; }
+  .widget-info { flex-direction: column !important; align-items: flex-start !important; justify-content: center !important; }
+  .widget-value { font-size: 19px; }
+  .widget-label { font-size: 11px; }
+  .widget-icon { width: 36px !important; height: 36px !important; font-size: 17px !important; }
+  .charts-grid { margin-top: 12px !important; }
+  .chart-card.glass { padding: 16px !important; border-radius: 18px; }
+  .chart-canvas-container { height: 210px !important; }
+  .notes-section { margin-top: 18px; }.notes-grid { gap: 10px; }.notes-input-card, .notes-list-card { padding: 16px; border-radius: 18px; }
+  .mobile-tab-bar { gap: 2px; padding: 8px 9px calc(8px + env(safe-area-inset-bottom)); background: rgba(8, 28, 63, .94); border-top-color: rgba(183,220,255,.13); box-shadow: 0 -12px 30px rgba(0,8,32,.36); }
+  .mobile-tab-bar .sidebar-tab { padding: 8px 4px; border-radius: 12px; color: #9ebad9; background: transparent; }
+  .mobile-tab-bar .sidebar-tab.active { background: rgba(80, 158, 255, .2); color: #fff; box-shadow: none; }
+  .mobile-tab-bar .sidebar-tab i { margin: 0; font-size: 19px; }.mobile-tab-bar .sidebar-tab span { display: block !important; margin-top: 3px; font-size: 9px; text-transform: none; }
+  .transactions-toolbar { padding: 10px; border-radius: 16px; }.transactions-card { padding: 8px; border-radius: 18px; }
+  .monthly-summary-card { padding: 13px; }.monthly-accounts-panel { padding: 16px; border-radius: 18px; }
+}

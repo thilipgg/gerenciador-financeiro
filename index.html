@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -106,10 +106,11 @@
                 <header class="glass animate-fade">
                     <div class="header-brand">
                         <div class="header-brand-icon">
-                            <i class="ri-hand-coin-line"></i>
+                            <i class="ri-stack-line"></i>
                         </div>
                         <div>
-                            <h2>Finanças Premium</h2>
+                            <span class="header-kicker">Sua central financeira</span>
+                            <h2>Vaulta</h2>
                             <span id="demo-badge" class="demo-badge" style="display: none;">Modo Teste</span>
                         </div>
                     </div>
@@ -121,9 +122,10 @@
                             <i class="ri-moon-line moon-icon"></i>
                         </button>
 
-                        <div class="user-profile">
+                        <div class="user-profile" title="Perfil do usuário">
                             <img id="user-avatar" class="user-avatar" src="" alt="Foto do usuário">
                             <div class="user-info">
+                                <span class="user-welcome">Olá,</span>
                                 <span id="user-name" class="user-name">Carregando...</span>
                             </div>
                             <button id="logout-btn" class="logout-btn" title="Encerrar Sessão" aria-label="Sair">
@@ -172,13 +174,11 @@
 
                         <section class="summary-container animate-fade">
                             <div class="widget-card widget-balance glass">
-                                <div class="widget-icon">
-                                    <i class="ri-bank-card-line"></i>
-                                </div>
                                 <div class="widget-info">
                                     <span class="widget-label">Saldo Geral</span>
                                     <span id="val-balance" class="widget-value">R$ 0,00</span>
                                 </div>
+                                <div class="balance-orb"><i class="ri-wallet-3-line"></i></div>
                             </div>
 
                             <div class="widget-card widget-income glass">

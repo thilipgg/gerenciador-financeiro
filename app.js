@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.stopImmediatePropagation(); // Evita que o evento rode 2 vezes no mesmo clique!
 
-        const { getCurrentSelection, updateDashboardUI, showToast } = await import('./ui.js');
+        const { getCurrentSelection, updateDashboardUI, showToast, showConfirmToast } = await import('./ui.js');
         const { fetchTransactions, replicarTransacoesParaProximoMes } = await import('./db.js');
         
         // 1. Pegamos a seleção da aba VISUAL da tela (Ex: Junho retorna month: 5)
@@ -186,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mês alvo em texto para a mensagem
         const mesAlvoNome = nomesMeses[proximoMesHumano - 1];
 
-        const confirmacao = confirm(`Deseja clonar os ${transacoesDoMes.length} lançamentos de ${nomesMeses[month]} diretamente para ${mesAlvoNome} de ${anoAlvo}?`);
+        const confirmacao = await showConfirmToast(
+            `Deseja replicar ${transacoesDoMes.length} lançamento(s) de ${nomesMeses[month]} para ${mesAlvoNome} de ${anoAlvo}?`
+        );
         if (!confirmacao) return;
 
         // 4. Forçamos as strings de texto puras para o vencimento E para a data de lançamento
