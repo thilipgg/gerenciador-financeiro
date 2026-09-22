@@ -301,6 +301,7 @@
     width: 100%;
     padding: 0px;
     height: 5dvh;
+    padding-left: 5%;
   }
 
   .modal-footer button {
