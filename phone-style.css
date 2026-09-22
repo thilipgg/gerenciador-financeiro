@@ -355,3 +355,27 @@
   .transactions-toolbar { padding: 10px; border-radius: 16px; }.transactions-card { padding: 8px; border-radius: 18px; }
   .monthly-summary-card { padding: 13px; }.monthly-accounts-panel { padding: 16px; border-radius: 18px; }
 }
+
+@media (max-width: 900px) {
+  :root:not(.dark) body {
+    background: radial-gradient(circle at 85% 0, rgba(91, 175, 255, 0.2) 0, transparent 30%),
+      linear-gradient(180deg, #eef7ff 0%, #f7fbff 48%, #ffffff 100%);
+  }
+
+  :root:not(.dark) .mobile-tab-bar {
+    background: rgba(255, 255, 255, 0.9);
+    border-top-color: rgba(39, 121, 216, 0.16);
+    box-shadow: 0 -12px 30px rgba(24, 73, 133, 0.12);
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab {
+    color: var(--text-muted);
+    background: transparent;
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    box-shadow: none;
+  }
+}

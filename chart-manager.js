@@ -137,8 +137,8 @@ export function renderCharts(transactions, isDarkTheme) {
         
         const ctx = ctxMonthly.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, isDarkTheme ? 'hsla(250, 72%, 60%, 0.9)' : 'hsla(250, 72%, 56%, 0.85)');
-        gradient.addColorStop(1, isDarkTheme ? 'hsla(250, 72%, 20%, 0.15)' : 'hsla(250, 72%, 94%, 0.1)');
+        gradient.addColorStop(0, isDarkTheme ? 'rgba(91, 175, 255, 0.96)' : 'rgba(55, 134, 229, 0.92)');
+        gradient.addColorStop(1, isDarkTheme ? 'rgba(24, 73, 133, 0.42)' : 'rgba(185, 220, 255, 0.28)');
 
         monthlyChartInstance = new Chart(ctxMonthly, {
             type: 'bar',
@@ -148,7 +148,7 @@ export function renderCharts(transactions, isDarkTheme) {
                     label: 'Despesas Mensais (R$)',
                     data: monthlyData.data,
                     backgroundColor: gradient,
-                    borderColor: isDarkTheme ? 'hsl(250, 72%, 65%)' : 'hsl(250, 72%, 56%)',
+                    borderColor: isDarkTheme ? 'rgba(141, 204, 255, 0.95)' : 'rgba(39, 121, 216, 0.9)',
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,

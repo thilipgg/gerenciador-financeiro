@@ -846,34 +846,33 @@ header {
   min-height: 48px;
   min-width: 180px;
   padding: 0 42px 0 16px;
-  border: 1px solid rgba(179, 218, 255, 0.2);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background-color: rgba(11, 35, 72, 0.72);
-  background-image: linear-gradient(45deg, transparent 50%, #b9dcff 50%),
-    linear-gradient(135deg, #b9dcff 50%, transparent 50%),
-    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
-  background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px, 100% 0;
-  background-size: 6px 6px, 6px 6px, 38px 100%;
+  background-color: var(--bg-input);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px;
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
-  color: #edf7ff;
+  color: var(--text-main);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  box-shadow: 0 8px 20px rgba(2, 17, 44, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-sm);
   transition: border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease,
     transform 220ms ease;
 }
 
 .search-filter-box .filter-select:hover {
-  border-color: rgba(142, 201, 255, 0.52);
-  background-color: rgba(20, 58, 108, 0.86);
+  border-color: var(--border-hover);
+  background-color: var(--bg-input);
   transform: translateY(-2px);
-  box-shadow: 0 12px 26px rgba(2, 17, 44, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .search-filter-box .filter-select:focus-visible {
-  border-color: #75baff;
-  box-shadow: 0 0 0 4px rgba(76, 157, 246, 0.18), 0 12px 26px rgba(2, 17, 44, 0.2);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light), var(--shadow-md);
   transform: translateY(-1px);
 }
 
@@ -1629,7 +1628,35 @@ input::-webkit-inner-spin-button {
 /* ========================================================================
    VAULTA — INTERFACE FINANCEIRA IMERSIVA
    ======================================================================== */
+/* Tema CLARO (azulado) — aplicado por padrão, quando .dark NÃO está presente */
 :root {
+  --primary: #2f6fd6;
+  --primary-hover: #1d5bc0;
+  --primary-light: rgba(47, 111, 214, 0.12);
+  --bg-app: #eaf1ff;
+  --bg-card: #ffffff;
+  --bg-input: rgba(47, 111, 214, 0.07);
+  --border: rgba(47, 90, 160, 0.16);
+  --border-hover: rgba(47, 111, 214, 0.45);
+  --text-main: #10203f;
+  --text-muted: #5c7194;
+  --success: #1fae66;
+  --danger: #e0405c;
+  --warning: #c9891a;
+  --info: #2f6fd6;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(47, 111, 214, 0.16);
+  --radius-sm: 14px;
+  --radius-md: 22px;
+  --radius-lg: 30px;
+  --shadow-sm: 0 10px 25px rgba(30, 60, 120, 0.08);
+  --shadow-md: 0 20px 50px rgba(30, 60, 120, 0.1);
+  --shadow-lg: 0 30px 80px rgba(30, 60, 120, 0.14);
+  --shadow-glow: 0 10px 35px rgba(47, 111, 214, 0.18);
+}
+
+/* Tema ESCURO (noturno) — aplicado quando <html class="dark"> está ativo */
+:root.dark {
   --primary: #4e9eff;
   --primary-hover: #78b8ff;
   --primary-light: rgba(78, 158, 255, 0.16);
@@ -1646,34 +1673,24 @@ input::-webkit-inner-spin-button {
   --info: #6ab6ff;
   --glass-bg: rgba(14, 38, 75, 0.74);
   --glass-border: rgba(198, 226, 255, 0.13);
-  --radius-sm: 14px;
-  --radius-md: 22px;
-  --radius-lg: 30px;
   --shadow-sm: 0 10px 25px rgba(0, 8, 28, 0.16);
   --shadow-md: 0 20px 50px rgba(0, 6, 24, 0.26);
   --shadow-lg: 0 30px 80px rgba(0, 4, 20, 0.42);
   --shadow-glow: 0 10px 35px rgba(63, 150, 255, 0.25);
 }
 
-/* Mantém a mesma paleta quando o estado inicial escuro é carregado. */
-:root.dark {
-  --bg-app: #07152d;
-  --bg-card: #10264a;
-  --bg-input: rgba(255, 255, 255, 0.075);
-  --border: rgba(174, 215, 255, 0.15);
-  --border-hover: rgba(128, 195, 255, 0.6);
-  --text-main: #f4f8ff;
-  --text-muted: #a7bddb;
-  --primary-light: rgba(78, 158, 255, 0.16);
-  --glass-bg: rgba(14, 38, 75, 0.74);
-  --glass-border: rgba(198, 226, 255, 0.13);
+body {
+  background:
+    radial-gradient(circle at 73% -15%, rgba(47, 111, 214, 0.14) 0, transparent 31%),
+    radial-gradient(circle at -5% 70%, rgba(47, 111, 214, 0.08) 0, transparent 29%),
+    var(--bg-app);
+  letter-spacing: -0.01em;
 }
 
-body {
+:root.dark body {
   background:
     radial-gradient(circle at 73% -15%, #327fd5 0, transparent 31%),
     radial-gradient(circle at -5% 70%, #173c73 0, transparent 29%), #07152d;
-  letter-spacing: -0.01em;
 }
 
 body::before,
@@ -1701,12 +1718,16 @@ body::after {
 }
 
 .glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+:root.dark .glass {
   background: linear-gradient(
     135deg,
     rgba(27, 62, 109, 0.82),
     rgba(9, 26, 56, 0.86)
   );
-  border-color: var(--glass-border);
 }
 #dashboard-screen {
   padding: 24px;
@@ -1720,6 +1741,10 @@ body::after {
   min-height: calc(100vh - 48px);
   padding: 16px 12px;
   border-radius: 26px;
+  background: var(--glass-bg);
+}
+
+:root.dark .dashboard-sidebar {
   background: linear-gradient(
     180deg,
     rgba(21, 53, 95, 0.85),
@@ -1755,7 +1780,7 @@ body::after {
   font-size: 21px;
 }
 .sidebar-brand-title span {
-  color: #9db8da;
+  color: var(--text-muted);
   font-size: 11px;
   line-height: 1.35;
   display: block;
@@ -1768,12 +1793,12 @@ body::after {
   padding: 14px 15px;
   border-radius: 14px;
   background: transparent;
-  color: #adc4e2;
+  color: var(--text-muted);
   font-size: 14px;
 }
 .sidebar-tab:hover {
-  background: rgba(120, 185, 255, 0.1);
-  color: #fff;
+  background: var(--primary-light);
+  color: var(--text-main);
 }
 .sidebar-tab.active {
   background: linear-gradient(100deg, #2c76c9, #4e9eff);
@@ -1783,18 +1808,18 @@ body::after {
   margin-top: auto;
   padding: 15px;
   border-radius: 16px;
-  background: rgba(127, 182, 249, 0.08);
-  border-color: rgba(170, 210, 255, 0.1);
-  color: #9eb7d5;
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-muted);
   font-size: 11px;
 }
 .sidebar-footer p + p {
   margin-top: 7px;
 }
 .shortcut-key {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--bg-input);
   border: 0;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .dashboard-main {
@@ -1803,7 +1828,7 @@ body::after {
 header {
   padding: 12px 16px;
   border-radius: 20px;
-  background: rgba(20, 54, 98, 0.58) !important;
+  background: var(--glass-bg) !important;
   box-shadow: none;
 }
 .header-brand {
@@ -1811,7 +1836,7 @@ header {
 }
 .header-kicker {
   display: block;
-  color: #91b0d3;
+  color: var(--text-muted);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1830,14 +1855,14 @@ header {
   width: 40px;
   height: 40px;
   border: 0;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e9f4ff;
+  background: var(--bg-input);
+  color: var(--text-main);
 }
 .user-profile {
   gap: 8px;
   padding: 3px 3px 3px 6px;
   border: 0;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-input);
 }
 .user-avatar {
   width: 35px;
@@ -1846,7 +1871,7 @@ header {
 }
 .user-welcome {
   display: block;
-  color: #a4bddb;
+  color: var(--text-muted);
   font-size: 10px;
   line-height: 1;
 }
@@ -1860,11 +1885,11 @@ header {
   font-weight: 700;
 }
 .logout-btn {
-  color: #d7eaff;
+  color: var(--text-muted);
   font-size: 17px;
 }
 .logout-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
 }
 
 .month-selector-container {
@@ -1872,20 +1897,20 @@ header {
   margin: 4px 0 0 auto !important;
   padding: 7px 9px !important;
   border-radius: 15px !important;
-  background: rgba(142, 196, 255, 0.09) !important;
+  background: var(--bg-input) !important;
   box-shadow: none;
 }
 .month-selector-container h3 {
   min-width: 150px !important;
   font-size: 13px;
-  color: #d9eaff;
+  color: var(--text-main);
 }
 .month-selector-container .btn-secondary {
   padding: 7px;
   min-width: 31px;
   justify-content: center;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-input);
   border: 0;
 }
 .section-header h3 {
@@ -1904,19 +1929,24 @@ header {
 .widget-card {
   min-height: 126px;
   padding: 18px;
-  border: 1px solid rgba(181, 219, 255, 0.12);
-  border-left: 1px solid rgba(181, 219, 255, 0.12);
+  border: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   border-radius: 19px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+:root.dark .widget-card {
+  border-color: rgba(181, 219, 255, 0.12);
   background: linear-gradient(
     140deg,
     rgba(35, 78, 133, 0.86),
     rgba(12, 35, 72, 0.9)
   );
-  box-shadow: var(--shadow-sm);
 }
 .widget-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(140, 203, 255, 0.42);
+  border-color: var(--border-hover);
 }
 .widget-icon {
   width: 43px;
@@ -1925,15 +1955,18 @@ header {
   font-size: 19px;
 }
 .widget-label {
-  color: #b5cae4;
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 500;
 }
 .widget-value {
   margin-top: 5px;
-  color: #fff !important;
+  color: var(--text-main) !important;
   font-size: 23px;
   letter-spacing: -0.8px;
+}
+.widget-balance .widget-value {
+  color: #fff !important;
 }
 .widget-balance {
   grid-row: span 2;
@@ -2017,8 +2050,8 @@ header {
 .widget-warning .widget-icon,
 .widget-danger .widget-icon,
 .widget-available .widget-icon {
-  background: rgba(116, 190, 255, 0.12);
-  color: #8dc8ff;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 .widget-income .widget-icon {
   color: var(--success);
@@ -2041,6 +2074,10 @@ header {
   margin-top: 0;
   padding: 20px;
   border-radius: 20px;
+  background: var(--bg-card);
+}
+
+:root.dark .chart-card {
   background: linear-gradient(
     150deg,
     rgba(20, 54, 101, 0.9),
@@ -2069,6 +2106,13 @@ header {
 .monthly-accounts-panel {
   padding: 20px;
   border-radius: 20px;
+  background: var(--bg-card);
+}
+
+:root.dark .notes-input-card,
+:root.dark .notes-list-card,
+:root.dark .transactions-card,
+:root.dark .monthly-accounts-panel {
   background: linear-gradient(
     140deg,
     rgba(20, 52, 96, 0.84),
@@ -2083,9 +2127,9 @@ header {
 .note-textarea,
 .form-input,
 .filter-select {
-  background: rgba(2, 17, 44, 0.35);
-  border-color: rgba(179, 218, 255, 0.16);
-  color: #edf7ff;
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-main);
 }
 .filter-select {
   /* A lista aberta é nativa do navegador: usar esquema claro garante contraste. */
@@ -2101,12 +2145,12 @@ header {
 }
 .note-textarea:focus,
 .form-input:focus {
-  background: rgba(5, 29, 67, 0.62);
-  box-shadow: 0 0 0 3px rgba(78, 158, 255, 0.17);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 .note-card {
-  background: rgba(2, 17, 44, 0.22);
-  border-color: rgba(179, 218, 255, 0.12);
+  background: var(--bg-input);
+  border-color: var(--border);
 }
 
 .btn-primary {
@@ -2119,12 +2163,12 @@ header {
 }
 .btn-secondary {
   border-radius: 13px;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(185, 220, 255, 0.13);
-  color: #dcecff;
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-main);
 }
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--border);
 }
 .transactions-section {
   margin-top: 0;
@@ -2132,58 +2176,50 @@ header {
 .transactions-toolbar {
   padding: 14px;
   border-radius: 18px;
-  background: rgba(18, 51, 96, 0.58);
+  background: var(--glass-bg);
 }
 .search-input-wrapper {
-  background: rgba(2, 17, 44, 0.35);
-  border-color: rgba(179, 218, 255, 0.16);
+  background: transparent;
+  border-color: var(--border);
 }
 .search-input {
-  color: #f3f8ff;
+  color: var(--text-main);
 }
 table thead {
-  background: rgba(118, 184, 255, 0.1);
+  background: var(--bg-input);
 }
 th {
-  color: #b6cce7;
+  color: var(--text-muted);
 }
 td {
-  border-color: rgba(179, 218, 255, 0.1);
+  border-color: var(--border);
 }
 tr:hover td {
-  background: rgba(108, 175, 255, 0.07);
-}
-.tx-status.status-paid {
-  background: rgba(78, 229, 142, 0.15);
-  color: #74f2a8;
-}
-.tx-status.status-pending {
-  background: rgba(255, 196, 93, 0.14);
-  color: #ffd278;
+  background: var(--primary-light);
 }
 
 .monthly-dashboard {
   gap: 14px;
 }
 .monthly-summary-card {
-  border-color: rgba(179, 218, 255, 0.12);
-  background: rgba(10, 31, 68, 0.45);
+  border-color: var(--border);
+  background: var(--bg-input);
   border-radius: 17px;
 }
 .monthly-summary-icon {
-  color: #8dccff;
-  background: rgba(97, 177, 255, 0.14);
+  color: var(--primary);
+  background: var(--primary-light);
 }
 .monthly-panel-heading > i,
 .monthly-account-name i {
-  color: #7fbfff;
+  color: var(--primary);
 }
 .monthly-account-card {
-  background: rgba(2, 17, 44, 0.25);
-  border-color: rgba(179, 218, 255, 0.12);
+  background: var(--bg-input);
+  border-color: var(--border);
 }
 .monthly-account-card:hover {
-  background: rgba(71, 143, 220, 0.12);
+  background: var(--primary-light);
 }
 .modal-overlay {
   background: rgba(1, 10, 28, 0.72);
@@ -2191,10 +2227,14 @@ tr:hover td {
 }
 .modal-container {
   border-radius: 24px;
+  background: var(--bg-card) !important;
+}
+
+:root.dark .modal-container {
   background: linear-gradient(145deg, #183d72, #0a2048) !important;
 }
 .modal-header {
-  border-color: rgba(179, 218, 255, 0.15);
+  border-color: var(--border);
 }
 .type-btn {
   border-radius: 12px;
@@ -2314,12 +2354,11 @@ tr:hover td {
 }
 
 .search-filter-box .filter-select {
-  background-color: rgba(11, 35, 72, 0.72);
-  background-image: linear-gradient(45deg, transparent 50%, #b9dcff 50%),
-    linear-gradient(135deg, #b9dcff 50%, transparent 50%),
-    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
-  background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px, 100% 0;
-  background-size: 6px 6px, 6px 6px, 38px 100%;
+  background-color: var(--bg-input);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px;
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
 
