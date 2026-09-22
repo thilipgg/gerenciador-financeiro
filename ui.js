@@ -677,7 +677,7 @@ export function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 3000);
 }
 
-export function showConfirmToast(message) {
+export function showConfirmToast(message, { confirmLabel = 'Confirmar', iconClass = 'ri-question-line' } = {}) {
     return new Promise(resolve => {
         const container = document.getElementById('toast-container');
         if (!container) {
@@ -690,7 +690,7 @@ export function showConfirmToast(message) {
 
         const icon = document.createElement('span');
         icon.className = 'toast-confirmation-icon';
-        icon.innerHTML = '<i class="ri-file-copy-2-line"></i>';
+        icon.innerHTML = `<i class="${iconClass}"></i>`;
 
         const content = document.createElement('div');
         content.className = 'toast-confirmation-content';
@@ -709,7 +709,7 @@ export function showConfirmToast(message) {
         const confirmButton = document.createElement('button');
         confirmButton.type = 'button';
         confirmButton.className = 'toast-action toast-action-primary';
-        confirmButton.textContent = 'Replicar';
+        confirmButton.textContent = confirmLabel;
 
         let resolved = false;
         const finish = value => {

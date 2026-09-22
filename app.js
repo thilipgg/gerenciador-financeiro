@@ -15,6 +15,7 @@ import {
     showDashboardScreen,
     updateDashboardUI,
     showToast,
+    showConfirmToast,
     initTheme,
     toggleTheme,
     openModal,
@@ -187,7 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const mesAlvoNome = nomesMeses[proximoMesHumano - 1];
 
         const confirmacao = await showConfirmToast(
-            `Deseja replicar ${transacoesDoMes.length} lançamento(s) de ${nomesMeses[month]} para ${mesAlvoNome} de ${anoAlvo}?`
+            `Deseja replicar ${transacoesDoMes.length} lançamento(s) de ${nomesMeses[month]} para ${mesAlvoNome} de ${anoAlvo}?`,
+            { confirmLabel: 'Replicar', iconClass: 'ri-file-copy-2-line' }
         );
         if (!confirmacao) return;
 
@@ -297,7 +299,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const noteId = deleteButton.dataset.id;
         if (!noteId) return;
 
-        if (!confirm('Deseja excluir esta anotação?')) return;
+        const confirmacao = await showConfirmToast(
+            'Deseja excluir esta anotação?',
+            { confirmLabel: 'Excluir', iconClass: 'ri-delete-bin-line' }
+        );
+        if (!confirmacao) return;
 
         try {
             await removeNote(noteId);

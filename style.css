@@ -1805,7 +1805,6 @@ body::after {
   box-shadow: 0 10px 24px rgba(25, 111, 217, 0.32);
 }
 .sidebar-footer {
-  margin-top: auto;
   padding: 15px;
   border-radius: 16px;
   background: var(--bg-input);
@@ -2130,6 +2129,7 @@ header {
   background: var(--bg-input);
   border-color: var(--border);
   color: var(--text-main);
+  margin-top: 1%;
 }
 .filter-select {
   /* A lista aberta é nativa do navegador: usar esquema claro garante contraste. */
