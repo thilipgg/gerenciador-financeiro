@@ -629,13 +629,24 @@ export function closeModal() {
     if (modalTitle) modalTitle.textContent = "Nova Transação";
 }
 
+const THEME_COLOR_DARK = '#07152d';
+const THEME_COLOR_LIGHT = '#eaf1ff';
+
+function syncThemeColorMeta(isDark) {
+    const meta = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isDark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT);
+}
+
 export function initTheme() {
     if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+    // Respeita o padrão definido no HTML (class="dark") quando não há preferência salva ainda
+    syncThemeColorMeta(document.documentElement.classList.contains('dark'));
 }
 
 export function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    syncThemeColorMeta(isDark);
     updateChartsTheme(isDark);
 }
 
