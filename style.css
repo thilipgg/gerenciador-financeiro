@@ -1049,6 +1049,96 @@ table td {
   overflow: hidden;
 }
 
+.avatar-editor {
+  width: min(520px, 92vw);
+}
+
+.avatar-editor-header {
+  position: relative;
+}
+
+.close-modal-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.avatar-editor-body {
+  padding: 18px 18px 12px;
+}
+
+.avatar-editor-url-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.avatar-editor-url-row .form-input {
+  flex: 1;
+}
+
+.avatar-crop-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0 18px;
+}
+
+.avatar-crop-frame {
+  width: min(300px, 72vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(138, 92, 246, 0.8);
+  box-shadow: 0 0 0 5px rgba(138, 92, 246, 0.12), 0 12px 30px rgba(138, 92, 246, 0.2);
+  background: var(--bg-input);
+}
+
+.avatar-crop-preview {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  transition: background-size 0.2s ease, background-position 0.2s ease;
+}
+
+.avatar-crop-controls {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.avatar-crop-controls label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.avatar-crop-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.avatar-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
 .modal-title {
   padding: 5px 0px 10px 0px;
   justify-self: center;

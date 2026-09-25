@@ -533,6 +533,50 @@
         </div>
     </div>
 
+    <div id="avatar-crop-modal" class="modal-overlay avatar-crop-modal">
+        <div class="modal-container avatar-editor glass">
+            <div class="modal-header avatar-editor-header">
+                <h3 class="modal-title">Editar foto do perfil</h3>
+                <button id="avatar-close-btn" type="button" class="close-modal-btn" aria-label="Fechar editor">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div class="avatar-editor-body">
+                <div class="avatar-editor-url-row">
+                    <input id="avatar-url-input" type="url" class="form-input" placeholder="Cole a URL da imagem aqui" />
+                    <button id="avatar-load-btn" type="button" class="btn-secondary">Carregar</button>
+                </div>
+
+                <div class="avatar-crop-stage">
+                    <div class="avatar-crop-frame">
+                        <div id="avatar-crop-preview" class="avatar-crop-preview"></div>
+                    </div>
+                </div>
+
+                <div class="avatar-crop-controls">
+                    <label>
+                        <span>Zoom</span>
+                        <input id="avatar-zoom" type="range" min="1" max="3" step="0.05" value="1" />
+                    </label>
+                    <label>
+                        <span>Horizontal</span>
+                        <input id="avatar-x" type="range" min="0" max="100" step="1" value="50" />
+                    </label>
+                    <label>
+                        <span>Vertical</span>
+                        <input id="avatar-y" type="range" min="0" max="100" step="1" value="50" />
+                    </label>
+                </div>
+
+                <div class="modal-footer avatar-editor-footer">
+                    <button id="avatar-cancel-btn" type="button" class="btn-secondary">Cancelar</button>
+                    <button id="avatar-save-btn" type="submit" class="btn-primary">Usar foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Container de Toasts -->
     <div id="toast-container" class="toast-container"></div>
 

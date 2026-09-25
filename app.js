@@ -477,23 +477,168 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 window.addEventListener('transactions-updated', loadDashboardData);
 
+const avatarCropState = {
+    url: '',
+    image: null,
+    zoom: 1,
+    x: 50,
+    y: 50
+};
+
+function openAvatarCropEditor(initialUrl = '') {
+    const modal = document.getElementById('avatar-crop-modal');
+    const urlInput = document.getElementById('avatar-url-input');
+    if (!modal || !urlInput) return;
+
+    urlInput.value = initialUrl;
+    avatarCropState.url = '';
+    avatarCropState.image = null;
+    avatarCropState.zoom = 1;
+    avatarCropState.x = 50;
+    avatarCropState.y = 50;
+
+    const zoomInput = document.getElementById('avatar-zoom');
+    const xInput = document.getElementById('avatar-x');
+    const yInput = document.getElementById('avatar-y');
+    if (zoomInput) zoomInput.value = '1';
+    if (xInput) xInput.value = '50';
+    if (yInput) yInput.value = '50';
+
+    if (initialUrl) {
+        loadAvatarPreview(initialUrl);
+    }
+
+    modal.classList.add('active');
+}
+
+function closeAvatarCropEditor() {
+    const modal = document.getElementById('avatar-crop-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function updateAvatarCropPreview() {
+    const preview = document.getElementById('avatar-crop-preview');
+    if (!preview || !avatarCropState.url) return;
+
+    preview.style.backgroundImage = `url("${avatarCropState.url}")`;
+    preview.style.backgroundSize = `${avatarCropState.zoom * 100}%`;
+    preview.style.backgroundPosition = `${avatarCropState.x}% ${avatarCropState.y}%`;
+}
+
+function loadAvatarPreview(url) {
+    if (!url || !url.startsWith('http')) {
+        showToast('Por favor, insira uma URL válida começando com http.', 'error');
+        return;
+    }
+
+    const preview = document.getElementById('avatar-crop-preview');
+    if (!preview) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+        avatarCropState.url = url;
+        avatarCropState.image = img;
+        updateAvatarCropPreview();
+    };
+    img.onerror = () => {
+        showToast('Não foi possível carregar essa imagem. Tente outra URL.', 'error');
+    };
+    img.src = url;
+}
+
+function handleAvatarCropSave() {
+    const img = avatarCropState.image;
+    if (!img) {
+        showToast('Primeiro carregue uma imagem para ajustar o recorte.', 'error');
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const size = 256;
+    canvas.width = size;
+    canvas.height = size;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        showToast('Não foi possível processar a imagem.', 'error');
+        return;
+    }
+
+    const squareSize = Math.min(img.naturalWidth, img.naturalHeight);
+    const sourceSize = Math.max(64, squareSize / Math.max(0.4, avatarCropState.zoom));
+    const xOffset = (img.naturalWidth - sourceSize) * (avatarCropState.x / 100);
+    const yOffset = (img.naturalHeight - sourceSize) * (avatarCropState.y / 100);
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = '#f4f4f5';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(
+        img,
+        Math.max(0, xOffset),
+        Math.max(0, yOffset),
+        Math.max(64, sourceSize),
+        Math.max(64, sourceSize),
+        0,
+        0,
+        size,
+        size
+    );
+
+    const croppedDataUrl = canvas.toDataURL('image/png');
+
+    supabase.auth.updateUser({
+        data: { avatar_url: croppedDataUrl }
+    }).then(({ error }) => {
+        if (error) throw error;
+        const avatarEl = document.getElementById('user-avatar');
+        if (avatarEl) avatarEl.src = croppedDataUrl;
+        closeAvatarCropEditor();
+        showToast('Avatar atualizado com sucesso!', 'success');
+    }).catch(() => {
+        showToast('Erro ao atualizar o avatar.', 'error');
+    });
+}
+
 // ATUALIZAÇÃO DE AVATAR (Perfil)
 document.getElementById('user-avatar')?.addEventListener('click', async () => {
-    const novaUrl = prompt("Cole aqui o link (URL) da nova imagem para o seu perfil:");
-    if (novaUrl && novaUrl.startsWith('http')) {
-        try {
-            const { error } = await supabase.auth.updateUser({
-                data: { avatar_url: novaUrl }
-            });
-            if (error) throw error;
-            document.getElementById('user-avatar').src = novaUrl;
-            showToast("Avatar updated successfully!", "success");
-        } catch (err) {
-            showToast("Erro ao atualizar o avatar.", "error");
-        }
-    } else if (novaUrl) {
-        showToast("Por favor, insira um link válido começando com http.", "error");
+    openAvatarCropEditor();
+});
+
+document.getElementById('avatar-load-btn')?.addEventListener('click', () => {
+    const url = document.getElementById('avatar-url-input')?.value.trim();
+    if (url) loadAvatarPreview(url);
+});
+
+document.getElementById('avatar-url-input')?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const url = document.getElementById('avatar-url-input')?.value.trim();
+        if (url) loadAvatarPreview(url);
     }
+});
+
+document.getElementById('avatar-close-btn')?.addEventListener('click', closeAvatarCropEditor);
+document.getElementById('avatar-cancel-btn')?.addEventListener('click', closeAvatarCropEditor);
+document.getElementById('avatar-save-btn')?.addEventListener('click', handleAvatarCropSave);
+
+document.getElementById('avatar-zoom')?.addEventListener('input', (event) => {
+    avatarCropState.zoom = Number(event.target.value || 1);
+    updateAvatarCropPreview();
+});
+
+document.getElementById('avatar-x')?.addEventListener('input', (event) => {
+    avatarCropState.x = Number(event.target.value || 50);
+    updateAvatarCropPreview();
+});
+
+document.getElementById('avatar-y')?.addEventListener('input', (event) => {
+    avatarCropState.y = Number(event.target.value || 50);
+    updateAvatarCropPreview();
+});
+
+document.getElementById('avatar-crop-modal')?.addEventListener('click', (event) => {
+    if (event.target === event.currentTarget) closeAvatarCropEditor();
 });
 
 function activateDashboardTab(tabId) {
