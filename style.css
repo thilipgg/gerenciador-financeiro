@@ -381,17 +381,6 @@ select {
   margin-right: 6px;
 }
 
-.sidebar-footer {
-  padding: 18px;
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
 .shortcut-key {
   display: inline-flex;
   align-items: center;
@@ -503,6 +492,32 @@ header {
   align-items: center;
   justify-content: center;
   color: var(--text-main);
+}
+
+.sound-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  transition: var(--transition);
+}
+
+.sound-toggle .sound-off-icon {
+  display: none;
+}
+
+.sound-toggle.muted .sound-on-icon {
+  display: none;
+}
+
+.sound-toggle.muted .sound-off-icon {
+  display: block;
 }
 
 .theme-toggle .sun-icon {
@@ -829,8 +844,12 @@ header {
 
 .transactions-toolbar {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  margin-bottom: 20px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .search-filter-box {
@@ -902,6 +921,7 @@ header {
 
 table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
@@ -933,7 +953,7 @@ td {
 
 .actions-cell {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
   align-items: center;
 }
@@ -945,24 +965,8 @@ table td {
   vertical-align: middle;
 }
 
-/* Centraliza os botões de ação dentro da célula */
-.actions-cell {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  align-items: center;
-}
-
 .td-description {
   font-weight: 600;
-}
-
-.td-category {
-  display: inline-flex;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  background-color: var(--bg-input);
 }
 
 .amount-income {
@@ -1208,17 +1212,6 @@ table td {
   background: var(--danger);
 }
 
-/* Correção da Toolbar e Busca */
-.transactions-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
 .search-input-wrapper i {
   position: absolute;
   left: 15px;
@@ -1245,10 +1238,6 @@ table td {
 .table-responsive {
   width: 100%;
   overflow-x: auto;
-}
-
-table {
-  min-width: 760px;
 }
 
 /* Estilo para o botão de editar na tabela */
@@ -1502,13 +1491,6 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* Remove as setas nativas do input number */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 .borda {
   border: 1px solid red;
 }
@@ -1717,11 +1699,6 @@ body::after {
   background: rgba(52, 100, 200, 0.16);
 }
 
-.glass {
-  background: var(--glass-bg);
-  border-color: var(--glass-border);
-}
-
 :root.dark .glass {
   background: linear-gradient(
     135deg,
@@ -1811,6 +1788,7 @@ body::after {
   border-color: var(--border);
   color: var(--text-muted);
   font-size: 11px;
+  line-height: 1.6;
 }
 .sidebar-footer p + p {
   margin-top: 7px;
@@ -1955,7 +1933,7 @@ header {
 }
 .widget-label {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 22px;
   font-weight: 500;
 }
 .widget-value {

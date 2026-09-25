@@ -659,12 +659,55 @@ function setupDeleteListeners() {
         // Adiciona o listener único de clique no botão limpo
         novoBotao.addEventListener('click', async (e) => {
             const id = e.currentTarget.dataset.id;
-            if (confirm("⚠️ Atenção: Você tem certeza que deseja apagar esta transação? Esta ação não poderá ser desfeita.")) {
-    await removeTransaction(id);
-                window.dispatchEvent(new Event('transactions-updated'));
-            }
+            const confirmacao = await showConfirmToast(
+                '⚠️ Atenção: você tem certeza que deseja apagar esta transação? Esta ação não poderá ser desfeita.',
+                { confirmLabel: 'Excluir', iconClass: 'ri-delete-bin-line' }
+            );
+
+            if (!confirmacao) return;
+
+            await removeTransaction(id);
+            playDeleteSound();
+            window.dispatchEvent(new Event('transactions-updated'));
         });
     });
+}
+
+export function isSoundEnabled() {
+    return localStorage.getItem('vaulta-sound-enabled') !== 'false';
+}
+
+export function setSoundEnabled(enabled) {
+    localStorage.setItem('vaulta-sound-enabled', String(enabled));
+    const button = document.getElementById('sound-toggle');
+    if (button) {
+        button.classList.toggle('muted', !enabled);
+        button.title = enabled ? 'Som ativado' : 'Som desativado';
+        button.setAttribute('aria-label', enabled ? 'Desativar som' : 'Ativar som');
+    }
+}
+
+function playAudio(path, volume = 0.7) {
+    if (!isSoundEnabled()) return;
+
+    const audio = new Audio(path);
+    audio.volume = volume;
+    audio.preload = 'auto';
+    audio.play().catch(() => {
+        // Silencia falhas de reprodução até que o usuário interaja com a página.
+    });
+}
+
+export function playSuccessSound() {
+    playAudio('./media/correct.mp3', 0.7);
+}
+
+export function playUiSelectionSound() {
+    playAudio('./media/ui-selection.mp3', 0.7);
+}
+
+export function playDeleteSound() {
+    playAudio('./media/exclusao.mp3', 0.8);
 }
 
 export function showToast(message, type = "success") {

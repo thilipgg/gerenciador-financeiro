@@ -16,6 +16,11 @@ import {
     updateDashboardUI,
     showToast,
     showConfirmToast,
+    playSuccessSound,
+    playUiSelectionSound,
+    playDeleteSound,
+    isSoundEnabled,
+    setSoundEnabled,
     initTheme,
     toggleTheme,
     openModal,
@@ -75,6 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDashboardUI([]);
         loadFiiData();
     });
+
+    const soundToggleBtn = document.getElementById('sound-toggle');
+    soundToggleBtn?.addEventListener('click', () => {
+        const nextEnabled = !isSoundEnabled();
+        setSoundEnabled(nextEnabled);
+    });
+    setSoundEnabled(isSoundEnabled());
 
     const savedBankBalances = JSON.parse(localStorage.getItem('monthly-bank-balances') || '[]');
     const monthlyBankInputs = [...document.querySelectorAll('.monthly-account-input')];
@@ -245,7 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDark = document.documentElement.classList.contains('dark');
         updateFiiAllocationChartTheme(isDark);
     });
-    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => openModal(false));
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => {
+        playUiSelectionSound();
+        openModal(false);
+    });
     document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('transaction-modal')?.addEventListener('click', (event) => {
@@ -259,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', () => {
             const selectedTab = tab.dataset.tab;
             if (selectedTab) {
+                playUiSelectionSound();
                 activateDashboardTab(selectedTab);
             }
         });
@@ -285,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await insertNote({ content });
             if (contentEl) contentEl.value = '';
             showToast('Anotação salva!', 'success');
+            playSuccessSound();
             await loadDashboardData();
         } catch (err) {
             console.error(err);
@@ -307,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await removeNote(noteId);
+            playDeleteSound();
             showToast('Anotação excluída.', 'success');
             await loadDashboardData();
         } catch (err) {
@@ -350,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('FII salvo com sucesso!', 'success');
         }
 
+        playSuccessSound();
         saveFiiHoldings(currentAppUser, holdings);
         updateFiiUI(holdings);
         resetFiiForm();
@@ -427,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast("Lançamento realizado!", "success");
             }
 
+            playSuccessSound();
             closeModal();
             await loadDashboardData();
         } catch (err) {
@@ -509,6 +529,7 @@ window.addEventListener('keydown', (event) => {
     if (event.key === 'F1') {
         event.preventDefault();
         if (!document.getElementById('transaction-modal')?.classList.contains('active')) {
+            playUiSelectionSound();
             openModal(false);
         }
     }
