@@ -1081,10 +1081,18 @@ table td {
   display: flex;
   gap: 10px;
   margin-bottom: 18px;
+  width: 100%;
 }
 
 .avatar-editor-url-row .form-input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.avatar-editor-url-row .btn-secondary {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .avatar-crop-stage {
@@ -1137,6 +1145,64 @@ table td {
   justify-content: flex-end;
   gap: 12px;
   padding-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .avatar-editor {
+    width: min(94vw, 420px);
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 22px;
+  }
+
+  .avatar-editor-header {
+    padding: 10px 12px;
+  }
+
+  .avatar-editor-header .modal-title {
+    padding: 6px 26px 0 0;
+    font-size: 1.05rem;
+  }
+
+  .avatar-editor-body {
+    padding: 12px 12px 10px;
+  }
+
+  .avatar-editor-url-row {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .avatar-editor-url-row .btn-secondary,
+  .avatar-editor-footer .btn-primary,
+  .avatar-editor-footer .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
+  }
+
+  .avatar-editor-footer {
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding-top: 2px;
+  }
+
+  .avatar-crop-stage {
+    padding: 4px 0 12px;
+  }
+
+  .avatar-crop-frame {
+    width: min(220px, 60vw);
+  }
+
+  .avatar-crop-controls {
+    gap: 8px;
+  }
+
+  .avatar-crop-controls label {
+    font-size: 12px;
+  }
 }
 
 .modal-title {
