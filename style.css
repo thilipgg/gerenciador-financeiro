@@ -127,6 +127,18 @@ select {
   }
 }
 
+@keyframes pulsePending {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.8), 0 0 10px rgba(250, 204, 21, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 1), 0 0 18px rgba(250, 204, 21, 0.8), 0 0 28px rgba(250, 204, 21, 0.45);
+    transform: scale(1.02);
+  }
+}
+
 .animate-fade {
   animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -721,8 +733,12 @@ header {
 }
 
 .status-pending {
-  background-color: rgba(245, 158, 11, 0.16);
-  color: var(--warning);
+  background: linear-gradient(135deg, rgba(253, 224, 71, 0.18), rgba(251, 191, 36, 0.12));
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.8);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.35), 0 0 12px rgba(250, 204, 21, 0.4), inset 0 0 10px rgba(250, 204, 21, 0.12);
+  animation: pulsePending 1.8s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
 }
 
 .overdue {
