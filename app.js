@@ -18,6 +18,7 @@ import {
     showConfirmToast,
     playSuccessSound,
     playUiSelectionSound,
+    playUiUnselectionSound,
     playDeleteSound,
     isSoundEnabled,
     setSoundEnabled,
@@ -40,12 +41,132 @@ import {
 // Estado do usuário atual, usado para persistir FIIs por perfil
 let currentAppUser = null;
 
-// Registra o Service Worker para habilitar o modo Tela Cheia (PWA) no Android
+const AVATAR_MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const AVATAR_MAX_SAVED_BYTES = 100 * 1024;
+const avatarEditorState = { image: null, sourceUrl: null };
+
+function getAvatarStorageKey(user = currentAppUser) {
+    return user?.id ? `vaulta-avatar-${user.id}` : 'vaulta-avatar-guest';
+}
+
+function applySavedAvatar(user = currentAppUser) {
+    const avatar = localStorage.getItem(getAvatarStorageKey(user));
+    if (avatar) document.getElementById('user-avatar').src = avatar;
+}
+
+function setAvatarEditorStatus(message, isError = false) {
+    const status = document.getElementById('avatar-editor-status');
+    if (!status) return;
+    status.textContent = message;
+    status.classList.toggle('error', isError);
+}
+
+function updateAvatarPreview() {
+    const preview = document.getElementById('avatar-crop-preview');
+    const zoom = Number(document.getElementById('avatar-zoom')?.value || 1);
+    const x = Number(document.getElementById('avatar-x')?.value || 50);
+    const y = Number(document.getElementById('avatar-y')?.value || 50);
+    const image = avatarEditorState.image;
+
+    if (!preview || !image || !avatarEditorState.sourceUrl) return;
+
+    const coverScale = Math.max(256 / image.naturalWidth, 256 / image.naturalHeight);
+    const width = image.naturalWidth * coverScale * zoom;
+    const height = image.naturalHeight * coverScale * zoom;
+    preview.style.backgroundImage = `url("${avatarEditorState.sourceUrl}")`;
+    preview.style.backgroundSize = `${(width / 256) * 100}% ${(height / 256) * 100}%`;
+    preview.style.backgroundPosition = `${x}% ${y}%`;
+}
+
+function loadAvatarImage(sourceUrl) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Não foi possível abrir esta imagem.'));
+        image.src = sourceUrl;
+    });
+}
+
+async function setAvatarEditorImage(sourceUrl) {
+    try {
+        const image = await loadAvatarImage(sourceUrl);
+        if (avatarEditorState.sourceUrl?.startsWith('blob:')) URL.revokeObjectURL(avatarEditorState.sourceUrl);
+        avatarEditorState.image = image;
+        avatarEditorState.sourceUrl = sourceUrl;
+        document.getElementById('avatar-zoom').value = '1';
+        document.getElementById('avatar-x').value = '50';
+        document.getElementById('avatar-y').value = '50';
+        updateAvatarPreview();
+        setAvatarEditorStatus('Imagem pronta. Ajuste o enquadramento antes de salvar.');
+    } catch (error) {
+        setAvatarEditorStatus(error.message, true);
+    }
+}
+
+function cropAvatarToDataUrl() {
+    const image = avatarEditorState.image;
+    if (!image) throw new Error('Escolha uma imagem antes de salvar.');
+
+    const zoom = Number(document.getElementById('avatar-zoom').value);
+    const x = Number(document.getElementById('avatar-x').value) / 100;
+    const y = Number(document.getElementById('avatar-y').value) / 100;
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    const coverScale = Math.max(size / image.naturalWidth, size / image.naturalHeight) * zoom;
+    const width = image.naturalWidth * coverScale;
+    const height = image.naturalHeight * coverScale;
+    context.drawImage(image, (size - width) * x, (size - height) * y, width, height);
+
+    let quality = 0.82;
+    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+    while (dataUrl.length > AVATAR_MAX_SAVED_BYTES && quality > 0.4) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
+    if (dataUrl.length > AVATAR_MAX_SAVED_BYTES) {
+        throw new Error('A imagem continua grande demais. Escolha outra imagem.');
+    }
+    return dataUrl;
+}
+
+function resetAvatarEditor() {
+    if (avatarEditorState.sourceUrl?.startsWith('blob:')) URL.revokeObjectURL(avatarEditorState.sourceUrl);
+    avatarEditorState.image = null;
+    avatarEditorState.sourceUrl = null;
+    const preview = document.getElementById('avatar-crop-preview');
+    if (preview) preview.style.backgroundImage = '';
+    document.getElementById('avatar-url-input').value = '';
+    document.getElementById('avatar-file-input').value = '';
+    document.getElementById('avatar-zoom').value = '1';
+    document.getElementById('avatar-x').value = '50';
+    document.getElementById('avatar-y').value = '50';
+    setAvatarEditorStatus('Carregue uma imagem para começar. Arquivos de até 8 MB.');
+}
+
+function openAvatarEditor() {
+    resetAvatarEditor();
+    document.getElementById('avatar-crop-modal')?.classList.add('active');
+}
+
+function closeAvatarEditor() {
+    document.getElementById('avatar-crop-modal')?.classList.remove('active');
+    resetAvatarEditor();
+}
+
+// Remove versões antigas do Service Worker. A versão anterior interceptava
+// chamadas ao Supabase e podia impedir a autenticação com ERR_FAILED.
+// O app não usa cache offline, portanto não deve manter um Service Worker ativo.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-      .catch(err => console.error('Erro ao registrar Service Worker:', err));
+  window.addEventListener('load', async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+    if (registrations.length) {
+      console.info('Service Worker antigo removido.');
+    }
   });
 }
 
@@ -67,9 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await loginComEmail(email, password);
+            // A troca de tela e o carregamento acontecem uma única vez no
+            // onAuthStateChange, quando o Supabase confirma a sessão.
         } catch (err) {
             console.error(err);
-            showToast("E-mail ou senha incorretos.", "error");
+            const message = String(err?.message || '').toLowerCase();
+            const isNetworkError = message.includes('failed to fetch') || message.includes('network');
+            showToast(
+                isNetworkError
+                    ? "Não foi possível conectar ao Supabase. Verifique sua internet ou bloqueadores de conteúdo."
+                    : "E-mail ou senha incorretos.",
+                "error"
+            );
         }
     });
 
@@ -77,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnVisitante?.addEventListener('click', () => {
         currentAppUser = { email: "demo@demo.com", user_metadata: { full_name: "Visitante" } };
         showDashboardScreen(currentAppUser, true);
+        applySavedAvatar(currentAppUser);
         updateDashboardUI([]);
         loadFiiData();
     });
@@ -261,11 +392,77 @@ document.addEventListener('DOMContentLoaded', () => {
         playUiSelectionSound();
         openModal(false);
     });
-    document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+    const closeTransactionModalWithSound = () => {
+        playUiUnselectionSound();
+        closeModal();
+    };
+
+    document.getElementById('close-modal-btn')?.addEventListener('click', closeTransactionModalWithSound);
     document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('transaction-modal')?.addEventListener('click', (event) => {
         if (event.target === event.currentTarget) {
-            closeModal();
+            closeTransactionModalWithSound();
+        }
+    });
+
+    const avatarModal = document.getElementById('avatar-crop-modal');
+    const closeAvatarModalWithSound = () => {
+        playUiUnselectionSound();
+        closeAvatarEditor();
+    };
+    document.getElementById('avatar-close-btn')?.addEventListener('click', closeAvatarModalWithSound);
+    document.getElementById('avatar-cancel-btn')?.addEventListener('click', closeAvatarModalWithSound);
+    avatarModal?.addEventListener('click', (event) => {
+        if (event.target === event.currentTarget) closeAvatarModalWithSound();
+    });
+
+    document.getElementById('avatar-load-btn')?.addEventListener('click', async () => {
+        const url = document.getElementById('avatar-url-input').value.trim();
+        if (!/^https?:\/\//i.test(url)) {
+            setAvatarEditorStatus('Use um link que comece com http:// ou https://.', true);
+            return;
+        }
+        await setAvatarEditorImage(url);
+    });
+
+    document.getElementById('avatar-paste-btn')?.addEventListener('click', async () => {
+        try {
+            const url = await navigator.clipboard.readText();
+            document.getElementById('avatar-url-input').value = url;
+            setAvatarEditorStatus('Link colado. Clique em Carregar para continuar.');
+        } catch {
+            setAvatarEditorStatus('Não foi possível ler a área de transferência.', true);
+        }
+    });
+
+    document.getElementById('avatar-file-input')?.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setAvatarEditorStatus('Escolha uma imagem PNG, JPEG ou WebP.', true);
+            return;
+        }
+        if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
+            setAvatarEditorStatus('A imagem ultrapassa o limite de 8 MB.', true);
+            return;
+        }
+        await setAvatarEditorImage(URL.createObjectURL(file));
+    });
+
+    ['avatar-zoom', 'avatar-x', 'avatar-y'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('input', updateAvatarPreview);
+    });
+
+    document.getElementById('avatar-save-btn')?.addEventListener('click', () => {
+        try {
+            const avatar = cropAvatarToDataUrl();
+            localStorage.setItem(getAvatarStorageKey(), avatar);
+            applySavedAvatar();
+            showToast('Foto atualizada neste dispositivo.', 'success');
+            playSuccessSound();
+            closeAvatarEditor();
+        } catch (error) {
+            setAvatarEditorStatus(error.message, true);
         }
     });
 
@@ -468,6 +665,7 @@ supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
         currentAppUser = session.user;
         showDashboardScreen(session.user, false);
+        applySavedAvatar(session.user);
         loadDashboardData();
         loadFiiData();
     } else {
@@ -477,168 +675,10 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 window.addEventListener('transactions-updated', loadDashboardData);
 
-const avatarCropState = {
-    url: '',
-    image: null,
-    zoom: 1,
-    x: 50,
-    y: 50
-};
-
-function openAvatarCropEditor(initialUrl = '') {
-    const modal = document.getElementById('avatar-crop-modal');
-    const urlInput = document.getElementById('avatar-url-input');
-    if (!modal || !urlInput) return;
-
-    urlInput.value = initialUrl;
-    avatarCropState.url = '';
-    avatarCropState.image = null;
-    avatarCropState.zoom = 1;
-    avatarCropState.x = 50;
-    avatarCropState.y = 50;
-
-    const zoomInput = document.getElementById('avatar-zoom');
-    const xInput = document.getElementById('avatar-x');
-    const yInput = document.getElementById('avatar-y');
-    if (zoomInput) zoomInput.value = '1';
-    if (xInput) xInput.value = '50';
-    if (yInput) yInput.value = '50';
-
-    if (initialUrl) {
-        loadAvatarPreview(initialUrl);
-    }
-
-    modal.classList.add('active');
-}
-
-function closeAvatarCropEditor() {
-    const modal = document.getElementById('avatar-crop-modal');
-    if (modal) modal.classList.remove('active');
-}
-
-function updateAvatarCropPreview() {
-    const preview = document.getElementById('avatar-crop-preview');
-    if (!preview || !avatarCropState.url) return;
-
-    preview.style.backgroundImage = `url("${avatarCropState.url}")`;
-    preview.style.backgroundSize = `${avatarCropState.zoom * 100}%`;
-    preview.style.backgroundPosition = `${avatarCropState.x}% ${avatarCropState.y}%`;
-}
-
-function loadAvatarPreview(url) {
-    if (!url || !url.startsWith('http')) {
-        showToast('Por favor, insira uma URL válida começando com http.', 'error');
-        return;
-    }
-
-    const preview = document.getElementById('avatar-crop-preview');
-    if (!preview) return;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-        avatarCropState.url = url;
-        avatarCropState.image = img;
-        updateAvatarCropPreview();
-    };
-    img.onerror = () => {
-        showToast('Não foi possível carregar essa imagem. Tente outra URL.', 'error');
-    };
-    img.src = url;
-}
-
-function handleAvatarCropSave() {
-    const img = avatarCropState.image;
-    if (!img) {
-        showToast('Primeiro carregue uma imagem para ajustar o recorte.', 'error');
-        return;
-    }
-
-    const canvas = document.createElement('canvas');
-    const size = 256;
-    canvas.width = size;
-    canvas.height = size;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        showToast('Não foi possível processar a imagem.', 'error');
-        return;
-    }
-
-    const squareSize = Math.min(img.naturalWidth, img.naturalHeight);
-    const sourceSize = Math.max(64, squareSize / Math.max(0.4, avatarCropState.zoom));
-    const xOffset = (img.naturalWidth - sourceSize) * (avatarCropState.x / 100);
-    const yOffset = (img.naturalHeight - sourceSize) * (avatarCropState.y / 100);
-
-    ctx.clearRect(0, 0, size, size);
-    ctx.fillStyle = '#f4f4f5';
-    ctx.fillRect(0, 0, size, size);
-    ctx.drawImage(
-        img,
-        Math.max(0, xOffset),
-        Math.max(0, yOffset),
-        Math.max(64, sourceSize),
-        Math.max(64, sourceSize),
-        0,
-        0,
-        size,
-        size
-    );
-
-    const croppedDataUrl = canvas.toDataURL('image/png');
-
-    supabase.auth.updateUser({
-        data: { avatar_url: croppedDataUrl }
-    }).then(({ error }) => {
-        if (error) throw error;
-        const avatarEl = document.getElementById('user-avatar');
-        if (avatarEl) avatarEl.src = croppedDataUrl;
-        closeAvatarCropEditor();
-        showToast('Avatar atualizado com sucesso!', 'success');
-    }).catch(() => {
-        showToast('Erro ao atualizar o avatar.', 'error');
-    });
-}
-
 // ATUALIZAÇÃO DE AVATAR (Perfil)
-document.getElementById('user-avatar')?.addEventListener('click', async () => {
-    openAvatarCropEditor();
-});
-
-document.getElementById('avatar-load-btn')?.addEventListener('click', () => {
-    const url = document.getElementById('avatar-url-input')?.value.trim();
-    if (url) loadAvatarPreview(url);
-});
-
-document.getElementById('avatar-url-input')?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        const url = document.getElementById('avatar-url-input')?.value.trim();
-        if (url) loadAvatarPreview(url);
-    }
-});
-
-document.getElementById('avatar-close-btn')?.addEventListener('click', closeAvatarCropEditor);
-document.getElementById('avatar-cancel-btn')?.addEventListener('click', closeAvatarCropEditor);
-document.getElementById('avatar-save-btn')?.addEventListener('click', handleAvatarCropSave);
-
-document.getElementById('avatar-zoom')?.addEventListener('input', (event) => {
-    avatarCropState.zoom = Number(event.target.value || 1);
-    updateAvatarCropPreview();
-});
-
-document.getElementById('avatar-x')?.addEventListener('input', (event) => {
-    avatarCropState.x = Number(event.target.value || 50);
-    updateAvatarCropPreview();
-});
-
-document.getElementById('avatar-y')?.addEventListener('input', (event) => {
-    avatarCropState.y = Number(event.target.value || 50);
-    updateAvatarCropPreview();
-});
-
-document.getElementById('avatar-crop-modal')?.addEventListener('click', (event) => {
-    if (event.target === event.currentTarget) closeAvatarCropEditor();
+document.getElementById('user-avatar')?.addEventListener('click', () => {
+    playUiSelectionSound();
+    openAvatarEditor();
 });
 
 function activateDashboardTab(tabId) {
@@ -687,7 +727,13 @@ async function loadDashboardData() {
         renderNotes(notes);
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        showToast("Não foi possível carregar os dados do painel.", "error");
+        const message = String(err?.message || '').toLowerCase();
+        showToast(
+            message.includes('failed to fetch') || message.includes('network')
+                ? "Conectado, mas os dados não puderam ser carregados. Verifique sua internet ou bloqueadores de conteúdo."
+                : "Não foi possível carregar os dados do painel.",
+            "error"
+        );
     }
 }
 

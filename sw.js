@@ -1,5 +1,6 @@
-// Este é um Service Worker básico para permitir a instalação do PWA
-const CACHE_NAME = 'financas-v1';
+// Service Worker mínimo para habilitar a instalação do PWA.
+// Não interceptamos requisições: um `fetch` genérico aqui também captura as
+// chamadas externas ao Supabase e pode convertê-las em ERR_FAILED.
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -7,9 +8,4 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   return self.clients.claim();
-});
-
-self.addEventListener('fetch', (e) => {
-  // Apenas repassa as requisições, cumprindo a exigência do Chrome
-  e.respondWith(fetch(e.request));
 });

@@ -544,9 +544,23 @@
 
             <div class="avatar-editor-body">
                 <div class="avatar-editor-url-row">
-                    <input id="avatar-url-input" type="url" class="form-input" placeholder="Cole a URL da imagem aqui" />
+                    <div class="avatar-url-field-wrap">
+                        <input id="avatar-url-input" type="url" class="form-input" placeholder="Cole a URL da imagem aqui" />
+                        <button id="avatar-paste-btn" type="button" class="avatar-paste-btn" aria-label="Colar link copiado" title="Colar link copiado">
+                            <i class="ri-file-copy-line"></i>
+                        </button>
+                    </div>
                     <button id="avatar-load-btn" type="button" class="btn-secondary">Carregar</button>
                 </div>
+
+                <label class="avatar-file-picker" for="avatar-file-input">
+                    <i class="ri-image-add-line"></i>
+                    <span>Escolher imagem do computador</span>
+                    <input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
+                <p id="avatar-editor-status" class="avatar-editor-status" aria-live="polite">
+                    A imagem será ajustada e salva somente neste dispositivo.
+                </p>
 
                 <div class="avatar-crop-stage">
                     <div class="avatar-crop-frame">

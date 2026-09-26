@@ -3,14 +3,33 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://yetdstodxkkukwzckopy.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlldGRzdG9keGtrdWt3emNrb3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMTI5MzYsImV4cCI6MjA5NTU4ODkzNn0.xpI8H3YaGGCXtPDnhwR9L2uGxzS8UrAGNOktoFyal3I";
 
+// O proxy local é usado apenas quando o app é servido por server.js (porta
+// 3000). Ele contorna falhas HTTP/2 que alguns navegadores exibem ao chamar
+// diretamente a API REST do Supabase.
+function fetchWithLocalRestProxy(input, init) {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const isLocalServer = window.location.port === '3000';
+    const isRestRequest = url.startsWith(`${SUPABASE_URL}/rest/v1/`);
+
+    if (isLocalServer && isRestRequest) {
+        return fetch(`${window.location.origin}/api/supabase${url.slice(SUPABASE_URL.length)}`, init);
+    }
+
+    return fetch(input, init);
+}
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true }
+    auth: { persistSession: true, autoRefreshToken: true },
+    global: { fetch: fetchWithLocalRestProxy }
 });
 
 // Funções de Auth
 export async function loginComEmail(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // signInWithPassword já persiste a sessão no cliente. Reaplicá-la com
+    // setSession faz uma segunda requisição a /auth/v1/user e pode transformar
+    // um login válido em erro de rede.
     return data;
 }
 
@@ -20,8 +39,25 @@ export async function logout() {
 }
 
 export async function getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (session?.user) return session.user;
+
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+            const msg = String(error.message || '').toLowerCase();
+            if (msg.includes('session') || msg.includes('not authenticated') || msg.includes('user not authenticated')) {
+                return null;
+            }
+            throw error;
+        }
+
+        return user ?? null;
+    } catch (error) {
+        console.error('Erro ao recuperar usuário autenticado:', error);
+        return null;
+    }
 }
 
 // Funções de Dados

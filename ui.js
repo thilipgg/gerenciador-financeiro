@@ -112,7 +112,12 @@ export function showDashboardScreen(user, isDemo) {
     const nameEl = document.getElementById('user-name');
     const badgeEl = document.getElementById('demo-badge');
     
-    if (avatarEl) avatarEl.src = user.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/adventurer/svg?seed=user';
+    const avatarUrl = String(user.user_metadata?.avatar_url || '');
+    // Nunca renderiza imagens base64 guardadas no metadata: além de pesadas,
+    // elas aumentam o JWT e podem quebrar as chamadas à API.
+    if (avatarEl) avatarEl.src = /^https?:\/\//i.test(avatarUrl)
+        ? avatarUrl
+        : 'https://api.dicebear.com/7.x/adventurer/svg?seed=user';
     if (nameEl) nameEl.textContent = user.user_metadata?.full_name || user.email;
     if (badgeEl) badgeEl.style.display = isDemo ? 'inline-block' : 'none';
 }
@@ -706,6 +711,10 @@ export function playUiSelectionSound() {
     playAudio('./media/ui-selection.mp3', 0.7);
 }
 
+export function playUiUnselectionSound() {
+    playAudio('./media/ui-unselection.mp3', 0.7);
+}
+
 export function playDeleteSound() {
     playAudio('./media/exclusao.mp3', 0.8);
 }
@@ -804,6 +813,7 @@ export function getCurrentSelection() {
 }
 
 export function changeSelectedMonth(offset) {
+    playUiSelectionSound();
     currentDateSelection.setMonth(currentDateSelection.getMonth() + offset);
     updateMonthDisplay();
     syncNewTransactionDateToSelectedMonth();
