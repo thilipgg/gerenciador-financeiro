@@ -2485,3 +2485,117 @@ tr:hover td { background: var(--primary-light); }
     gap: 6px;
   }
 }
+
+/* ========================================================================
+   CORREÇÃO: iOS Safari — inputs de data não respeitam grid cell
+   O iOS renderiza <input type="date"> com largura mínima própria, o que
+   faz o input "vazar" do grid e colar no vizinho.
+   ======================================================================== */
+#transaction-form input[type="date"] {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Garante que o grid não permita vazamento entre colunas */
+#transaction-form {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 10px;
+}
+
+/* Cada célula do grid precisa permitir o input encolher */
+#transaction-form > .form-group {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ========================================================================
+   CORREÇÃO: card mobile da transação — mais respiro
+   ======================================================================== */
+.mobile-transaction-card {
+  padding: 16px 14px;
+  gap: 12px;
+}
+
+.mobile-bottom {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.mobile-meta .mobile-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.mobile-meta .mobile-date {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.mobile-meta .tx-status {
+  font-size: 11px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.mobile-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mobile-actions button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  transition: background .2s ease, color .2s ease;
+}
+
+.mobile-actions .btn-edit {
+  color: var(--primary);
+  background: var(--primary-light);
+  margin: 0;
+}
+
+.mobile-actions .btn-delete {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.mobile-actions .btn-edit:hover,
+.mobile-actions .btn-delete:hover {
+  transform: none;
+  opacity: 0.85;
+}
+
+/* Em telas muito estreitas, empilha o botão de ação abaixo dos metadados */
+@media (max-width: 380px) {
+  .mobile-bottom {
+    grid-template-columns: 1fr;
+  }
+  .mobile-actions {
+    justify-content: flex-end;
+  }
+}
