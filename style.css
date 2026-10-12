@@ -2247,46 +2247,7 @@ tr:hover td { background: var(--primary-light); }
   .insights-section, .budgets-section, .goals-section { margin-top: 16px; }
   .budget-card, .goal-card, .insight-card { padding: 14px; }
 
-  .mobile-tab-bar {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    gap: 2px;
-    padding: 8px 9px calc(8px + env(safe-area-inset-bottom));
-    border-radius: 0;
-    background: rgba(8, 28, 63, .94);
-    border-top: 1px solid rgba(183, 220, 255, .13);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 -12px 30px rgba(0, 8, 32, .36);
-    margin: 0;
-  }
-  .mobile-tab-bar .sidebar-tab {
-    flex: 1;
-    min-width: 0;
-    padding: 8px 4px;
-    border-radius: 12px;
-    color: #9ebad9;
-    background: transparent;
-    font-size: 12px;
-    justify-content: center;
-    gap: 6px;
-    white-space: normal;
-  }
-  .mobile-tab-bar .sidebar-tab.active {
-    background: rgba(80, 158, 255, .2);
-    color: #fff;
-    box-shadow: none;
-  }
-  .mobile-tab-bar .sidebar-tab i { margin: 0; font-size: 19px; }
-  .mobile-tab-bar .sidebar-tab span {
-    display: block !important;
-    margin-top: 3px;
-    font-size: 9px;
-    text-transform: none;
-  }
+  
 
   .notes-section { margin-top: 18px; }
   .notes-grid { gap: 10px; }
@@ -2598,4 +2559,200 @@ tr:hover td { background: var(--primary-light); }
   .mobile-actions {
     justify-content: flex-end;
   }
+}
+
+/* ========================================================================
+   MOBILE TAB BAR v2 — pílula flutuante moderna
+   ======================================================================== */
+@media (max-width: 900px) {
+  /* ---------- Base ---------- */
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    gap: 4px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    background: rgba(8, 28, 63, .88);
+    border-top: 1px solid rgba(183, 220, 255, .12);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 -10px 30px rgba(0, 8, 32, .34);
+    margin: 0;
+    overflow-x: hidden;
+    isolation: isolate;
+  }
+
+  /* Filete luminoso no topo (detalhe premium) */
+  .mobile-tab-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(120, 184, 255, .55), transparent);
+    pointer-events: none;
+  }
+
+  /* ---------- Cada aba ---------- */
+  .mobile-tab-bar .sidebar-tab {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 4px 10px;
+    border-radius: 14px;
+    color: #9ebad9;
+    background: transparent;
+    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: normal;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color .25s ease, background .3s ease, border-color .3s ease, transform .2s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: none;
+  }
+
+  .mobile-tab-bar .sidebar-tab:hover {
+    background: transparent;
+    color: #cfe3ff;
+  }
+
+  /* ---------- Ícone ---------- */
+  .mobile-tab-bar .sidebar-tab i {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1;
+    transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), filter .3s ease, color .25s ease;
+  }
+
+  /* ---------- Rótulo ---------- */
+  .mobile-tab-bar .sidebar-tab span {
+    display: block !important;
+    margin-top: 0;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: .02em;
+    line-height: 1;
+    transition: color .25s ease;
+  }
+
+  /* ---------- Estado ATIVO ---------- */
+  .mobile-tab-bar .sidebar-tab.active {
+    background: linear-gradient(180deg, rgba(78, 158, 255, .22), rgba(78, 158, 255, .06));
+    border-color: rgba(120, 184, 255, .22);
+    color: #fff;
+    box-shadow:
+      0 6px 18px rgba(46, 122, 220, .28),
+      inset 0 1px 0 rgba(255, 255, 255, .1);
+    animation: none;
+  }
+
+  .mobile-tab-bar .sidebar-tab.active i {
+    color: #cbe6ff;
+    transform: translateY(-1px) scale(1.12);
+    filter: drop-shadow(0 0 10px rgba(120, 184, 255, .65));
+    animation: none;
+  }
+
+  .mobile-tab-bar .sidebar-tab.active span {
+    color: #fff;
+  }
+
+  /* ---------- Filete embaixo do ícone ativo ---------- */
+  .mobile-tab-bar .sidebar-tab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #4e9eff, #78b8ff);
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: width .35s cubic-bezier(.18,.85,.32,1), opacity .3s ease;
+    pointer-events: none;
+  }
+
+  .mobile-tab-bar .sidebar-tab.active::after {
+    width: 22px;
+    opacity: 1;
+  }
+
+  /* ---------- Feedback de toque ---------- */
+  .mobile-tab-bar .sidebar-tab:active {
+    transform: scale(.94);
+  }
+
+  /* ---------- Espaçamento extra do conteúdo ---------- */
+  #dashboard-screen {
+    padding-bottom: 108px;
+  }
+}
+
+/* ========================================================================
+   TEMA CLARO — mesma elegância, paleta clara
+   ======================================================================== */
+@media (max-width: 900px) {
+  :root:not(.dark) .mobile-tab-bar {
+    background: rgba(255, 255, 255, .92);
+    border-top-color: rgba(47, 111, 214, .14);
+    box-shadow: 0 -10px 30px rgba(24, 73, 133, .12);
+  }
+
+  :root:not(.dark) .mobile-tab-bar::before {
+    background: linear-gradient(90deg, transparent, rgba(47, 111, 214, .4), transparent);
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab {
+    color: #5c7194;
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab:hover {
+    color: #2f6fd6;
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab.active {
+    background: linear-gradient(180deg, rgba(47, 111, 214, .14), rgba(47, 111, 214, .04));
+    border-color: rgba(47, 111, 214, .28);
+    color: #2f6fd6;
+    box-shadow:
+      0 6px 18px rgba(47, 111, 214, .16),
+      inset 0 1px 0 rgba(255, 255, 255, .6);
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab.active i {
+    color: #2f6fd6;
+    filter: drop-shadow(0 0 8px rgba(47, 111, 214, .35));
+  }
+
+  :root:not(.dark) .mobile-tab-bar .sidebar-tab.active span {
+    color: #2f6fd6;
+  }
+}
+
+/* ========================================================================
+   Telas bem estreitas (iPhone SE, Galaxy A0x)
+   ======================================================================== */
+@media (max-width: 380px) {
+  .mobile-tab-bar {
+    padding-left: 6px;
+    padding-right: 6px;
+    gap: 2px;
+  }
+  .mobile-tab-bar .sidebar-tab i { font-size: 20px; }
+  .mobile-tab-bar .sidebar-tab span { font-size: 9px; }
+  .mobile-tab-bar .sidebar-tab.active::after { width: 18px; }
 }
