@@ -70,6 +70,8 @@
   --glass-border: rgba(255, 255, 255, 0.05);
 }
 
+
+
 /* ==========================================================================
    RESET E BASE
    ========================================================================== */
@@ -2649,5 +2651,426 @@ tr:hover td {
   .search-filter-box .filter-select {
     width: 100%;
     min-width: 0;
+  }
+}
+
+/* ========================================================================
+   INSIGHTS
+   ======================================================================== */
+.insights-section { margin-top: 22px; }
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.insight-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: transform .25s ease, border-color .25s ease;
+}
+.insight-card:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+.insight-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 20px;
+}
+.insight-info { min-width: 0; }
+.insight-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+}
+.insight-message {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+.insight-card.insight-success .insight-icon { color: var(--success); background: var(--success-light); }
+.insight-card.insight-warning .insight-icon { color: var(--warning); background: var(--warning-light); }
+.insight-card.insight-info    .insight-icon { color: var(--info);    background: var(--info-light); }
+
+/* ========================================================================
+   ORÇAMENTO
+   ======================================================================== */
+.budgets-section { margin-top: 22px; }
+.budgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.budget-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: transform .25s ease;
+}
+.budget-card:hover { transform: translateY(-2px); }
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.budget-category { font-weight: 700; font-size: 14px; }
+.budget-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: color .2s ease, background .2s ease;
+}
+.budget-remove:hover { color: var(--danger); background: var(--danger-light); }
+.budget-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.budget-spent { font-weight: 700; color: var(--text-main); font-size: 15px; }
+.budget-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.budget-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease, background .3s ease;
+}
+.budget-card.status-ok     .budget-progress-fill { background: linear-gradient(90deg, #4ade80, #22c55e); }
+.budget-card.status-warning .budget-progress-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.budget-card.status-danger  .budget-progress-fill { background: linear-gradient(90deg, #f87171, #ef4444); }
+.budget-pct {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  margin-top: 6px;
+}
+.budget-card.status-warning .budget-pct { color: var(--warning); }
+.budget-card.status-danger  .budget-pct { color: var(--danger); }
+.budget-card.status-ok      .budget-pct { color: var(--text-muted); }
+
+/* ========================================================================
+   METAS
+   ======================================================================== */
+.goals-section { margin-top: 22px; }
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.goal-card {
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(140deg, rgba(55, 134, 229, 0.08), rgba(55, 134, 229, 0.02));
+  border: 1px solid var(--border);
+  transition: transform .25s ease;
+}
+:root.dark .goal-card {
+  background: linear-gradient(140deg, rgba(78, 158, 255, 0.14), rgba(78, 158, 255, 0.03));
+}
+.goal-card:hover { transform: translateY(-2px); }
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.goal-name { font-weight: 700; font-size: 15px; }
+.goal-deadline { font-size: 12px; color: var(--text-muted); }
+.goal-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.goal-current { font-size: 20px; font-weight: 800; color: var(--primary); }
+.goal-target { font-size: 13px; color: var(--text-muted); }
+.goal-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.goal-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3786e5, #78b8ff);
+  transition: width .4s ease;
+}
+.goal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.goal-actions button {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background .2s ease;
+}
+.goal-actions button:hover { background: var(--border); }
+.goal-actions .goal-add-btn {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+.goal-actions .goal-add-btn:hover { background: var(--primary-hover); }
+.goal-actions .goal-remove-btn { color: var(--danger); }
+
+/* ========================================================================
+   BADGE DE RECORRÊNCIA NA TABELA
+   ======================================================================== */
+.recurrence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+  margin-left: 6px;
+}
+.recurrence-badge i { font-size: 12px; }
+
+/* ========================================================================
+   TOAST COM AÇÃO "DESFAZER"
+   ======================================================================== */
+.toast-undo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(220, 25%, 15%), hsl(220, 25%, 11%));
+  color: #fff;
+  box-shadow: 0 20px 45px rgba(0, 8, 28, 0.35);
+  border: 1px solid rgba(151, 200, 255, 0.14);
+  animation: toast-rise .28s ease both;
+}
+.toast-undo-text { font-size: 14px; flex: 1; }
+.toast-undo-btn {
+  background: rgba(120, 184, 255, 0.2);
+  color: #d9efff;
+  border: 1px solid rgba(151, 200, 255, 0.24);
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.toast-undo-btn:hover { background: rgba(120, 184, 255, 0.32); }
+
+/* ========================================================================
+   BOTÃO DE NOTIFICAÇÃO ATIVO
+   ======================================================================== */
+#notify-toggle.active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ========================================================================
+   RESPONSIVIDADE MOBILE — seções novas
+   ======================================================================== */
+@media (max-width: 900px) {
+  .insights-grid, .budgets-grid, .goals-grid { grid-template-columns: 1fr; }
+  .insights-section, .budgets-section, .goals-section { margin-top: 16px; }
+  .budget-card, .goal-card, .insight-card { padding: 14px; }
+}
+
+/* ========================================================================
+   CORREÇÃO: força as opções dos <select> a terem contraste em ambos os temas.
+   O dropdown nativo do navegador é renderizado fora do controle do CSS,
+   então garantimos fundo claro + texto escuro explicitamente.
+   ======================================================================== */
+select option,
+.form-input option,
+.filter-select option {
+  background-color: #ffffff !important;
+  color: #132a4f !important;
+}
+
+select option:checked,
+select option:hover,
+.form-input option:checked,
+.filter-select option:checked {
+  background-color: #2779d8 !important;
+  color: #ffffff !important;
+}
+
+/* Alguns navegadores (Firefox) ignoram :checked em option; usamos :checked
+   no select para dar feedback visual mínimo ao usuário. */
+select:focus option:checked {
+  background-color: #2779d8 !important;
+  color: #ffffff !important;
+}
+
+/* ========================================================================
+   MODAL DE EXCLUSÃO DE RECORRENTES
+   ======================================================================== */
+.recurrence-delete-option {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  margin-bottom: 10px;
+  align-items: flex-start;
+  transition: border-color .2s ease, background .2s ease, transform .15s ease;
+}
+
+.recurrence-delete-option:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.recurrence-delete-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.recurrence-delete-option input[type="radio"] {
+  margin-top: 4px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.recurrence-delete-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.recurrence-delete-option strong {
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.recurrence-delete-option small {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ========================================================================
+   CORREÇÃO: modal-footer genérico com layout em linha
+   Vale para qualquer modal que NÃO esteja dentro de #transaction-form.
+   O modal de transação continua com sua regra própria (space-around).
+   ======================================================================== */
+.modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Botões do rodapé não devem esticar por padrão */
+.modal-footer > .btn-primary,
+.modal-footer > .btn-secondary {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Garante que o modal de recorrência fique alinhado à direita */
+#recurrence-delete-modal .modal-footer {
+  justify-content: flex-end;
+}
+
+/* No mobile, empilha para ocupar a largura toda (mais confortável no dedo) */
+@media (max-width: 640px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .modal-footer > .btn-primary,
+  .modal-footer > .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* O modal de transação já tem regra própria; preserva o comportamento atual */
+  #transaction-form .modal-footer {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+}
+
+
+/* ========================================================================
+   PADDING INTERNO DOS MODAIS DE META E ORÇAMENTO
+   Os inputs precisam de respiro lateral em relação à borda do modal.
+   ======================================================================== */
+#budget-form,
+#goal-form {
+  padding: 20px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#budget-form .form-group,
+#goal-form .form-group {
+  margin-bottom: 0 !important;
+}
+
+/* O rodapé já tem padding próprio; removemos o extra daqui */
+#budget-form .modal-footer,
+#goal-form .modal-footer {
+  margin-left: -24px;
+  margin-right: -24px;
+  margin-top: 14px;
+}
+
+/* Mobile: padding mais compacto */
+@media (max-width: 640px) {
+  #budget-form,
+  #goal-form {
+    padding: 16px 16px 0;
+  }
+
+  #budget-form .modal-footer,
+  #goal-form .modal-footer {
+    margin-left: -16px;
+    margin-right: -16px;
   }
 }

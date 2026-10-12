@@ -1,344 +1,590 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR" class="dark">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" id="theme-color-meta" content="#07152d">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" id="theme-color-meta" content="#07152d" />
     <title>Finanças Premium - Seu Painel de Controle Financeiro</title>
-    <meta name="description"
-        content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase.">
+    <meta
+      name="description"
+      content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase."
+    />
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Finanças Premium">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Finanças Premium" />
 
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 
-    <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png" />
 
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json" />
 
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
 
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="phone-style.css">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="phone-style.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- ==========================================
          1. TELA DE LOGIN (Google OAuth / Modo Demo)
          ========================================== -->
-    <main id="login-screen" style="display: flex;">
-        <div class="login-card glass">
-            <div class="login-header">
-                <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
-                <h1>Finanças Premium</h1>
-                <p>Acesse sua conta para continuar</p>
-            </div>
-
-            <form id="login-form" class="login-options">
-                <div class="input-group">
-                    <i class="ri-mail-line"></i>
-                    <input type="email" id="user-email" placeholder="E-mail" class="form-input" required>
-                </div>
-                <div class="input-group">
-                    <i class="ri-lock-line"></i>
-                    <input type="password" id="user-pass" placeholder="Senha" class="form-input" required>
-                </div>
-
-                <button type="submit" class="btn-primary" id="btn-login-real">
-                    Entrar <i class="ri-arrow-right-line" style="margin-left: 5px;"></i>
-                </button>
-
-                <div class="divider">
-                    <span>ou</span>
-                </div>
-
-                <button type="button" id="btn-login-visitante" class="btn-secondary">
-                    <i class="ri-user-smile-line"></i> Acessar como Visitante
-                </button>
-            </form>
+    <main id="login-screen" style="display: flex">
+      <div class="login-card glass">
+        <div class="login-header">
+          <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
+          <h1>Finanças Premium</h1>
+          <p>Acesse sua conta para continuar</p>
         </div>
+
+        <form id="login-form" class="login-options">
+          <div class="input-group">
+            <i class="ri-mail-line"></i>
+            <input
+              type="email"
+              id="user-email"
+              placeholder="E-mail"
+              class="form-input"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <i class="ri-lock-line"></i>
+            <input
+              type="password"
+              id="user-pass"
+              placeholder="Senha"
+              class="form-input"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-login-real">
+            Entrar <i class="ri-arrow-right-line" style="margin-left: 5px"></i>
+          </button>
+
+          <div class="divider">
+            <span>ou</span>
+          </div>
+
+          <button type="button" id="btn-login-visitante" class="btn-secondary">
+            <i class="ri-user-smile-line"></i> Acessar como Visitante
+          </button>
+        </form>
+      </div>
     </main>
 
     <!-- ==========================================
          2. TELA DO DASHBOARD FINANCEIRO
          ========================================== -->
-    <main id="dashboard-screen" style="display: none;">
-        <div class="dashboard-shell">
-            <aside class="dashboard-sidebar glass">
-                <div class="sidebar-brand">
-                    <div class="header-brand-icon">
-                        <i class="ri-bar-chart-box-line"></i>
-                    </div>
-                    <div class="sidebar-brand-title">
-                        <h3>Painel</h3>
-                        <span>Selecione uma área para navegar</span>
-                    </div>
+    <main id="dashboard-screen" style="display: none">
+      <div class="dashboard-shell">
+        <aside class="dashboard-sidebar glass">
+          <div class="sidebar-brand">
+            <div class="header-brand-icon">
+              <i class="ri-bar-chart-box-line"></i>
+            </div>
+            <div class="sidebar-brand-title">
+              <h3>Painel</h3>
+              <span>Selecione uma área para navegar</span>
+            </div>
+          </div>
+
+          <nav class="sidebar-nav" aria-label="Menu do dashboard">
+            <button
+              type="button"
+              class="sidebar-tab active"
+              data-tab="overview"
+            >
+              <i class="ri-line-chart-line"></i>
+              Visão Geral
+            </button>
+            <button type="button" class="sidebar-tab" data-tab="transactions">
+              <i class="ri-add-large-line"></i>
+              Lançamentos
+            </button>
+            <button type="button" class="sidebar-tab" data-tab="monthly">
+              <i class="ri-calendar-line"></i>
+              Controle Mensal
+            </button>
+          </nav>
+
+          <div class="sidebar-footer">
+            <p>
+              <strong>Atalho rápido:</strong> pressione
+              <span class="shortcut-key">F1</span>
+            </p>
+            <p>
+              Use as abas para alternar entre dashboard, lançamentos e controle
+              mensal.
+            </p>
+          </div>
+        </aside>
+
+        <div class="dashboard-main">
+          <!-- Header Principal -->
+          <header class="glass animate-fade">
+            <div class="header-brand">
+              <div class="header-brand-icon">
+                <i class="ri-stack-line"></i>
+              </div>
+              <div>
+                <span class="header-kicker">Sua central financeira</span>
+                <h2>Vaulta</h2>
+                <span id="demo-badge" class="demo-badge" style="display: none"
+                  >Modo Teste</span
+                >
+              </div>
+            </div>
+
+            <div class="header-actions">
+              <button
+                id="export-btn"
+                class="sound-toggle"
+                aria-label="Exportar transações"
+                title="Exportar CSV"
+              >
+                <i class="ri-download-2-line"></i>
+              </button>
+
+              <button
+                id="notify-toggle"
+                class="sound-toggle"
+                aria-label="Ativar notificações"
+                title="Notificações de vencimento"
+              >
+                <i class="ri-notification-3-line"></i>
+              </button>
+              <button
+                id="sound-toggle"
+                class="sound-toggle"
+                aria-label="Ativar ou desativar som"
+                title="Ativar/Desativar som"
+              >
+                <i class="ri-volume-up-line sound-on-icon"></i>
+                <i class="ri-volume-mute-line sound-off-icon"></i>
+              </button>
+
+              <button
+                id="theme-toggle"
+                class="theme-toggle"
+                aria-label="Alternar tema escuro/claro"
+                title="Alternar Tema"
+              >
+                <i class="ri-sun-line sun-icon"></i>
+                <i class="ri-moon-line moon-icon"></i>
+              </button>
+
+              <div class="user-profile" title="Perfil do usuário">
+                <img
+                  id="user-avatar"
+                  class="user-avatar"
+                  src=""
+                  alt="Foto do usuário"
+                />
+                <div class="user-info">
+                  <span class="user-welcome">Olá,</span>
+                  <span id="user-name" class="user-name">Carregando...</span>
+                </div>
+                <button
+                  id="logout-btn"
+                  class="logout-btn"
+                  title="Encerrar Sessão"
+                  aria-label="Sair"
+                >
+                  <i class="ri-logout-box-r-line"></i>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div
+            class="mobile-tab-bar"
+            role="tablist"
+            aria-label="Navegação do painel mobile"
+          >
+            <button
+              type="button"
+              class="sidebar-tab active"
+              data-tab="overview"
+              aria-controls="tab-overview"
+            >
+              <i class="ri-line-chart-line"></i>
+              <span>Dashboard</span>
+            </button>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-tab="transactions"
+              aria-controls="tab-transactions"
+            >
+              <i class="ri-add-large-line"></i>
+              <span>Transações</span>
+            </button>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-tab="monthly"
+              aria-controls="tab-monthly"
+            >
+              <i class="ri-calendar-line"></i>
+              <span>Mensal</span>
+            </button>
+          </div>
+
+          <div class="dashboard-page-content">
+            <section id="tab-overview" class="tab-page active">
+              <div
+                class="month-selector-container glass animate-fade"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 12px 20px;
+                  margin-bottom: 20px;
+                  border-radius: 12px;
+                "
+              >
+                <button
+                  type="button"
+                  id="btn-prev-month"
+                  class="btn-secondary"
+                  title="Mês Anterior"
+                >
+                  <i class="ri-arrow-left-s-line"></i>
+                </button>
+                <h3
+                  id="current-month-display"
+                  style="margin: 0; min-width: 160px; text-align: center"
+                >
+                  Junho de 2026
+                </h3>
+                <button
+                  type="button"
+                  id="btn-next-month"
+                  class="btn-secondary"
+                  title="Próximo Mês"
+                >
+                  <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+
+              <div class="section-header">
+                <div>
+                  <h3>Visão Geral</h3>
+                  <p class="text-muted">
+                    Resumo rápido das finanças, principais indicadores e
+                    evolução.
+                  </p>
+                </div>
+              </div>
+
+              <section class="summary-container animate-fade">
+                <div class="widget-card widget-balance glass">
+                  <div class="widget-info">
+                    <span class="widget-label">Saldo Geral</span>
+                    <span id="val-balance" class="widget-value">R$ 0,00</span>
+                  </div>
+                  <div class="balance-orb">
+                    <i class="ri-wallet-3-line"></i>
+                  </div>
                 </div>
 
-                <nav class="sidebar-nav" aria-label="Menu do dashboard">
-                    <button type="button" class="sidebar-tab active" data-tab="overview">
-                        <i class="ri-line-chart-line"></i>
-                        Visão Geral
-                    </button>
-                    <button type="button" class="sidebar-tab" data-tab="transactions">
-                        <i class="ri-add-large-line"></i>
-                        Lançamentos
-                    </button>
-                    <button type="button" class="sidebar-tab" data-tab="monthly">
-                        <i class="ri-calendar-line"></i>
-                        Controle Mensal
-                    </button>
-                </nav>
-
-                <div class="sidebar-footer">
-                    <p><strong>Atalho rápido:</strong> pressione <span class="shortcut-key">F1</span></p>
-                    <p>Use as abas para alternar entre dashboard, lançamentos e controle mensal.</p>
+                <div class="widget-card widget-income glass">
+                  <div class="widget-icon">
+                    <i class="ri-arrow-up-circle-line"></i>
+                  </div>
+                  <div class="widget-info">
+                    <span class="widget-label">Receitas</span>
+                    <span id="val-income" class="widget-value">R$ 0,00</span>
+                  </div>
                 </div>
-            </aside>
 
-            <div class="dashboard-main">
-                <!-- Header Principal -->
-                <header class="glass animate-fade">
-                    <div class="header-brand">
-                        <div class="header-brand-icon">
-                            <i class="ri-stack-line"></i>
-                        </div>
-                        <div>
-                            <span class="header-kicker">Sua central financeira</span>
-                            <h2>Vaulta</h2>
-                            <span id="demo-badge" class="demo-badge" style="display: none;">Modo Teste</span>
-                        </div>
-                    </div>
+                <div class="widget-card widget-expense glass">
+                  <div class="widget-icon">
+                    <i class="ri-arrow-down-circle-line"></i>
+                  </div>
+                  <div class="widget-info">
+                    <span class="widget-label">Despesas</span>
+                    <span id="val-expense" class="widget-value">R$ 0,00</span>
+                  </div>
+                </div>
 
-                    <div class="header-actions">
-                        <button id="sound-toggle" class="sound-toggle" aria-label="Ativar ou desativar som"
-                            title="Ativar/Desativar som">
-                            <i class="ri-volume-up-line sound-on-icon"></i>
-                            <i class="ri-volume-mute-line sound-off-icon"></i>
+                <div class="widget-card widget-warning glass">
+                  <div class="widget-icon">
+                    <i class="ri-clockwise-line"></i>
+                  </div>
+                  <div class="widget-info">
+                    <span class="widget-label">Contas Pendentes</span>
+                    <span id="val-pending" class="widget-value">R$ 0,00</span>
+                  </div>
+                </div>
+
+                <div class="widget-card widget-danger glass">
+                  <div class="widget-icon">
+                    <i class="ri-alert-line"></i>
+                  </div>
+                  <div class="widget-info">
+                    <span class="widget-label">Contas Vencidas</span>
+                    <span id="val-overdue" class="widget-value">R$ 0,00</span>
+                  </div>
+                </div>
+
+                <div class="widget-card widget-available glass">
+                  <div class="widget-icon">
+                    <i class="ri-shield-check-line"></i>
+                  </div>
+                  <div class="widget-info">
+                    <span class="widget-label">Saldo Disponível</span>
+                    <span id="val-available" class="widget-value">R$ 0,00</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="charts-grid animate-fade">
+                <div class="chart-card glass">
+                  <div class="chart-card-header">
+                    <h3 class="chart-card-title">
+                      Evolução Mensal de Despesas
+                    </h3>
+                    <i
+                      class="ri-bar-chart-fill"
+                      style="color: var(--primary)"
+                    ></i>
+                  </div>
+                  <div class="chart-canvas-container">
+                    <canvas id="monthlyExpensesChart"></canvas>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ========== INSIGHTS ========== -->
+              <section
+                class="insights-section animate-fade"
+                id="insights-section"
+                style="display: none"
+              >
+                <div class="section-header">
+                  <div>
+                    <h3>Insights</h3>
+                    <p class="text-muted">
+                      Observações automáticas sobre seus hábitos financeiros.
+                    </p>
+                  </div>
+                </div>
+                <div id="insights-grid" class="insights-grid"></div>
+              </section>
+
+              <!-- ========== ORÇAMENTO POR CATEGORIA ========== -->
+              <section
+                class="budgets-section animate-fade"
+                id="budgets-section"
+              >
+                <div class="section-header">
+                  <div>
+                    <h3>Orçamento do mês</h3>
+                    <p class="text-muted">
+                      Defina limites por categoria e acompanhe em tempo real.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    id="open-budget-modal-btn"
+                    class="btn-primary"
+                  >
+                    <i class="ri-add-line"></i> Novo orçamento
+                  </button>
+                </div>
+                <div id="budgets-grid" class="budgets-grid">
+                  <div class="notes-empty">
+                    Nenhum orçamento definido para este mês.
+                  </div>
+                </div>
+              </section>
+
+              <!-- ========== METAS ========== -->
+              <section class="goals-section animate-fade" id="goals-section">
+                <div class="section-header">
+                  <div>
+                    <h3>Metas</h3>
+                    <p class="text-muted">
+                      Objetivos de poupança e investimento.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    id="open-goal-modal-btn"
+                    class="btn-primary"
+                  >
+                    <i class="ri-add-line"></i> Nova meta
+                  </button>
+                </div>
+                <div id="goals-grid" class="goals-grid">
+                  <div class="notes-empty">Nenhuma meta cadastrada.</div>
+                </div>
+              </section>
+
+              <!-- ========== PROJEÇÃO ========== -->
+              <section class="charts-grid animate-fade">
+                <div class="chart-card glass">
+                  <div class="chart-card-header">
+                    <h3 class="chart-card-title">
+                      Projeção de saldo (próximos 3 meses)
+                    </h3>
+                    <i
+                      class="ri-line-chart-fill"
+                      style="color: var(--primary)"
+                    ></i>
+                  </div>
+                  <div
+                    class="chart-canvas-container"
+                    style="height: 240px !important"
+                  >
+                    <canvas id="projectionChart"></canvas>
+                  </div>
+                </div>
+              </section>
+
+              <section class="notes-section animate-fade">
+                <div class="section-header">
+                  <div>
+                    <h3>Anotações</h3>
+                    <p class="text-muted">
+                      Registre observações financeiras e salve diretamente no
+                      banco de dados.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="notes-grid">
+                  <div class="notes-input-card glass">
+                    <h4>Nova anotação</h4>
+                    <form id="note-form">
+                      <textarea
+                        id="note-content"
+                        class="note-textarea"
+                        placeholder="Escreva sua anotação aqui..."
+                        rows="7"
+                        required
+                      ></textarea>
+                      <div class="notes-actions">
+                        <button type="submit" class="btn-primary">
+                          Salvar Anotação
                         </button>
+                      </div>
+                    </form>
+                  </div>
 
-                        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema escuro/claro"
-                            title="Alternar Tema">
-                            <i class="ri-sun-line sun-icon"></i>
-                            <i class="ri-moon-line moon-icon"></i>
-                        </button>
-
-                        <div class="user-profile" title="Perfil do usuário">
-                            <img id="user-avatar" class="user-avatar" src="" alt="Foto do usuário">
-                            <div class="user-info">
-                                <span class="user-welcome">Olá,</span>
-                                <span id="user-name" class="user-name">Carregando...</span>
-                            </div>
-                            <button id="logout-btn" class="logout-btn" title="Encerrar Sessão" aria-label="Sair">
-                                <i class="ri-logout-box-r-line"></i>
-                            </button>
-                        </div>
+                  <div class="notes-list-card glass">
+                    <div class="section-header" style="margin-bottom: 14px">
+                      <div>
+                        <h4>Últimas notas</h4>
+                        <p class="text-muted">
+                          Suas notas salvas aparecem aqui com data de registro.
+                        </p>
+                      </div>
                     </div>
-                </header>
-
-                <div class="mobile-tab-bar" role="tablist" aria-label="Navegação do painel mobile">
-                    <button type="button" class="sidebar-tab active" data-tab="overview" aria-controls="tab-overview">
-                        <i class="ri-line-chart-line"></i>
-                        <span>Dashboard</span>
-                    </button>
-                    <button type="button" class="sidebar-tab" data-tab="transactions" aria-controls="tab-transactions">
-                        <i class="ri-add-large-line"></i>
-                        <span>Transações</span>
-                    </button>
-                    <button type="button" class="sidebar-tab" data-tab="monthly" aria-controls="tab-monthly">
-                        <i class="ri-calendar-line"></i>
-                        <span>Mensal</span>
-                    </button>
+                    <div id="notes-list" class="notes-list"></div>
+                  </div>
                 </div>
+              </section>
+            </section>
 
-                <div class="dashboard-page-content">
-                    <section id="tab-overview" class="tab-page active">
+            <section id="tab-transactions" class="tab-page">
+              <div
+                class="month-selector-container glass animate-fade"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 12px 20px;
+                  margin-bottom: 20px;
+                  border-radius: 12px;
+                "
+              >
+                <button
+                  type="button"
+                  id="btn-prev-month-list"
+                  class="btn-secondary"
+                  title="Mês Anterior"
+                >
+                  <i class="ri-arrow-left-s-line"></i>
+                </button>
+                <h3
+                  id="current-month-display-list"
+                  style="margin: 0; min-width: 160px; text-align: center"
+                >
+                  Junho de 2026
+                </h3>
+                <button
+                  type="button"
+                  id="btn-next-month-list"
+                  class="btn-secondary"
+                  title="Próximo Mês"
+                >
+                  <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
 
-                        <div class="month-selector-container glass animate-fade"
-                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin-bottom: 20px; border-radius: 12px;">
-                            <button type="button" id="btn-prev-month" class="btn-secondary" title="Mês Anterior">
-                                <i class="ri-arrow-left-s-line"></i>
-                            </button>
-                            <h3 id="current-month-display" style="margin: 0; min-width: 160px; text-align: center;">
-                                Junho de 2026</h3>
-                            <button type="button" id="btn-next-month" class="btn-secondary" title="Próximo Mês">
-                                <i class="ri-arrow-right-s-line"></i>
-                            </button>
-                        </div>
+              <div class="section-header">
+                <div id="info-header">
+                  <h3>Lançamentos</h3>
+                  <p class="text-muted">
+                    Buscar, filtrar e gerenciar todas as transações cadastradas.
+                  </p>
+                </div>
+              </div>
 
-                        <div class="section-header">
-                            <div>
-                                <h3>Visão Geral</h3>
-                                <p class="text-muted">Resumo rápido das finanças, principais indicadores e evolução.</p>
-                            </div>
-                        </div>
+              <section class="transactions-section animate-fade">
+                <div class="transactions-toolbar">
+                  <div class="search-filter-box">
+                    <div class="search-input-wrapper">
+                      <i class="ri-search-line"></i>
+                      <input
+                        id="search-input"
+                        class="search-input"
+                        type="text"
+                        placeholder="Buscar lançamentos"
+                      />
+                    </div>
 
-                        <section class="summary-container animate-fade">
-                            <div class="widget-card widget-balance glass">
-                                <div class="widget-info">
-                                    <span class="widget-label">Saldo Geral</span>
-                                    <span id="val-balance" class="widget-value">R$ 0,00</span>
-                                </div>
-                                <div class="balance-orb"><i class="ri-wallet-3-line"></i></div>
-                            </div>
+                    <select id="filter-select" class="filter-select">
+                      <option value="all">Todas as Transações</option>
+                      <option value="income">Entradas (Receitas)</option>
+                      <option value="expense">Saídas (Despesas)</option>
+                    </select>
 
-                            <div class="widget-card widget-income glass">
-                                <div class="widget-icon">
-                                    <i class="ri-arrow-up-circle-line"></i>
-                                </div>
-                                <div class="widget-info">
-                                    <span class="widget-label">Receitas</span>
-                                    <span id="val-income" class="widget-value">R$ 0,00</span>
-                                </div>
-                            </div>
+                    <select
+                      id="status-filter"
+                      class="filter-select"
+                      style="margin-left: 0px"
+                    >
+                      <option value="all">Todos os Status</option>
+                      <option value="paid">Pagas</option>
+                      <option value="pending">Pendentes</option>
+                    </select>
 
-                            <div class="widget-card widget-expense glass">
-                                <div class="widget-icon">
-                                    <i class="ri-arrow-down-circle-line"></i>
-                                </div>
-                                <div class="widget-info">
-                                    <span class="widget-label">Despesas</span>
-                                    <span id="val-expense" class="widget-value">R$ 0,00</span>
-                                </div>
-                            </div>
-
-                            <div class="widget-card widget-warning glass">
-                                <div class="widget-icon">
-                                    <i class="ri-clockwise-line"></i>
-                                </div>
-                                <div class="widget-info">
-                                    <span class="widget-label">Contas Pendentes</span>
-                                    <span id="val-pending" class="widget-value">R$ 0,00</span>
-                                </div>
-                            </div>
-
-                            <div class="widget-card widget-danger glass">
-                                <div class="widget-icon">
-                                    <i class="ri-alert-line"></i>
-                                </div>
-                                <div class="widget-info">
-                                    <span class="widget-label">Contas Vencidas</span>
-                                    <span id="val-overdue" class="widget-value">R$ 0,00</span>
-                                </div>
-                            </div>
-
-                            <div class="widget-card widget-available glass">
-                                <div class="widget-icon">
-                                    <i class="ri-shield-check-line"></i>
-                                </div>
-                                <div class="widget-info">
-                                    <span class="widget-label">Saldo Disponível</span>
-                                    <span id="val-available" class="widget-value">R$ 0,00</span>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="charts-grid animate-fade">
-                            <div class="chart-card glass">
-                                <div class="chart-card-header">
-                                    <h3 class="chart-card-title">Evolução Mensal de Despesas</h3>
-                                    <i class="ri-bar-chart-fill" style="color: var(--primary);"></i>
-                                </div>
-                                <div class="chart-canvas-container">
-                                    <canvas id="monthlyExpensesChart"></canvas>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="notes-section animate-fade">
-                            <div class="section-header">
-                                <div>
-                                    <h3>Anotações</h3>
-                                    <p class="text-muted">Registre observações financeiras e salve diretamente no banco
-                                        de dados.</p>
-                                </div>
-                            </div>
-
-                            <div class="notes-grid">
-                                <div class="notes-input-card glass">
-                                    <h4>Nova anotação</h4>
-                                    <form id="note-form">
-                                        <textarea id="note-content" class="note-textarea"
-                                            placeholder="Escreva sua anotação aqui..." rows="7" required></textarea>
-                                        <div class="notes-actions">
-                                            <button type="submit" class="btn-primary">Salvar Anotação</button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div class="notes-list-card glass">
-                                    <div class="section-header" style="margin-bottom: 14px;">
-                                        <div>
-                                            <h4>Últimas notas</h4>
-                                            <p class="text-muted">Suas notas salvas aparecem aqui com data de registro.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div id="notes-list" class="notes-list"></div>
-                                </div>
-                            </div>
-                        </section>
-                    </section>
-
-                    <section id="tab-transactions" class="tab-page">
-
-                        <div class="month-selector-container glass animate-fade"
-                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin-bottom: 20px; border-radius: 12px;">
-                            <button type="button" id="btn-prev-month-list" class="btn-secondary" title="Mês Anterior">
-                                <i class="ri-arrow-left-s-line"></i>
-                            </button>
-                            <h3 id="current-month-display-list"
-                                style="margin: 0; min-width: 160px; text-align: center;">Junho de 2026</h3>
-                            <button type="button" id="btn-next-month-list" class="btn-secondary" title="Próximo Mês">
-                                <i class="ri-arrow-right-s-line"></i>
-                            </button>
-                        </div>
-
-                        <div class="section-header">
-                            <div id="info-header">
-                                <h3>Lançamentos</h3>
-                                <p class="text-muted">Buscar, filtrar e gerenciar todas as transações cadastradas.</p>
-                            </div>
-
-                        </div>
-
-                        <section class="transactions-section animate-fade">
-                            <div class="transactions-toolbar">
-
-                                <div class="search-filter-box">
-
-                                    <div class="search-input-wrapper">
-                                        <i class="ri-search-line"></i>
-                                        <input id="search-input" class="search-input" type="text"
-                                            placeholder="Buscar lançamentos">
-                                    </div>
-
-                                    <select id="filter-select" class="filter-select">
-                                        <option value="all">Todas as Transações</option>
-                                        <option value="income">Entradas (Receitas)</option>
-                                        <option value="expense">Saídas (Despesas)</option>
-                                    </select>
-
-                                    <select id="status-filter" class="filter-select" style="margin-left:0px;">
-                                        <option value="all">Todos os Status</option>
-                                        <option value="paid">Pagas</option>
-                                        <option value="pending">Pendentes</option>
-                                    </select>
-
-                                    <select id="sort-by-mobile" class="filter-select mobile-sort-select"
-                                        style="display: none;">
-                                        <option value="date">Por Data</option>
-                                        <option value="due_date">Por Vencimento</option>
-                                        <option value="amount">Por Valor</option>
-                                        <option value="description">Por Descrição</option>
-                                    </select>
-                                    <!-- <div id="filtro-data">
+                    <select
+                      id="sort-by-mobile"
+                      class="filter-select mobile-sort-select"
+                      style="display: none"
+                    >
+                      <option value="date">Por Data</option>
+                      <option value="due_date">Por Vencimento</option>
+                      <option value="amount">Por Valor</option>
+                      <option value="description">Por Descrição</option>
+                    </select>
+                    <!-- <div id="filtro-data">
                                         <div id="date-filter-phone-ini" class="date-filter-wrapper">
                                             <input type="date" id="filter-start-date" class="form-input"
                                                 title="Data início do filtro" />
@@ -348,254 +594,583 @@
                                                 title="Data fim do filtro" />
                                         </div>
                                     </div> -->
-                                    <div id="div-btn-novo-reg" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1%;">
-                                        <button id="btn-copy-next-month" class="btn-secondary" type="button"
-                                            title="Espelhar lançamentos deste mês no próximo mês">
-                                            <i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês
-                                        </button>
+                    <div
+                      id="div-btn-novo-reg"
+                      style="
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                        margin-top: 1%;
+                      "
+                    >
+                      <button
+                        id="btn-copy-next-month"
+                        class="btn-secondary"
+                        type="button"
+                        title="Espelhar lançamentos deste mês no próximo mês"
+                      >
+                        <i class="ri-file-copy-2-line"></i> Replicar no Próx.
+                        Mês
+                      </button>
 
-                                        <button id="open-add-modal-btn" class="btn-primary">
-                                            <i class="ri-add-line"></i>
-                                            Nova Transação
-                                        </button>
-                                    </div>
-
-
-
-                                </div>
-
-                            </div>
-
-                            <div class="transactions-card glass">
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th class="sortable" data-key="description">Descrição</th>
-                                                <th class="sortable" data-key="amount">Valor</th>
-                                                <th class="sortable" data-key="category">Categoria</th>
-                                                <th>Status</th>
-                                                <th class="sortable" data-key="date">Data</th>
-                                                <th class="sortable" data-key="due_date">Vencimento</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="transactions-tbody">
-                                            <!-- Inserido dinamicamente via JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="mobile-transactions-list" class="mobile-transactions-list">
-                                    <!-- Inserido dinamicamente via JS -->
-                                </div>
-                            </div>
-                        </section>
-                    </section>
-
-                    <section id="tab-monthly" class="tab-page">
-                        <div class="section-header monthly-header">
-                            <div>
-                                <h3>Controle Mensal</h3>
-                                <p class="text-muted">Acompanhe o saldo disponível em cada conta e veja quanto sobra após as despesas pendentes.</p>
-                            </div>
-                        </div>
-                        <div class="monthly-dashboard">
-                            <div id="card-calculo" class="card-calculo glass">
-                                <div id="card-pendencias" class="card-valores monthly-summary-card">
-                                    <div class="monthly-summary-icon"><i class="ri-time-line"></i></div>
-                                    <div>
-                                        <span class="monthly-summary-label">Despesas pendentes</span>
-                                        <strong class="span-valor valor-negativo">R$ 0,00</strong>
-                                    </div>
-                                </div>
-                                <div id="card-total-bancos" class="card-valores monthly-summary-card">
-                                    <div class="monthly-summary-icon"><i class="ri-wallet-3-line"></i></div>
-                                    <div>
-                                        <span class="monthly-summary-label">Total em contas</span>
-                                        <strong class="span-valor valor-positivo">R$ 0,00</strong>
-                                    </div>
-                                </div>
-                                <div id="card-resultado" class="card-valores monthly-summary-card">
-                                    <div class="monthly-summary-icon"><i class="ri-line-chart-line"></i></div>
-                                    <div>
-                                        <span class="monthly-summary-label">Saldo após pendências</span>
-                                        <strong class="span-valor">R$ 0,00</strong>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="monthly-accounts-panel glass">
-                                <div class="monthly-panel-heading">
-                                    <div>
-                                        <h4>Saldos das contas</h4>
-                                        <p>Atualize os valores para manter o cálculo em dia.</p>
-                                    </div>
-                                    <i class="ri-bank-card-line" aria-hidden="true"></i>
-                                </div>
-                                <div id="div-saldo" class="div-saldo">
-                                    <label class="monthly-account-card" for="carteira-valor">
-                                        <span class="monthly-account-name"><i class="ri-wallet-3-line"></i>CARTEIRA</span>
-                                        <input class="monthly-account-input form-input" id="carteira-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                    <label class="monthly-account-card" for="itau-valor">
-                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>ITAU</span>
-                                        <input class="monthly-account-input form-input" id="itau-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                    <label class="monthly-account-card" for="nubank-valor">
-                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>NUBANK</span>
-                                        <input class="monthly-account-input form-input" id="nubank-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                    <label class="monthly-account-card" for="merc-pg-valor">
-                                        <span class="monthly-account-name"><i class="ri-smartphone-line"></i>MERC. PG</span>
-                                        <input class="monthly-account-input form-input" id="merc-pg-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                    <label class="monthly-account-card" for="inter-valor">
-                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>INTER</span>
-                                        <input class="monthly-account-input form-input" id="inter-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                    <label class="monthly-account-card" for="bradesco-valor">
-                                        <span class="monthly-account-name"><i class="ri-bank-line"></i>BRADESCO</span>
-                                        <input class="monthly-account-input form-input" id="bradesco-valor" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                    </section>
+                      <button id="open-add-modal-btn" class="btn-primary">
+                        <i class="ri-add-line"></i>
+                        Nova Transação
+                      </button>
+                    </div>
+                  </div>
                 </div>
-            </div>
+
+                <div class="transactions-card glass">
+                  <div class="table-responsive">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th class="sortable" data-key="description">
+                            Descrição
+                          </th>
+                          <th class="sortable" data-key="amount">Valor</th>
+                          <th class="sortable" data-key="category">
+                            Categoria
+                          </th>
+                          <th>Status</th>
+                          <th class="sortable" data-key="date">Data</th>
+                          <th class="sortable" data-key="due_date">
+                            Vencimento
+                          </th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="transactions-tbody">
+                        <!-- Inserido dinamicamente via JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                  <div
+                    id="mobile-transactions-list"
+                    class="mobile-transactions-list"
+                  >
+                    <!-- Inserido dinamicamente via JS -->
+                  </div>
+                </div>
+              </section>
+            </section>
+
+            <section id="tab-monthly" class="tab-page">
+              <div class="section-header monthly-header">
+                <div>
+                  <h3>Controle Mensal</h3>
+                  <p class="text-muted">
+                    Acompanhe o saldo disponível em cada conta e veja quanto
+                    sobra após as despesas pendentes.
+                  </p>
+                </div>
+              </div>
+              <div class="monthly-dashboard">
+                <div id="card-calculo" class="card-calculo glass">
+                  <div
+                    id="card-pendencias"
+                    class="card-valores monthly-summary-card"
+                  >
+                    <div class="monthly-summary-icon">
+                      <i class="ri-time-line"></i>
+                    </div>
+                    <div>
+                      <span class="monthly-summary-label"
+                        >Despesas pendentes</span
+                      >
+                      <strong class="span-valor valor-negativo">R$ 0,00</strong>
+                    </div>
+                  </div>
+                  <div
+                    id="card-total-bancos"
+                    class="card-valores monthly-summary-card"
+                  >
+                    <div class="monthly-summary-icon">
+                      <i class="ri-wallet-3-line"></i>
+                    </div>
+                    <div>
+                      <span class="monthly-summary-label">Total em contas</span>
+                      <strong class="span-valor valor-positivo">R$ 0,00</strong>
+                    </div>
+                  </div>
+                  <div
+                    id="card-resultado"
+                    class="card-valores monthly-summary-card"
+                  >
+                    <div class="monthly-summary-icon">
+                      <i class="ri-line-chart-line"></i>
+                    </div>
+                    <div>
+                      <span class="monthly-summary-label"
+                        >Saldo após pendências</span
+                      >
+                      <strong class="span-valor">R$ 0,00</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="monthly-accounts-panel glass">
+                  <div class="monthly-panel-heading">
+                    <div>
+                      <h4>Saldos das contas</h4>
+                      <p>Atualize os valores para manter o cálculo em dia.</p>
+                    </div>
+                    <i class="ri-bank-card-line" aria-hidden="true"></i>
+                  </div>
+                  <div id="div-saldo" class="div-saldo">
+                    <label class="monthly-account-card" for="carteira-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-wallet-3-line"></i>CARTEIRA</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="carteira-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                    <label class="monthly-account-card" for="itau-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-bank-line"></i>ITAU</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="itau-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                    <label class="monthly-account-card" for="nubank-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-bank-line"></i>NUBANK</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="nubank-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                    <label class="monthly-account-card" for="merc-pg-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-smartphone-line"></i>MERC. PG</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="merc-pg-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                    <label class="monthly-account-card" for="inter-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-bank-line"></i>INTER</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="inter-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                    <label class="monthly-account-card" for="bradesco-valor">
+                      <span class="monthly-account-name"
+                        ><i class="ri-bank-line"></i>BRADESCO</span
+                      >
+                      <input
+                        class="monthly-account-input form-input"
+                        id="bradesco-valor"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="R$ 0,00"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
+      </div>
     </main>
 
     <!-- ==========================================
          3. MODAL: ADICIONAR NOVA TRANSAÇÃO
          ========================================== -->
     <div id="transaction-modal" class="modal-overlay">
-        <div class="modal-container glass">
-            <div class="modal-header">
-                <h3 class="modal-title">Nova Transação</h3>
+      <div class="modal-container glass">
+        <div class="modal-header">
+          <h3 class="modal-title">Nova Transação</h3>
 
-
-                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button type="button" id="btn-type-expense" class="type-btn type-btn-expense active"
-                        style="flex: 1;">Despesa</button>
-                    <button type="button" id="btn-type-income" class="type-btn type-btn-income"
-                        style="flex: 1;">Receita</button>
-                </div>
-
-            </div>
-
-            <form id="transaction-form" autocomplete="off">
-                <input type="hidden" id="trans-type" value="expense">
-
-
-
-                <div class="form-group">
-                    <label for="trans-desc" class="form-label">Descrição</label>
-                    <input type="text" id="trans-desc" class="form-input" placeholder="Ex: Aluguel, Salário" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="trans-amount" class="form-label">Valor (R$)</label>
-                    <input type="number" id="trans-amount" class="form-input" placeholder="0.00" step="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="trans-date" class="form-label">Data</label>
-                    <input type="date" id="trans-date" class="form-input" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="trans-due-date" class="form-label">Data de Vencimento</label>
-                    <input type="date" id="trans-due-date" class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="trans-category" class="form-label">Categoria</label>
-                    <select id="trans-category" class="form-input"></select>
-                    <input type="text" id="trans-custom-category" class="form-input"
-                        style="display: none; margin-top: 12px;" placeholder="Qual?">
-                </div>
-
-                <div class="form-group">
-                    <label for="trans-paid-status" class="form-label">Status</label>
-                    <select id="trans-paid-status" class="form-input">
-                        <option value="paid">Pago</option>
-                        <option value="pending">Pendente</option>
-                    </select>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" id="cancel-modal-btn" class="btn-secondary">Cancelar</button>
-                    <button type="submit" id="save-transaction-btn" class="btn-primary">Salvar Transação</button>
-                </div>
-            </form>
+          <div
+            class="form-group"
+            style="display: flex; gap: 10px; margin-bottom: 15px"
+          >
+            <button
+              type="button"
+              id="btn-type-expense"
+              class="type-btn type-btn-expense active"
+              style="flex: 1"
+            >
+              Despesa
+            </button>
+            <button
+              type="button"
+              id="btn-type-income"
+              class="type-btn type-btn-income"
+              style="flex: 1"
+            >
+              Receita
+            </button>
+          </div>
         </div>
+
+        <form id="transaction-form" autocomplete="off">
+          <input type="hidden" id="trans-type" value="expense" />
+
+          <div class="form-group">
+            <label for="trans-desc" class="form-label">Descrição</label>
+            <input
+              type="text"
+              id="trans-desc"
+              class="form-input"
+              placeholder="Ex: Aluguel, Salário"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="trans-amount" class="form-label">Valor (R$)</label>
+            <input
+              type="number"
+              id="trans-amount"
+              class="form-input"
+              placeholder="0.00"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="trans-date" class="form-label">Data</label>
+            <input type="date" id="trans-date" class="form-input" required />
+          </div>
+
+          <div class="form-group">
+            <label for="trans-due-date" class="form-label"
+              >Data de Vencimento</label
+            >
+            <input type="date" id="trans-due-date" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label for="trans-category" class="form-label">Categoria</label>
+            <select id="trans-category" class="form-input"></select>
+            <input
+              type="text"
+              id="trans-custom-category"
+              class="form-input"
+              style="display: none; margin-top: 12px"
+              placeholder="Qual?"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="trans-paid-status" class="form-label">Status</label>
+            <select id="trans-paid-status" class="form-input">
+              <option value="paid">Pago</option>
+              <option value="pending">Pendente</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="trans-recurrence" class="form-label">Repetir</label>
+            <select id="trans-recurrence" class="form-input">
+              <option value="">Não repetir</option>
+              <option value="daily">Diariamente</option>
+              <option value="weekly">Semanalmente</option>
+              <option value="monthly">Mensalmente</option>
+              <option value="yearly">Anualmente</option>
+            </select>
+          </div>
+
+          <div
+            class="form-group"
+            id="recurrence-end-group"
+            style="display: none"
+          >
+            <label for="trans-recurrence-end" class="form-label"
+              >Repetir até (opcional)</label
+            >
+            <input type="date" id="trans-recurrence-end" class="form-input" />
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" id="cancel-modal-btn" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" id="save-transaction-btn" class="btn-primary">
+              Salvar Transação
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <div id="avatar-crop-modal" class="modal-overlay avatar-crop-modal">
-        <div class="modal-container avatar-editor glass">
-            <div class="modal-header avatar-editor-header">
-                <h3 class="modal-title">Editar foto do perfil</h3>
-                <button id="avatar-close-btn" type="button" class="close-modal-btn" aria-label="Fechar editor">
-                    <i class="ri-close-line"></i>
-                </button>
+      <div class="modal-container avatar-editor glass">
+        <div class="modal-header avatar-editor-header">
+          <h3 class="modal-title">Editar foto do perfil</h3>
+          <button
+            id="avatar-close-btn"
+            type="button"
+            class="close-modal-btn"
+            aria-label="Fechar editor"
+          >
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+
+        <div class="avatar-editor-body">
+          <div class="avatar-editor-url-row">
+            <div class="avatar-url-field-wrap">
+              <input
+                id="avatar-url-input"
+                type="url"
+                class="form-input"
+                placeholder="Cole a URL da imagem aqui"
+              />
+              <button
+                id="avatar-paste-btn"
+                type="button"
+                class="avatar-paste-btn"
+                aria-label="Colar link copiado"
+                title="Colar link copiado"
+              >
+                <i class="ri-file-copy-line"></i>
+              </button>
             </div>
+            <button id="avatar-load-btn" type="button" class="btn-secondary">
+              Carregar
+            </button>
+          </div>
 
-            <div class="avatar-editor-body">
-                <div class="avatar-editor-url-row">
-                    <div class="avatar-url-field-wrap">
-                        <input id="avatar-url-input" type="url" class="form-input" placeholder="Cole a URL da imagem aqui" />
-                        <button id="avatar-paste-btn" type="button" class="avatar-paste-btn" aria-label="Colar link copiado" title="Colar link copiado">
-                            <i class="ri-file-copy-line"></i>
-                        </button>
-                    </div>
-                    <button id="avatar-load-btn" type="button" class="btn-secondary">Carregar</button>
-                </div>
+          <label class="avatar-file-picker" for="avatar-file-input">
+            <i class="ri-image-add-line"></i>
+            <span>Escolher imagem do computador</span>
+            <input
+              id="avatar-file-input"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+            />
+          </label>
+          <p
+            id="avatar-editor-status"
+            class="avatar-editor-status"
+            aria-live="polite"
+          >
+            A imagem será ajustada e salva somente neste dispositivo.
+          </p>
 
-                <label class="avatar-file-picker" for="avatar-file-input">
-                    <i class="ri-image-add-line"></i>
-                    <span>Escolher imagem do computador</span>
-                    <input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" />
-                </label>
-                <p id="avatar-editor-status" class="avatar-editor-status" aria-live="polite">
-                    A imagem será ajustada e salva somente neste dispositivo.
-                </p>
-
-                <div class="avatar-crop-stage">
-                    <div class="avatar-crop-frame">
-                        <div id="avatar-crop-preview" class="avatar-crop-preview"></div>
-                    </div>
-                </div>
-
-                <div class="avatar-crop-controls">
-                    <label>
-                        <span>Zoom</span>
-                        <input id="avatar-zoom" type="range" min="1" max="3" step="0.05" value="1" />
-                    </label>
-                    <label>
-                        <span>Horizontal</span>
-                        <input id="avatar-x" type="range" min="0" max="100" step="1" value="50" />
-                    </label>
-                    <label>
-                        <span>Vertical</span>
-                        <input id="avatar-y" type="range" min="0" max="100" step="1" value="50" />
-                    </label>
-                </div>
-
-                <div class="modal-footer avatar-editor-footer">
-                    <button id="avatar-cancel-btn" type="button" class="btn-secondary">Cancelar</button>
-                    <button id="avatar-save-btn" type="submit" class="btn-primary">Usar foto</button>
-                </div>
+          <div class="avatar-crop-stage">
+            <div class="avatar-crop-frame">
+              <div id="avatar-crop-preview" class="avatar-crop-preview"></div>
             </div>
+          </div>
+
+          <div class="avatar-crop-controls">
+            <label>
+              <span>Zoom</span>
+              <input
+                id="avatar-zoom"
+                type="range"
+                min="1"
+                max="3"
+                step="0.05"
+                value="1"
+              />
+            </label>
+            <label>
+              <span>Horizontal</span>
+              <input
+                id="avatar-x"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+              />
+            </label>
+            <label>
+              <span>Vertical</span>
+              <input
+                id="avatar-y"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+              />
+            </label>
+          </div>
+
+          <div class="modal-footer avatar-editor-footer">
+            <button id="avatar-cancel-btn" type="button" class="btn-secondary">
+              Cancelar
+            </button>
+            <button id="avatar-save-btn" type="submit" class="btn-primary">
+              Usar foto
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: NOVO ORÇAMENTO -->
+    <div id="budget-modal" class="modal-overlay">
+      <div class="modal-container glass" style="max-width: 460px">
+        <div class="modal-header">
+          <h3 class="modal-title">Orçamento por categoria</h3>
+        </div>
+        <form id="budget-form">
+          <div class="form-group">
+            <label for="budget-category" class="form-label">Categoria</label>
+            <select id="budget-category" class="form-input" required></select>
+            <input
+              type="text"
+              id="budget-custom-category"
+              class="form-input"
+              style="display: none; margin-top: 12px"
+              placeholder="Qual?"
+            />
+          </div>
+          <div class="form-group">
+            <label for="budget-amount" class="form-label">Limite (R$)</label>
+            <input
+              type="number"
+              id="budget-amount"
+              class="form-input"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-budget-btn" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">Salvar orçamento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: NOVA META -->
+    <div id="goal-modal" class="modal-overlay">
+      <div class="modal-container glass" style="max-width: 460px">
+        <div class="modal-header">
+          <h3 class="modal-title">Nova meta</h3>
+        </div>
+        <form id="goal-form">
+          <div class="form-group">
+            <label for="goal-name" class="form-label">Nome da meta</label>
+            <input
+              type="text"
+              id="goal-name"
+              class="form-input"
+              placeholder="Ex: Viagem, Reserva..."
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="goal-target" class="form-label">Valor alvo (R$)</label>
+            <input
+              type="number"
+              id="goal-target"
+              class="form-input"
+              step="0.01"
+              min="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="goal-current" class="form-label"
+              >Valor já guardado (R$)</label
+            >
+            <input
+              type="number"
+              id="goal-current"
+              class="form-input"
+              step="0.01"
+              min="0"
+              value="0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="goal-deadline" class="form-label"
+              >Prazo (opcional)</label
+            >
+            <input type="date" id="goal-deadline" class="form-input" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-goal-btn" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">Salvar meta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
+<div id="recurrence-delete-modal" class="modal-overlay">
+    <div class="modal-container glass" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Transação recorrente</h3>
+        </div>
+
+        <div class="modal-body" style="padding: 18px 24px 8px;">
+            <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 14px; line-height: 1.5;">
+                Esta transação faz parte de uma série recorrente.
+                Escolha o que deseja fazer:
+            </p>
+
+            <label class="recurrence-delete-option">
+                <input type="radio" name="recurrence-delete-scope" value="single" checked>
+                <span>
+                    <strong>Excluir apenas esta ocorrência</strong>
+                    <small>As próximas continuarão sendo geradas normalmente.</small>
+                </span>
+            </label>
+
+            <label class="recurrence-delete-option">
+                <input type="radio" name="recurrence-delete-scope" value="future">
+                <span>
+                    <strong>Excluir esta e todas as futuras</strong>
+                    <small>A recorrência será encerrada a partir deste mês.</small>
+                </span>
+            </label>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" id="cancel-recurrence-delete" class="btn-secondary">Cancelar</button>
+            <button type="button" id="confirm-recurrence-delete" class="btn-primary">
+                <i class="ri-delete-bin-line"></i> Excluir
+            </button>
         </div>
     </div>
+</div>
 
     <!-- Container de Toasts -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Script Principal -->
     <script type="module" src="app.js"></script>
-</body>
-
+  </body>
 </html>
