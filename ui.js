@@ -1209,9 +1209,32 @@ export function renderGoals(goals) {
       const current = Number(g.current_amount || 0);
       const target = Number(g.target_amount || 0);
       const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
-      const deadline = g.deadline
-        ? new Date(g.deadline + "T12:00:00").toLocaleDateString("pt-BR")
+      
+      const deadlineDate = g.deadline ? new Date(g.deadline + "T12:00:00") : null;
+      const deadline = deadlineDate
+        ? deadlineDate.toLocaleDateString("pt-BR")
         : "Sem prazo";
+        
+      const remaining = target - current;
+      let monthlyHint = "";
+
+      // Lógica inteligente de aporte mensal
+      if (remaining <= 0) {
+        monthlyHint = `<div class="goal-monthly-hint success">Meta alcançada! 🎉</div>`;
+      } else if (deadlineDate) {
+        const today = new Date();
+        let monthsDiff = (deadlineDate.getFullYear() - today.getFullYear()) * 12 + (deadlineDate.getMonth() - today.getMonth());
+        
+        if (monthsDiff <= 0) {
+          monthlyHint = `<div class="goal-monthly-hint warning">Prazo esgotado. Aporte os R$ ${remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} restantes.</div>`;
+        } else {
+          const monthsToSave = monthsDiff + 1; 
+          const monthlyNeeded = remaining / monthsToSave;
+          
+          // CORREÇÃO AQUI: Adicionado maximumFractionDigits: 2
+          monthlyHint = `<div class="goal-monthly-hint">Guarde <strong>R$ ${monthlyNeeded.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>/mês</div>`;
+        }
+      }
 
       return `
             <div class="goal-card" data-id="${g.id}">
@@ -1220,13 +1243,14 @@ export function renderGoals(goals) {
                     <span class="goal-deadline">${deadline}</span>
                 </div>
                 <div class="goal-values">
-                    <span class="goal-current">R$ ${current.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                    <span class="goal-target">de R$ ${target.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                    <span class="goal-current">R$ ${current.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="goal-target">de R$ ${target.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div class="goal-progress">
                     <div class="goal-progress-fill" style="width: ${pct}%"></div>
                 </div>
-                <div class="goal-actions">
+                ${monthlyHint}
+                <div class="goal-actions" style="margin-top: ${monthlyHint ? '12px' : '0'};">
                     <button type="button" class="goal-add-btn" data-id="${g.id}">
                         <i class="ri-add-line"></i> Aportar
                     </button>

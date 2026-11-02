@@ -16,6 +16,12 @@ import {
   insertGoal,
   updateGoal,
   removeGoal,
+  // Novas importações de Aportes:
+  fetchGoalContributions,
+  insertGoalContribution,
+  updateGoalContribution,
+  removeGoalContribution,
+  recalculateGoalTotal
 } from "./db.js";
 
 import {
@@ -312,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // ---- Orçamentos ----
   const budgetModal = document.getElementById("budget-modal");
   document
     .getElementById("open-budget-modal-btn")
@@ -384,99 +391,293 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+  // ==========================================
+  // METAS E APORTES
+  // ==========================================
   const goalModal = document.getElementById("goal-modal");
-  document
-    .getElementById("open-goal-modal-btn")
-    ?.addEventListener("click", () => {
-      goalModal?.classList.add("active");
-      playUiSelectionSound();
-    });
+  const goalDepositModal = document.getElementById("goal-deposit-modal");
+  
+  // Função para renderizar a lista de aportes dentro do modal
+  const renderContributionsList = (contributions) => {
+    const listEl = document.getElementById("goal-contributions-list");
+    if (!listEl) return;
+
+    if (contributions.length === 0) {
+      listEl.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 10px;">Nenhum aporte registrado ainda.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = contributions.map(c => `
+      <div class="contribution-item">
+        <div class="contribution-info">
+          <span class="contribution-date">${new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR")}</span>
+          <strong class="contribution-amount">R$ ${Number(c.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+        </div>
+        <div class="contribution-actions">
+          <button type="button" class="btn-icon edit-contribution" data-id="${c.id}" data-amount="${c.amount}" data-date="${c.date}" title="Editar">
+            <i class="ri-pencil-line"></i>
+          </button>
+          <button type="button" class="btn-icon delete-contribution" data-id="${c.id}" title="Excluir">
+            <i class="ri-delete-bin-line"></i>
+          </button>
+        </div>
+      </div>
+    `).join("");
+  };
+
+  // Abrir modal de Nova Meta
+  document.getElementById("open-goal-modal-btn")?.addEventListener("click", () => {
+    goalModal?.classList.add("active");
+    playUiSelectionSound();
+  });
+
+  // Fechar modal de Nova Meta
   document.getElementById("cancel-goal-btn")?.addEventListener("click", () => {
     goalModal?.classList.remove("active");
     playUiUnselectionSound();
   });
+  
   goalModal?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) goalModal.classList.remove("active");
   });
 
-  document
-    .getElementById("goal-form")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("goal-name").value.trim();
-      const target = parseFloat(document.getElementById("goal-target").value);
-      const current =
-        parseFloat(document.getElementById("goal-current").value) || 0;
-      const deadline = document.getElementById("goal-deadline").value || null;
+  // Submit do form de Nova Meta
+  document.getElementById("goal-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("goal-name").value.trim();
+    const target = parseFloat(document.getElementById("goal-target").value);
+    const current = parseFloat(document.getElementById("goal-current").value) || 0;
+    const deadline = document.getElementById("goal-deadline").value || null;
 
-      if (!name || !Number.isFinite(target) || target <= 0) {
-        showToast("Preencha nome e valor alvo.", "error");
-        return;
+    if (!name || !Number.isFinite(target) || target <= 0) {
+      showToast("Preencha nome e valor alvo.", "error");
+      return;
+    }
+
+    try {
+      const newGoal = await insertGoal({ name, target_amount: target, current_amount: 0, deadline });
+      
+      // Se o usuário já tem um valor guardado, criamos um aporte inicial
+      if (current > 0 && newGoal) {
+         await insertGoalContribution(newGoal.id, current, new Date().toISOString().split('T')[0]);
+         await recalculateGoalTotal(newGoal.id);
       }
 
+      goalModal?.classList.remove("active");
+      document.getElementById("goal-form").reset();
+      showToast("Meta criada.", "success");
+      playSuccessSound();
+      currentGoals = await fetchGoals();
+      renderGoals(currentGoals);
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao criar meta.", "error");
+    }
+  });
+
+  // Cliques nos cards de Meta (Aportar / Excluir)
+  document.getElementById("goals-grid")?.addEventListener("click", async (e) => {
+    const addBtn = e.target.closest(".goal-add-btn");
+    const removeBtn = e.target.closest(".goal-remove-btn");
+
+    if (addBtn) {
+      const id = addBtn.dataset.id;
+      const goal = currentGoals.find((g) => String(g.id) === String(id));
+      if (!goal) return;
+
+      // Reseta o form
+      document.getElementById("goal-deposit-form").reset();
+      document.getElementById("deposit-goal-id").value = id;
+      document.getElementById("deposit-contribution-id").value = "";
+      document.getElementById("deposit-date").value = new Date().toISOString().split('T')[0];
+      document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
+      document.getElementById("cancel-deposit-edit-btn").style.display = "none";
+      document.getElementById("goal-deposit-title").textContent = `Aportar em "${goal.name}"`;
+
+      // Cálculo inteligente no Modal
+      const target = Number(goal.target_amount || 0);
+      const current = Number(goal.current_amount || 0);
+      const remaining = target - current;
+      let infoHtml = "";
+
+      if (goal.deadline && remaining > 0) {
+        const deadlineDate = new Date(goal.deadline + "T12:00:00");
+        const today = new Date();
+        let monthsDiff = (deadlineDate.getFullYear() - today.getFullYear()) * 12 + (deadlineDate.getMonth() - today.getMonth());
+        
+        if (monthsDiff > 0) {
+          const monthsToSave = monthsDiff + 1;
+          const monthlyNeeded = remaining / monthsToSave;
+          infoHtml = `<span>Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>. Guarde <strong>R$ ${monthlyNeeded.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>/mês para chegar no prazo.</span>`;
+          document.getElementById("deposit-amount").value = monthlyNeeded.toFixed(2);
+        } else {
+          infoHtml = `<span>Prazo muito próximo. Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>.</span>`;
+          document.getElementById("deposit-amount").value = remaining.toFixed(2);
+        }
+      } else if (remaining > 0) {
+         infoHtml = `<span>Sem prazo definido. Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>.</span>`;
+      } else {
+         infoHtml = `<span>Parabéns! Você já atingiu esta meta. 🎉</span>`;
+      }
+      document.getElementById("goal-deposit-info").innerHTML = infoHtml;
+
+      // Busca e renderiza o histórico de aportes
       try {
-        await insertGoal({
-          name,
-          target_amount: target,
-          current_amount: current,
-          deadline,
-        });
-        goalModal?.classList.remove("active");
-        document.getElementById("goal-form").reset();
-        showToast("Meta criada.", "success");
-        playSuccessSound();
-        currentGoals = await fetchGoals();
-        renderGoals(currentGoals);
+        const contributions = await fetchGoalContributions(id);
+        renderContributionsList(contributions);
       } catch (err) {
         console.error(err);
-        showToast("Erro ao criar meta.", "error");
       }
-    });
 
-  document
-    .getElementById("goals-grid")
-    ?.addEventListener("click", async (e) => {
-      const addBtn = e.target.closest(".goal-add-btn");
-      const removeBtn = e.target.closest(".goal-remove-btn");
+      goalDepositModal?.classList.add("active");
+      playUiSelectionSound();
+      setTimeout(() => document.getElementById("deposit-amount")?.select(), 100);
+      return;
+    }
 
-      if (addBtn) {
-        const id = addBtn.dataset.id;
-        const goal = currentGoals.find((g) => String(g.id) === String(id));
-        if (!goal) return;
-        const value = prompt(`Quanto adicionar em "${goal.name}"?`, "0");
-        const amount = parseFloat(String(value || "").replace(",", "."));
-        if (!Number.isFinite(amount) || amount <= 0) return;
-        const next = Number(goal.current_amount || 0) + amount;
-        try {
-          await updateGoal(id, { current_amount: next });
-          playSuccessSound();
-          currentGoals = await fetchGoals();
-          renderGoals(currentGoals);
-        } catch (err) {
-          console.error(err);
-          showToast("Erro ao atualizar meta.", "error");
+    if (removeBtn) {
+      const id = removeBtn.dataset.id;
+      const ok = await showConfirmToast("Excluir esta meta e todo o seu histórico?", { confirmLabel: "Excluir" });
+      if (!ok) return;
+      try {
+        await removeGoal(id);
+        playDeleteSound();
+        currentGoals = await fetchGoals();
+        renderGoals(currentGoals);
+        showToast("Meta removida.", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao remover meta.", "error");
+      }
+    }
+  });
+
+  // ------------------------------------------
+  // MODAL DE APORTE (Salvar/Editar)
+  // ------------------------------------------
+  const closeDepositModal = () => {
+    goalDepositModal?.classList.remove("active");
+    playUiUnselectionSound();
+  };
+
+  document.getElementById("cancel-deposit-btn")?.addEventListener("click", closeDepositModal);
+  document.getElementById("cancel-deposit-edit-btn")?.addEventListener("click", () => {
+    document.getElementById("goal-deposit-form").reset();
+    document.getElementById("deposit-contribution-id").value = "";
+    document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
+    document.getElementById("cancel-deposit-edit-btn").style.display = "none";
+  });
+
+  goalDepositModal?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeDepositModal();
+  });
+
+  // Salvar ou Atualizar Aporte
+  document.getElementById("goal-deposit-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const goalId = document.getElementById("deposit-goal-id").value;
+    const contributionId = document.getElementById("deposit-contribution-id").value;
+    const amount = parseFloat(document.getElementById("deposit-amount").value);
+    const date = document.getElementById("deposit-date").value;
+
+    if (!goalId || !Number.isFinite(amount) || amount <= 0 || !date) {
+      showToast("Informe um valor e data válidos.", "error");
+      return;
+    }
+
+    try {
+      if (contributionId) {
+        // Está editando um aporte existente
+        await updateGoalContribution(contributionId, amount, date);
+        showToast("Aporte atualizado!", "success");
+      } else {
+        // É um novo aporte
+        await insertGoalContribution(goalId, amount, date);
+        showToast("Aporte realizado com sucesso!", "success");
+      }
+
+      playSuccessSound();
+      
+      // Recalcula o total da meta e atualiza a tela
+      await recalculateGoalTotal(goalId);
+      currentGoals = await fetchGoals();
+      renderGoals(currentGoals);
+
+      // Atualiza a lista de histórico no modal
+      const contributions = await fetchGoalContributions(goalId);
+      renderContributionsList(contributions);
+
+      // Reseta o form para novo aporte, mas mantém o modal aberto
+      document.getElementById("goal-deposit-form").reset();
+      document.getElementById("deposit-contribution-id").value = "";
+      document.getElementById("deposit-date").value = new Date().toISOString().split('T')[0];
+      document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
+      document.getElementById("cancel-deposit-edit-btn").style.display = "none";
+
+      // Atualiza o texto de ajuda no topo
+      const updatedGoal = currentGoals.find(g => String(g.id) === String(goalId));
+      if(updatedGoal) {
+        const remaining = Number(updatedGoal.target_amount) - Number(updatedGoal.current_amount);
+        document.getElementById("goal-deposit-info").innerHTML = `<span>Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> para atingir a meta.</span>`;
+      }
+
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao salvar aporte.", "error");
+    }
+  });
+
+  // Ações de Editar e Excluir dentro da lista do modal
+  document.getElementById("goal-contributions-list")?.addEventListener("click", async (e) => {
+    const editBtn = e.target.closest(".edit-contribution");
+    const deleteBtn = e.target.closest(".delete-contribution");
+    const goalId = document.getElementById("deposit-goal-id").value;
+
+    if (editBtn) {
+      const { id, amount, date } = editBtn.dataset;
+      document.getElementById("deposit-contribution-id").value = id;
+      document.getElementById("deposit-amount").value = amount;
+      document.getElementById("deposit-date").value = date;
+      document.getElementById("save-deposit-btn").textContent = "Salvar Alteração";
+      document.getElementById("cancel-deposit-edit-btn").style.display = "flex";
+      document.getElementById("deposit-amount").focus();
+      return;
+    }
+
+    if (deleteBtn) {
+      const id = deleteBtn.dataset.id;
+      const ok = await showConfirmToast("Excluir este aporte?", { confirmLabel: "Excluir" });
+      if (!ok) return;
+
+      try {
+        await removeGoalContribution(id);
+        playDeleteSound();
+        showToast("Aporte excluído.", "success");
+
+        await recalculateGoalTotal(goalId);
+        currentGoals = await fetchGoals();
+        renderGoals(currentGoals);
+
+        const contributions = await fetchGoalContributions(goalId);
+        renderContributionsList(contributions);
+        
+        // Limpa o form caso o usuário estivesse editando o item que acabou de ser excluído
+        if (document.getElementById("deposit-contribution-id").value === id) {
+           document.getElementById("goal-deposit-form").reset();
+           document.getElementById("deposit-contribution-id").value = "";
+           document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
+           document.getElementById("cancel-deposit-edit-btn").style.display = "none";
         }
-        return;
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao excluir aporte.", "error");
       }
+    }
+  });
 
-      if (removeBtn) {
-        const id = removeBtn.dataset.id;
-        const ok = await showConfirmToast("Excluir esta meta?", {
-          confirmLabel: "Excluir",
-        });
-        if (!ok) return;
-        try {
-          await removeGoal(id);
-          playDeleteSound();
-          currentGoals = await fetchGoals();
-          renderGoals(currentGoals);
-          showToast("Meta removida.", "success");
-        } catch (err) {
-          console.error(err);
-          showToast("Erro ao remover meta.", "error");
-        }
-      }
-    });
+  // ==========================================
+  // FIM METAS
+  // ==========================================
 
   btnVisitante?.addEventListener("click", () => {
     currentAppUser = {
@@ -602,18 +803,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const nomesMeses = [
-      "Janeiro",
-      "Fevereiro",
-      "Março",
-      "Abril",
-      "Maio",
-      "Junho",
-      "Julho",
-      "Agosto",
-      "Setembro",
-      "Outubro",
-      "Novembro",
-      "Dezembro",
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
     ];
 
     const mesAlvoNome = nomesMeses[proximoMesHumano - 1];
@@ -627,10 +818,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const transacoesReplicadas = transacoesDoMes.map((t) => {
       const parts = t.due_date.split("-");
       const diaOriginal = parts[2] ? parts[2].padStart(2, "0") : "10";
-
       const mesString = String(proximoMesHumano).padStart(2, "0");
       const anoString = String(anoAlvo);
-
       const novaDataFinal = `${anoString}-${mesString}-${diaOriginal}`;
 
       return {
@@ -651,10 +840,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await replicarTransacoesParaProximoMes(transacoesReplicadas);
 
-      showToast(
-        `Sucesso! Lançamentos replicados em ${mesAlvoNome}.`,
-        "success",
-      );
+      showToast(`Sucesso! Lançamentos replicados em ${mesAlvoNome}.`, "success");
 
       window.allTransactions = await fetchTransactions();
       updateDashboardUI(window.allTransactions);
@@ -680,31 +866,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---- Modal de transação ----
-  document
-    .getElementById("open-add-modal-btn")
-    ?.addEventListener("click", () => {
+  document.getElementById("open-add-modal-btn")?.addEventListener("click", () => {
       playUiSelectionSound();
       openModal(false);
-    });
+  });
 
   const closeTransactionModalWithSound = () => {
     playUiUnselectionSound();
     closeModal();
   };
 
-  document
-    .getElementById("close-modal-btn")
-    ?.addEventListener("click", closeTransactionModalWithSound);
-  document
-    .getElementById("cancel-modal-btn")
-    ?.addEventListener("click", closeModal);
-  document
-    .getElementById("transaction-modal")
-    ?.addEventListener("click", (event) => {
+  document.getElementById("close-modal-btn")?.addEventListener("click", closeTransactionModalWithSound);
+  document.getElementById("cancel-modal-btn")?.addEventListener("click", closeModal);
+  document.getElementById("transaction-modal")?.addEventListener("click", (event) => {
       if (event.target === event.currentTarget) {
         closeTransactionModalWithSound();
       }
-    });
+  });
 
   // ---- Modal de avatar ----
   const avatarModal = document.getElementById("avatar-crop-modal");
@@ -712,50 +890,32 @@ document.addEventListener("DOMContentLoaded", () => {
     playUiUnselectionSound();
     closeAvatarEditor();
   };
-  document
-    .getElementById("avatar-close-btn")
-    ?.addEventListener("click", closeAvatarModalWithSound);
-  document
-    .getElementById("avatar-cancel-btn")
-    ?.addEventListener("click", closeAvatarModalWithSound);
+  document.getElementById("avatar-close-btn")?.addEventListener("click", closeAvatarModalWithSound);
+  document.getElementById("avatar-cancel-btn")?.addEventListener("click", closeAvatarModalWithSound);
   avatarModal?.addEventListener("click", (event) => {
     if (event.target === event.currentTarget) closeAvatarModalWithSound();
   });
 
-  document
-    .getElementById("avatar-load-btn")
-    ?.addEventListener("click", async () => {
+  document.getElementById("avatar-load-btn")?.addEventListener("click", async () => {
       const url = document.getElementById("avatar-url-input").value.trim();
       if (!/^https?:\/\//i.test(url)) {
-        setAvatarEditorStatus(
-          "Use um link que comece com http:// ou https://.",
-          true,
-        );
+        setAvatarEditorStatus("Use um link que comece com http:// ou https://.", true);
         return;
       }
       await setAvatarEditorImage(url);
-    });
+  });
 
-  document
-    .getElementById("avatar-paste-btn")
-    ?.addEventListener("click", async () => {
+  document.getElementById("avatar-paste-btn")?.addEventListener("click", async () => {
       try {
         const url = await navigator.clipboard.readText();
         document.getElementById("avatar-url-input").value = url;
-        setAvatarEditorStatus(
-          "Link colado. Clique em Carregar para continuar.",
-        );
+        setAvatarEditorStatus("Link colado. Clique em Carregar para continuar.");
       } catch {
-        setAvatarEditorStatus(
-          "Não foi possível ler a área de transferência.",
-          true,
-        );
+        setAvatarEditorStatus("Não foi possível ler a área de transferência.", true);
       }
-    });
+  });
 
-  document
-    .getElementById("avatar-file-input")
-    ?.addEventListener("change", async (event) => {
+  document.getElementById("avatar-file-input")?.addEventListener("change", async (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
       if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -767,7 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       await setAvatarEditorImage(URL.createObjectURL(file));
-    });
+  });
 
   ["avatar-zoom", "avatar-x", "avatar-y"].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", updateAvatarPreview);
@@ -799,23 +959,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---- Busca e filtros (com debounce) ----
-  document
-    .getElementById("search-input")
-    ?.addEventListener("input", debounce(filterAndRenderTransactions, 180));
-  document
-    .getElementById("filter-select")
-    ?.addEventListener("change", filterAndRenderTransactions);
-  document
-    .getElementById("status-filter")
-    ?.addEventListener("change", filterAndRenderTransactions);
+  document.getElementById("search-input")?.addEventListener("input", debounce(filterAndRenderTransactions, 180));
+  document.getElementById("filter-select")?.addEventListener("change", filterAndRenderTransactions);
+  document.getElementById("status-filter")?.addEventListener("change", filterAndRenderTransactions);
   document.getElementById("sort-by-mobile")?.addEventListener("change", (e) => {
     setSort(e.target.value);
   });
 
   // ---- Notas ----
-  document
-    .getElementById("note-form")
-    ?.addEventListener("submit", async (e) => {
+  document.getElementById("note-form")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const contentEl = document.getElementById("note-content");
       const content = contentEl?.value.trim();
@@ -834,21 +986,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(err);
         showToast("Erro ao salvar nota: " + err.message, "error");
       }
-    });
+  });
 
-  document
-    .getElementById("notes-list")
-    ?.addEventListener("click", async (event) => {
+  document.getElementById("notes-list")?.addEventListener("click", async (event) => {
       const deleteButton = event.target.closest(".note-delete-btn");
       if (!deleteButton) return;
 
       const noteId = deleteButton.dataset.id;
       if (!noteId) return;
 
-      const confirmacao = await showConfirmToast(
-        "Deseja excluir esta anotação?",
-        { confirmLabel: "Excluir", iconClass: "ri-delete-bin-line" },
-      );
+      const confirmacao = await showConfirmToast("Deseja excluir esta anotação?", { confirmLabel: "Excluir", iconClass: "ri-delete-bin-line" });
       if (!confirmacao) return;
 
       try {
@@ -860,49 +1007,27 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(err);
         showToast("Erro ao excluir a anotação.", "error");
       }
-    });
+  });
 
   // ---- FIIs ----
   const fiiForm = document.getElementById("fii-form");
   fiiForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const ticker = normalizeFiiTicker(
-      document.getElementById("fii-ticker")?.value,
-    );
+    const ticker = normalizeFiiTicker(document.getElementById("fii-ticker")?.value);
     const name = document.getElementById("fii-name")?.value.trim();
-    const quantity =
-      parseInt(document.getElementById("fii-quantity")?.value, 10) || 0;
-    const averagePrice =
-      parseFloat(document.getElementById("fii-average-price")?.value) || 0;
-    const currentPrice =
-      parseFloat(document.getElementById("fii-current-price")?.value) || 0;
-    const dividends =
-      parseFloat(document.getElementById("fii-dividends")?.value) || 0;
+    const quantity = parseInt(document.getElementById("fii-quantity")?.value, 10) || 0;
+    const averagePrice = parseFloat(document.getElementById("fii-average-price")?.value) || 0;
+    const currentPrice = parseFloat(document.getElementById("fii-current-price")?.value) || 0;
+    const dividends = parseFloat(document.getElementById("fii-dividends")?.value) || 0;
 
-    if (
-      !ticker ||
-      !name ||
-      quantity < 0 ||
-      averagePrice < 0 ||
-      currentPrice < 0 ||
-      dividends < 0
-    ) {
+    if (!ticker || !name || quantity < 0 || averagePrice < 0 || currentPrice < 0 || dividends < 0) {
       showToast("Preencha corretamente todos os campos do FII.", "error");
       return;
     }
 
     const holdings = loadFiiHoldings(currentAppUser);
-    const existingIndex = holdings.findIndex(
-      (item) => normalizeFiiTicker(item.ticker) === ticker,
-    );
-    const newHolding = {
-      ticker,
-      name,
-      quantity,
-      averagePrice,
-      currentPrice,
-      dividends,
-    };
+    const existingIndex = holdings.findIndex((item) => normalizeFiiTicker(item.ticker) === ticker);
+    const newHolding = { ticker, name, quantity, averagePrice, currentPrice, dividends };
 
     if (existingIndex >= 0) {
       holdings[existingIndex] = newHolding;
@@ -952,29 +1077,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---- Submit do form (criação/edição) ----
-  document
-    .getElementById("transaction-form")
-    ?.addEventListener("submit", async (e) => {
+  document.getElementById("transaction-form")?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const editId = form.dataset.editId;
 
       const rawAmount = document.getElementById("trans-amount").value;
-      const cleanAmount =
-        parseFloat(String(rawAmount).replace(/[^0-9.-]/g, "")) || 0;
+      const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, "")) || 0;
 
-      const fallbackType = document
-        .getElementById("btn-type-income")
-        ?.classList.contains("active")
-        ? "income"
-        : "expense";
+      const fallbackType = document.getElementById("btn-type-income")?.classList.contains("active") ? "income" : "expense";
       const finalType = transTypeInput ? transTypeInput.value : fallbackType;
 
       let finalCategory = document.getElementById("trans-category").value;
       if (finalCategory === "Outros") {
-        const customValue = document
-          .getElementById("trans-custom-category")
-          .value.trim();
+        const customValue = document.getElementById("trans-custom-category").value.trim();
         if (customValue) finalCategory = customValue;
       }
 
@@ -987,16 +1103,12 @@ document.addEventListener("DOMContentLoaded", () => {
         paid_status: document.getElementById("trans-paid-status").value,
         due_date: document.getElementById("trans-due-date").value || null,
         recurrence: document.getElementById("trans-recurrence").value || null,
-        recurrence_end:
-          document.getElementById("trans-recurrence-end").value || null,
+        recurrence_end: document.getElementById("trans-recurrence-end").value || null,
       };
 
       try {
         if (editId) {
-          const { error } = await supabase
-            .from("transactions")
-            .update(transactionData)
-            .eq("id", editId);
+          const { error } = await supabase.from("transactions").update(transactionData).eq("id", editId);
           if (error) throw error;
           showToast("Transação atualizada!", "success");
         } else {
@@ -1011,7 +1123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error(err);
         showToast("Erro ao processar: " + err.message, "error");
       }
-    });
+  });
 });
 
 // Recarrega orçamentos quando o mês muda
@@ -1109,11 +1221,7 @@ window.addEventListener("keydown", (event) => {
 
   if (event.key === "F1") {
     event.preventDefault();
-    if (
-      !document
-        .getElementById("transaction-modal")
-        ?.classList.contains("active")
-    ) {
+    if (!document.getElementById("transaction-modal")?.classList.contains("active")) {
       playUiSelectionSound();
       openModal(false);
     }
@@ -1207,16 +1315,12 @@ function renderNotes(notes) {
 // =====================================================================
 
 function normalizeFiiTicker(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase();
+  return String(value || "").trim().toUpperCase();
 }
 
 function loadFiiHoldings(user) {
   try {
-    const storageKey = user?.email
-      ? `fii-holdings:${user.email}`
-      : "fii-holdings:anon";
+    const storageKey = user?.email ? `fii-holdings:${user.email}` : "fii-holdings:anon";
     const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     const holdings = JSON.parse(raw);
@@ -1229,9 +1333,7 @@ function loadFiiHoldings(user) {
 
 function saveFiiHoldings(user, holdings) {
   try {
-    const storageKey = user?.email
-      ? `fii-holdings:${user.email}`
-      : "fii-holdings:anon";
+    const storageKey = user?.email ? `fii-holdings:${user.email}` : "fii-holdings:anon";
     localStorage.setItem(storageKey, JSON.stringify(holdings));
   } catch (err) {
     console.error("Erro ao salvar holdings de FIIs:", err);
@@ -1247,8 +1349,7 @@ function formatFiiCurrency(value) {
 
 function updateFiiUI(holdings) {
   const totalValue = holdings.reduce(
-    (sum, item) =>
-      sum + Number(item.currentPrice || 0) * Number(item.quantity || 0),
+    (sum, item) => sum + Number(item.currentPrice || 0) * Number(item.quantity || 0),
     0,
   );
   const totalDividends = holdings.reduce(
@@ -1264,12 +1365,9 @@ function updateFiiUI(holdings) {
   const tbody = document.getElementById("fii-holdings-tbody");
   const emptyState = document.getElementById("fii-empty-state");
 
-  if (totalValueEl)
-    totalValueEl.textContent = `R$ ${formatFiiCurrency(totalValue)}`;
-  if (monthlyDividendsEl)
-    monthlyDividendsEl.textContent = `R$ ${formatFiiCurrency(totalDividends)}`;
-  if (averageYieldEl)
-    averageYieldEl.textContent = `${averageYield.toFixed(2)}%`;
+  if (totalValueEl) totalValueEl.textContent = `R$ ${formatFiiCurrency(totalValue)}`;
+  if (monthlyDividendsEl) monthlyDividendsEl.textContent = `R$ ${formatFiiCurrency(totalDividends)}`;
+  if (averageYieldEl) averageYieldEl.textContent = `${averageYield.toFixed(2)}%`;
   if (countEl) countEl.textContent = String(holdings.length);
 
   if (!tbody) return;
@@ -1285,8 +1383,7 @@ function updateFiiUI(holdings) {
 
   tbody.innerHTML = holdings
     .map((item) => {
-      const totalItem =
-        Number(item.currentPrice || 0) * Number(item.quantity || 0);
+      const totalItem = Number(item.currentPrice || 0) * Number(item.quantity || 0);
       return `
             <tr class="animate-fade">
                 <td>${sanitizeText(item.name)} (${sanitizeText(item.ticker)})</td>
@@ -1315,9 +1412,7 @@ function setupFiiEditButtons() {
 function handleFiiEditClick(event) {
   const ticker = normalizeFiiTicker(event.currentTarget.dataset.ticker);
   const holdings = loadFiiHoldings(currentAppUser);
-  const holding = holdings.find(
-    (item) => normalizeFiiTicker(item.ticker) === ticker,
-  );
+  const holding = holdings.find((item) => normalizeFiiTicker(item.ticker) === ticker);
   if (!holding) return;
 
   document.getElementById("fii-ticker").value = holding.ticker;

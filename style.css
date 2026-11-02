@@ -1691,13 +1691,13 @@ tr:hover td { background: var(--primary-light); }
 }
 
 .modal-header {
-  padding: 10px;
+  padding: 16px 10px; /* Aumentado de 10px para 16px no topo e base */
   border-bottom: 1px solid var(--border);
   display: grid;
   grid-template-columns: 1fr;
 }
 .modal-title {
-  padding: 5px 0 10px 0;
+  padding: 5px 0 5px 0;
   justify-self: center;
 }
 .modal-body { padding: 24px; }
@@ -1783,21 +1783,72 @@ tr:hover td { background: var(--primary-light); }
    24. MODAIS DE ORÇAMENTO E META
    ========================================================================== */
 #budget-form,
-#goal-form {
+#goal-form,
+#goal-deposit-form {
   padding: 20px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 #budget-form .form-group,
-#goal-form .form-group {
+#goal-form .form-group,
+#goal-deposit-form .form-group {
   margin-bottom: 0 !important;
 }
 #budget-form .modal-footer,
-#goal-form .modal-footer {
+#goal-form .modal-footer,
+#goal-deposit-form .modal-footer {
   margin-left: -24px;
   margin-right: -24px;
   margin-top: 14px;
+}
+
+/* ==========================================================================
+   ESTILOS INTELIGENTES DE METAS
+   ========================================================================== */
+.goal-monthly-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: inline-block;
+}
+.goal-monthly-hint strong {
+  color: var(--primary);
+}
+.goal-monthly-hint.success {
+  color: var(--success);
+  border-color: rgba(31, 174, 102, 0.3);
+  background: rgba(31, 174, 102, 0.1);
+}
+.goal-monthly-hint.warning {
+  color: var(--danger);
+  border-color: rgba(224, 64, 92, 0.3);
+  background: rgba(224, 64, 92, 0.1);
+}
+
+/* Info box dentro do modal de aporte */
+.goal-deposit-info {
+  background: var(--bg-input);
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.goal-deposit-info strong {
+  color: var(--primary);
+  font-size: 20px;
+  font-family: var(--font-heading);
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -2295,10 +2346,13 @@ tr:hover td { background: var(--primary-light); }
     justify-content: space-around;
   }
 
-  #budget-form,
-  #goal-form { padding: 16px 16px 0; }
+    #budget-form,
+  #goal-form,
+  #goal-deposit-form { padding: 16px 16px 0; }
+  
   #budget-form .modal-footer,
-  #goal-form .modal-footer {
+  #goal-form .modal-footer,
+  #goal-deposit-form .modal-footer {
     margin-left: -16px;
     margin-right: -16px;
   }
@@ -2755,4 +2809,88 @@ tr:hover td { background: var(--primary-light); }
   .mobile-tab-bar .sidebar-tab i { font-size: 20px; }
   .mobile-tab-bar .sidebar-tab span { font-size: 9px; }
   .mobile-tab-bar .sidebar-tab.active::after { width: 18px; }
+}
+
+/* ==========================================================================
+   HISTÓRICO DE APORTES NO MODAL
+   ========================================================================== */
+.goal-history-section {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  padding-bottom: 20px;
+}
+
+.goal-contributions-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar para a lista */
+.goal-contributions-list::-webkit-scrollbar {
+  width: 6px;
+}
+.goal-contributions-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.contribution-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.contribution-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.contribution-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.contribution-amount {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.contribution-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.edit-contribution:hover {
+  color: var(--primary);
+}
+
+.delete-contribution:hover {
+  color: var(--danger);
 }

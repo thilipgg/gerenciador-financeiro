@@ -11,7 +11,7 @@
     />
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
@@ -468,7 +468,7 @@
 
                 <div class="notes-grid">
                   <div class="notes-input-card glass">
-                    <h4>Nova anotação</h4>
+                    <h4 style="margin-bottom: 10px;">Nova anotação</h4>
                     <form id="note-form">
                       <textarea
                         id="note-content"
@@ -1071,7 +1071,118 @@
       </div>
     </div>
 
-    <!-- MODAL: NOVA META -->
+        <!-- MODAL: APORTAR EM META -->
+    <div id="goal-deposit-modal" class="modal-overlay">
+      <div class="modal-container glass" style="max-width: 500px">
+        <div class="modal-header">
+          <h3 class="modal-title" id="goal-deposit-title">Aportar em Meta</h3>
+        </div>
+        
+        <div class="modal-body" style="padding: 20px 24px 0; max-height: 80vh; overflow-y: auto;">
+          <div id="goal-deposit-info" class="goal-deposit-info"></div>
+
+          <form id="goal-deposit-form">
+            <input type="hidden" id="deposit-goal-id" />
+            <input type="hidden" id="deposit-contribution-id" />
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="deposit-amount" class="form-label">Valor (R$)</label>
+                <input type="number" id="deposit-amount" class="form-input" step="0.01" min="0.01" required />
+              </div>
+              <div class="form-group">
+                <label for="deposit-date" class="form-label">Data</label>
+                <input type="date" id="deposit-date" class="form-input" required />
+              </div>
+            </div>
+
+            <div class="modal-footer" style="padding-top: 12px;">
+              <button type="button" id="cancel-deposit-edit-btn" class="btn-secondary" style="display: none;">
+                Cancelar Edição
+              </button>
+              <button type="submit" id="save-deposit-btn" class="btn-primary">
+                Salvar Aporte
+              </button>
+            </div>
+          </form>
+
+          <div class="goal-history-section">
+            <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted);">Histórico de Aportes</h4>
+            <div id="goal-contributions-list" class="goal-contributions-list">
+              <!-- Inserido dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
+    <div id="recurrence-delete-modal" class="modal-overlay">
+      <!-- ... conteúdo existente ... -->
+    </div>
+
+    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
+    <div id="recurrence-delete-modal" class="modal-overlay">
+      <div class="modal-container glass" style="max-width: 480px">
+        <div class="modal-header">
+          <h3 class="modal-title">Transação recorrente</h3>
+        </div>
+
+        <div class="modal-body" style="padding: 18px 24px 8px">
+          <p
+            style="
+              margin-bottom: 16px;
+              color: var(--text-muted);
+              font-size: 14px;
+              line-height: 1.5;
+            "
+          >
+            Esta transação faz parte de uma série recorrente. Escolha o que
+            deseja fazer:
+          </p>
+
+          <label class="recurrence-delete-option">
+            <input
+              type="radio"
+              name="recurrence-delete-scope"
+              value="single"
+              checked
+            />
+            <span>
+              <strong>Excluir apenas esta ocorrência</strong>
+              <small>As próximas continuarão sendo geradas normalmente.</small>
+            </span>
+          </label>
+
+          <label class="recurrence-delete-option">
+            <input type="radio" name="recurrence-delete-scope" value="future" />
+            <span>
+              <strong>Excluir esta e todas as futuras</strong>
+              <small>A recorrência será encerrada a partir deste mês.</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            id="cancel-recurrence-delete"
+            class="btn-secondary"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            id="confirm-recurrence-delete"
+            class="btn-primary"
+          >
+            <i class="ri-delete-bin-line"></i> Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+        <!-- MODAL: NOVA META -->
     <div id="goal-modal" class="modal-overlay">
       <div class="modal-container glass" style="max-width: 460px">
         <div class="modal-header">
@@ -1128,44 +1239,50 @@
       </div>
     </div>
 
-    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
-<div id="recurrence-delete-modal" class="modal-overlay">
-    <div class="modal-container glass" style="max-width: 480px;">
+        <!-- MODAL: APORTAR EM META -->
+    <div id="goal-deposit-modal" class="modal-overlay">
+      <div class="modal-container glass" style="max-width: 500px">
         <div class="modal-header">
-            <h3 class="modal-title">Transação recorrente</h3>
+          <h3 class="modal-title" id="goal-deposit-title">Aportar em Meta</h3>
         </div>
+        
+        <div class="modal-body" style="padding: 20px 24px 0;">
+          <div id="goal-deposit-info" class="goal-deposit-info"></div>
 
-        <div class="modal-body" style="padding: 18px 24px 8px;">
-            <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 14px; line-height: 1.5;">
-                Esta transação faz parte de uma série recorrente.
-                Escolha o que deseja fazer:
-            </p>
+          <form id="goal-deposit-form">
+            <input type="hidden" id="deposit-goal-id" />
+            <input type="hidden" id="deposit-contribution-id" />
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="deposit-amount" class="form-label">Valor (R$)</label>
+                <input type="number" id="deposit-amount" class="form-input" step="0.01" min="0.01" required />
+              </div>
+              <div class="form-group">
+                <label for="deposit-date" class="form-label">Data</label>
+                <input type="date" id="deposit-date" class="form-input" required />
+              </div>
+            </div>
 
-            <label class="recurrence-delete-option">
-                <input type="radio" name="recurrence-delete-scope" value="single" checked>
-                <span>
-                    <strong>Excluir apenas esta ocorrência</strong>
-                    <small>As próximas continuarão sendo geradas normalmente.</small>
-                </span>
-            </label>
+            <div class="modal-footer" style="padding-top: 12px;">
+              <button type="button" id="cancel-deposit-edit-btn" class="btn-secondary" style="display: none;">
+                Cancelar Edição
+              </button>
+              <button type="submit" id="save-deposit-btn" class="btn-primary">
+                Salvar Aporte
+              </button>
+            </div>
+          </form>
 
-            <label class="recurrence-delete-option">
-                <input type="radio" name="recurrence-delete-scope" value="future">
-                <span>
-                    <strong>Excluir esta e todas as futuras</strong>
-                    <small>A recorrência será encerrada a partir deste mês.</small>
-                </span>
-            </label>
+          <div class="goal-history-section">
+            <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted);">Histórico de Aportes</h4>
+            <div id="goal-contributions-list" class="goal-contributions-list">
+              <!-- Inserido dinamicamente via JS -->
+            </div>
+          </div>
         </div>
-
-        <div class="modal-footer">
-            <button type="button" id="cancel-recurrence-delete" class="btn-secondary">Cancelar</button>
-            <button type="button" id="confirm-recurrence-delete" class="btn-primary">
-                <i class="ri-delete-bin-line"></i> Excluir
-            </button>
-        </div>
+      </div>
     </div>
-</div>
 
     <!-- Container de Toasts -->
     <div id="toast-container" class="toast-container"></div>

@@ -442,3 +442,62 @@ export async function removeTransactionAndFuture(id) {
     if (error) throw error;
     return { removed: 'normal' };
 }
+
+// =====================================================================
+// APORTES EM METAS
+// =====================================================================
+
+export async function fetchGoalContributions(goalId) {
+    const user = await getCurrentUser();
+    if (!user) return [];
+    const { data, error } = await supabase
+        .from('goal_contributions')
+        .select('*')
+        .eq('goal_id', goalId)
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+    if (error) throw error;
+    return data || [];
+}
+
+export async function insertGoalContribution(goalId, amount, date) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Usuário não autenticado');
+    const { data, error } = await supabase
+        .from('goal_contributions')
+        .insert([{ user_id: user.id, goal_id: goalId, amount, date }])
+        .select();
+    if (error) throw error;
+    return data[0];
+}
+
+export async function updateGoalContribution(id, amount, date) {
+    const { data, error } = await supabase
+        .from('goal_contributions')
+        .update({ amount, date })
+        .eq('id', id)
+        .select();
+    if (error) throw error;
+    return data[0];
+}
+
+export async function removeGoalContribution(id) {
+    const { error } = await supabase.from('goal_contributions').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+}
+
+// Função auxiliar para recalcular o total da meta baseado nos aportes
+export async function recalculateGoalTotal(goalId) {
+    const contributions = await fetchGoalContributions(goalId);
+    const total = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
+    
+    // Atualiza a meta principal com o novo total
+    const { error } = await supabase
+        .from('goals')
+        .update({ current_amount: total })
+        .eq('id', goalId);
+        
+    if (error) throw error;
+    return total;
+}
