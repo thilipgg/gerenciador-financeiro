@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" id="theme-color-meta" content="#07152d" />
-    <title>Finanças Premium - Seu Painel de Controle Financeiro</title>
+    <title>Vaulta - Seu Painel de Controle Financeiro</title>
     <meta
       name="description"
       content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase."
@@ -16,12 +16,10 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="Finanças Premium" />
+    <meta name="apple-mobile-web-app-title" content="Vaulta" />
 
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-
     <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png" />
-
     <link rel="manifest" href="manifest.json" />
 
     <link
@@ -37,13 +35,13 @@
 
   <body>
     <!-- ==========================================
-         1. TELA DE LOGIN (Google OAuth / Modo Demo)
+         1. TELA DE LOGIN (E-mail / Modo Visitante)
          ========================================== -->
     <main id="login-screen" style="display: flex">
       <div class="login-card glass">
         <div class="login-header">
           <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
-          <h1>Finanças Premium</h1>
+          <h1>Vaulta</h1>
           <p>Acesse sua conta para continuar</p>
         </div>
 
@@ -55,6 +53,7 @@
               id="user-email"
               placeholder="E-mail"
               class="form-input"
+              autocomplete="email"
               required
             />
           </div>
@@ -65,6 +64,7 @@
               id="user-pass"
               placeholder="Senha"
               class="form-input"
+              autocomplete="current-password"
               required
             />
           </div>
@@ -132,6 +132,8 @@
         </aside>
 
         <div class="dashboard-main">
+          <div id="dashboard-loading-bar" class="dashboard-loading-bar" aria-hidden="true"></div>
+
           <!-- Header Principal -->
           <header class="glass animate-fade">
             <div class="header-brand">
@@ -142,7 +144,7 @@
                 <span class="header-kicker">Sua central financeira</span>
                 <h2>Vaulta</h2>
                 <span id="demo-badge" class="demo-badge" style="display: none"
-                  >Modo Teste</span
+                  >Modo Visitante</span
                 >
               </div>
             </div>
@@ -151,7 +153,7 @@
               <button
                 id="export-btn"
                 class="sound-toggle"
-                aria-label="Exportar transações"
+                aria-label="Exportar dados em CSV"
                 title="Exportar CSV"
               >
                 <i class="ri-download-2-line"></i>
@@ -165,6 +167,7 @@
               >
                 <i class="ri-notification-3-line"></i>
               </button>
+
               <button
                 id="sound-toggle"
                 class="sound-toggle"
@@ -243,6 +246,7 @@
           </div>
 
           <div class="dashboard-page-content">
+            <!-- ========== ABA 1: VISÃO GERAL ========== -->
             <section id="tab-overview" class="tab-page active">
               <div
                 class="month-selector-container glass animate-fade"
@@ -260,6 +264,7 @@
                   id="btn-prev-month"
                   class="btn-secondary"
                   title="Mês Anterior"
+                  aria-label="Mês anterior"
                 >
                   <i class="ri-arrow-left-s-line"></i>
                 </button>
@@ -267,13 +272,14 @@
                   id="current-month-display"
                   style="margin: 0; min-width: 160px; text-align: center"
                 >
-                  Junho de 2026
+                  Carregando...
                 </h3>
                 <button
                   type="button"
                   id="btn-next-month"
                   class="btn-secondary"
                   title="Próximo Mês"
+                  aria-label="Próximo mês"
                 >
                   <i class="ri-arrow-right-s-line"></i>
                 </button>
@@ -355,7 +361,7 @@
                 <div class="chart-card glass">
                   <div class="chart-card-header">
                     <h3 class="chart-card-title">
-                      Evolução Mensal de Despesas
+                      Receitas vs. Despesas Mensais
                     </h3>
                     <i
                       class="ri-bar-chart-fill"
@@ -364,6 +370,21 @@
                   </div>
                   <div class="chart-canvas-container">
                     <canvas id="monthlyExpensesChart"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card glass">
+                  <div class="chart-card-header">
+                    <h3 class="chart-card-title">
+                      Despesas por Categoria (Mês)
+                    </h3>
+                    <i
+                      class="ri-pie-chart-2-fill"
+                      style="color: var(--primary)"
+                    ></i>
+                  </div>
+                  <div class="chart-canvas-container">
+                    <canvas id="categoryExpensesChart"></canvas>
                   </div>
                 </div>
               </section>
@@ -390,7 +411,7 @@
                 class="budgets-section animate-fade"
                 id="budgets-section"
               >
-                <div class="section-header">
+                <div class="section-header section-header-actions">
                   <div>
                     <h3>Orçamento do mês</h3>
                     <p class="text-muted">
@@ -414,7 +435,7 @@
 
               <!-- ========== METAS ========== -->
               <section class="goals-section animate-fade" id="goals-section">
-                <div class="section-header">
+                <div class="section-header section-header-actions">
                   <div>
                     <h3>Metas</h3>
                     <p class="text-muted">
@@ -441,6 +462,7 @@
                     <h3 class="chart-card-title">
                       Projeção de saldo (próximos 3 meses)
                     </h3>
+                    <span id="projection-source-badge" class="projection-badge"></span>
                     <i
                       class="ri-line-chart-fill"
                       style="color: var(--primary)"
@@ -455,20 +477,20 @@
                 </div>
               </section>
 
+              <!-- ========== ANOTAÇÕES ========== -->
               <section class="notes-section animate-fade">
                 <div class="section-header">
                   <div>
                     <h3>Anotações</h3>
                     <p class="text-muted">
-                      Registre observações financeiras e salve diretamente no
-                      banco de dados.
+                      Registre observações financeiras e salve diretamente na sua conta.
                     </p>
                   </div>
                 </div>
 
                 <div class="notes-grid">
                   <div class="notes-input-card glass">
-                    <h4 style="margin-bottom: 10px;">Nova anotação</h4>
+                    <h4 style="margin-bottom: 10px">Nova anotação</h4>
                     <form id="note-form">
                       <textarea
                         id="note-content"
@@ -478,7 +500,7 @@
                         required
                       ></textarea>
                       <div class="notes-actions">
-                        <button type="submit" class="btn-primary">
+                        <button type="submit" id="save-note-btn" class="btn-primary">
                           Salvar Anotação
                         </button>
                       </div>
@@ -500,6 +522,7 @@
               </section>
             </section>
 
+            <!-- ========== ABA 2: LANÇAMENTOS ========== -->
             <section id="tab-transactions" class="tab-page">
               <div
                 class="month-selector-container glass animate-fade"
@@ -517,6 +540,7 @@
                   id="btn-prev-month-list"
                   class="btn-secondary"
                   title="Mês Anterior"
+                  aria-label="Mês anterior"
                 >
                   <i class="ri-arrow-left-s-line"></i>
                 </button>
@@ -524,13 +548,14 @@
                   id="current-month-display-list"
                   style="margin: 0; min-width: 160px; text-align: center"
                 >
-                  Junho de 2026
+                  Carregando...
                 </h3>
                 <button
                   type="button"
                   id="btn-next-month-list"
                   class="btn-secondary"
                   title="Próximo Mês"
+                  aria-label="Próximo mês"
                 >
                   <i class="ri-arrow-right-s-line"></i>
                 </button>
@@ -540,80 +565,67 @@
                 <div id="info-header">
                   <h3>Lançamentos</h3>
                   <p class="text-muted">
-                    Buscar, filtrar e gerenciar todas as transações cadastradas.
+                    Buscar, filtrar e gerenciar todas as transações cadastradas. Clique no status para alternar Pago/Pendente.
                   </p>
                 </div>
               </div>
 
               <section class="transactions-section animate-fade">
-                <div class="transactions-toolbar">
+                <div class="transactions-toolbar glass">
                   <div class="search-filter-box">
-                    <div class="search-input-wrapper">
-                      <i class="ri-search-line"></i>
-                      <input
-                        id="search-input"
-                        class="search-input"
-                        type="text"
-                        placeholder="Buscar lançamentos"
-                      />
+                    <div class="toolbar-filters">
+                      <div class="search-input-wrapper">
+                        <i class="ri-search-line"></i>
+                        <input
+                          id="search-input"
+                          class="search-input"
+                          type="text"
+                          placeholder="Buscar lançamentos..."
+                        />
+                      </div>
+
+                      <div class="toolbar-selects">
+                        <select id="filter-select" class="filter-select" aria-label="Filtrar por tipo">
+                          <option value="all">Todos os Tipos</option>
+                          <option value="income">Receitas</option>
+                          <option value="expense">Despesas</option>
+                        </select>
+
+                        <select
+                          id="status-filter"
+                          class="filter-select"
+                          aria-label="Filtrar por status"
+                        >
+                          <option value="all">Todos Status</option>
+                          <option value="pending" selected>Pendentes</option>
+                          <option value="paid">Pagas</option>
+                        </select>
+
+                        <select
+                          id="sort-by-mobile"
+                          class="filter-select mobile-sort-select"
+                          style="display: none"
+                          aria-label="Ordenar lançamentos"
+                        >
+                          <option value="due_date" selected>Por Vencimento</option>
+                          <option value="date">Por Data</option>
+                          <option value="amount">Por Valor</option>
+                          <option value="description">Por Descrição</option>
+                        </select>
+                      </div>
                     </div>
 
-                    <select id="filter-select" class="filter-select">
-                      <option value="all">Todas as Transações</option>
-                      <option value="income">Entradas (Receitas)</option>
-                      <option value="expense">Saídas (Despesas)</option>
-                    </select>
-
-                    <select
-                      id="status-filter"
-                      class="filter-select"
-                      style="margin-left: 0px"
-                    >
-                      <option value="all">Todos os Status</option>
-                      <option value="paid">Pagas</option>
-                      <option value="pending">Pendentes</option>
-                    </select>
-
-                    <select
-                      id="sort-by-mobile"
-                      class="filter-select mobile-sort-select"
-                      style="display: none"
-                    >
-                      <option value="date">Por Data</option>
-                      <option value="due_date">Por Vencimento</option>
-                      <option value="amount">Por Valor</option>
-                      <option value="description">Por Descrição</option>
-                    </select>
-                    <!-- <div id="filtro-data">
-                                        <div id="date-filter-phone-ini" class="date-filter-wrapper">
-                                            <input type="date" id="filter-start-date" class="form-input"
-                                                title="Data início do filtro" />
-                                        </div>
-                                        <div id="date-filter-phone-fim" class="date-filter-wrapper">
-                                            <input type="date" id="filter-end-date" class="form-input"
-                                                title="Data fim do filtro" />
-                                        </div>
-                                    </div> -->
-                    <div
-                      id="div-btn-novo-reg"
-                      style="
-                        display: flex;
-                        gap: 8px;
-                        flex-wrap: wrap;
-                        margin-top: 1%;
-                      "
-                    >
+                    <div id="div-btn-novo-reg" class="toolbar-actions">
                       <button
                         id="btn-copy-next-month"
                         class="btn-secondary"
                         type="button"
                         title="Espelhar lançamentos deste mês no próximo mês"
                       >
-                        <i class="ri-file-copy-2-line"></i> Replicar no Próx.
-                        Mês
+                        <i class="ri-file-copy-2-line"></i> Replicar Mês
                       </button>
 
-                      <button id="open-add-modal-btn" class="btn-primary">
+                      <button id="open-add-modal-btn" class="btn-primary" type="button">
                         <i class="ri-add-line"></i>
                         Nova Transação
                       </button>
@@ -621,7 +633,14 @@
                   </div>
                 </div>
 
-                <div class="transactions-card glass">
+                <div id="transactions-card" class="transactions-card glass">
+                  <div
+                    id="active-filters-bar"
+                    class="active-filters-bar"
+                    style="display: none"
+                    role="status"
+                    aria-live="polite"
+                  ></div>
                   <div class="table-responsive">
                     <table>
                       <thead>
@@ -635,7 +654,7 @@
                           </th>
                           <th>Status</th>
                           <th class="sortable" data-key="date">Data</th>
-                          <th class="sortable" data-key="due_date">
+                          <th class="sortable sorted-asc" data-key="due_date">
                             Vencimento
                           </th>
                           <th>Ações</th>
@@ -656,6 +675,7 @@
               </section>
             </section>
 
+            <!-- ========== ABA 3: CONTROLE MENSAL ========== -->
             <section id="tab-monthly" class="tab-page">
               <div class="section-header monthly-header">
                 <div>
@@ -714,83 +734,18 @@
                   <div class="monthly-panel-heading">
                     <div>
                       <h4>Saldos das contas</h4>
-                      <p>Atualize os valores para manter o cálculo em dia.</p>
+                      <p>Atualize os valores ou adicione suas contas para sincronizar o cálculo.</p>
                     </div>
-                    <i class="ri-bank-card-line" aria-hidden="true"></i>
+                    <button
+                      type="button"
+                      id="open-account-modal-btn"
+                      class="btn-primary btn-compact"
+                    >
+                      <i class="ri-add-line"></i> Nova conta
+                    </button>
                   </div>
                   <div id="div-saldo" class="div-saldo">
-                    <label class="monthly-account-card" for="carteira-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-wallet-3-line"></i>CARTEIRA</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="carteira-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
-                    <label class="monthly-account-card" for="itau-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-bank-line"></i>ITAU</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="itau-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
-                    <label class="monthly-account-card" for="nubank-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-bank-line"></i>NUBANK</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="nubank-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
-                    <label class="monthly-account-card" for="merc-pg-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-smartphone-line"></i>MERC. PG</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="merc-pg-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
-                    <label class="monthly-account-card" for="inter-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-bank-line"></i>INTER</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="inter-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
-                    <label class="monthly-account-card" for="bradesco-valor">
-                      <span class="monthly-account-name"
-                        ><i class="ri-bank-line"></i>BRADESCO</span
-                      >
-                      <input
-                        class="monthly-account-input form-input"
-                        id="bradesco-valor"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="R$ 0,00"
-                      />
-                    </label>
+                    <!-- Contas renderizadas dinamicamente via JS -->
                   </div>
                 </div>
               </div>
@@ -801,12 +756,12 @@
     </main>
 
     <!-- ==========================================
-         3. MODAL: ADICIONAR NOVA TRANSAÇÃO
+         3. MODAL: ADICIONAR / EDITAR TRANSAÇÃO
          ========================================== -->
-    <div id="transaction-modal" class="modal-overlay">
+    <div id="transaction-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="transaction-modal-title">
       <div class="modal-container glass">
         <div class="modal-header">
-          <h3 class="modal-title">Nova Transação</h3>
+          <h3 id="transaction-modal-title" class="modal-title">Nova Transação</h3>
 
           <div
             class="form-group"
@@ -853,6 +808,7 @@
               class="form-input"
               placeholder="0.00"
               step="0.01"
+              min="0.01"
               required
             />
           </div>
@@ -923,7 +879,10 @@
       </div>
     </div>
 
-    <div id="avatar-crop-modal" class="modal-overlay avatar-crop-modal">
+    <!-- ==========================================
+         4. MODAL: EDITAR AVATAR
+         ========================================== -->
+    <div id="avatar-crop-modal" class="modal-overlay avatar-crop-modal" role="dialog" aria-modal="true" aria-label="Editar foto do perfil">
       <div class="modal-container avatar-editor glass">
         <div class="modal-header avatar-editor-header">
           <h3 class="modal-title">Editar foto do perfil</h3>
@@ -1024,7 +983,7 @@
             <button id="avatar-cancel-btn" type="button" class="btn-secondary">
               Cancelar
             </button>
-            <button id="avatar-save-btn" type="submit" class="btn-primary">
+            <button id="avatar-save-btn" type="button" class="btn-primary">
               Usar foto
             </button>
           </div>
@@ -1032,8 +991,10 @@
       </div>
     </div>
 
-    <!-- MODAL: NOVO ORÇAMENTO -->
-    <div id="budget-modal" class="modal-overlay">
+    <!-- ==========================================
+         5. MODAL: NOVO ORÇAMENTO
+         ========================================== -->
+    <div id="budget-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Orçamento por categoria">
       <div class="modal-container glass" style="max-width: 460px">
         <div class="modal-header">
           <h3 class="modal-title">Orçamento por categoria</h3>
@@ -1047,7 +1008,7 @@
               id="budget-custom-category"
               class="form-input"
               style="display: none; margin-top: 12px"
-              placeholder="Qual?"
+              placeholder="Nome da categoria personalizada"
             />
           </div>
           <div class="form-group">
@@ -1057,7 +1018,7 @@
               id="budget-amount"
               class="form-input"
               step="0.01"
-              min="0"
+              min="0.01"
               required
             />
           </div>
@@ -1065,125 +1026,18 @@
             <button type="button" id="cancel-budget-btn" class="btn-secondary">
               Cancelar
             </button>
-            <button type="submit" class="btn-primary">Salvar orçamento</button>
+            <button type="submit" id="save-budget-btn" class="btn-primary">
+              Salvar orçamento
+            </button>
           </div>
         </form>
       </div>
     </div>
 
-        <!-- MODAL: APORTAR EM META -->
-    <div id="goal-deposit-modal" class="modal-overlay">
-      <div class="modal-container glass" style="max-width: 500px">
-        <div class="modal-header">
-          <h3 class="modal-title" id="goal-deposit-title">Aportar em Meta</h3>
-        </div>
-        
-        <div class="modal-body" style="padding: 20px 24px 0; max-height: 80vh; overflow-y: auto;">
-          <div id="goal-deposit-info" class="goal-deposit-info"></div>
-
-          <form id="goal-deposit-form">
-            <input type="hidden" id="deposit-goal-id" />
-            <input type="hidden" id="deposit-contribution-id" />
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label for="deposit-amount" class="form-label">Valor (R$)</label>
-                <input type="number" id="deposit-amount" class="form-input" step="0.01" min="0.01" required />
-              </div>
-              <div class="form-group">
-                <label for="deposit-date" class="form-label">Data</label>
-                <input type="date" id="deposit-date" class="form-input" required />
-              </div>
-            </div>
-
-            <div class="modal-footer" style="padding-top: 12px;">
-              <button type="button" id="cancel-deposit-edit-btn" class="btn-secondary" style="display: none;">
-                Cancelar Edição
-              </button>
-              <button type="submit" id="save-deposit-btn" class="btn-primary">
-                Salvar Aporte
-              </button>
-            </div>
-          </form>
-
-          <div class="goal-history-section">
-            <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted);">Histórico de Aportes</h4>
-            <div id="goal-contributions-list" class="goal-contributions-list">
-              <!-- Inserido dinamicamente via JS -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
-    <div id="recurrence-delete-modal" class="modal-overlay">
-      <!-- ... conteúdo existente ... -->
-    </div>
-
-    <!-- MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE -->
-    <div id="recurrence-delete-modal" class="modal-overlay">
-      <div class="modal-container glass" style="max-width: 480px">
-        <div class="modal-header">
-          <h3 class="modal-title">Transação recorrente</h3>
-        </div>
-
-        <div class="modal-body" style="padding: 18px 24px 8px">
-          <p
-            style="
-              margin-bottom: 16px;
-              color: var(--text-muted);
-              font-size: 14px;
-              line-height: 1.5;
-            "
-          >
-            Esta transação faz parte de uma série recorrente. Escolha o que
-            deseja fazer:
-          </p>
-
-          <label class="recurrence-delete-option">
-            <input
-              type="radio"
-              name="recurrence-delete-scope"
-              value="single"
-              checked
-            />
-            <span>
-              <strong>Excluir apenas esta ocorrência</strong>
-              <small>As próximas continuarão sendo geradas normalmente.</small>
-            </span>
-          </label>
-
-          <label class="recurrence-delete-option">
-            <input type="radio" name="recurrence-delete-scope" value="future" />
-            <span>
-              <strong>Excluir esta e todas as futuras</strong>
-              <small>A recorrência será encerrada a partir deste mês.</small>
-            </span>
-          </label>
-        </div>
-
-        <div class="modal-footer">
-          <button
-            type="button"
-            id="cancel-recurrence-delete"
-            class="btn-secondary"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            id="confirm-recurrence-delete"
-            class="btn-primary"
-          >
-            <i class="ri-delete-bin-line"></i> Excluir
-          </button>
-        </div>
-      </div>
-    </div>
-
-        <!-- MODAL: NOVA META -->
-    <div id="goal-modal" class="modal-overlay">
+    <!-- ==========================================
+         6. MODAL: NOVA META
+         ========================================== -->
+    <div id="goal-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Nova meta">
       <div class="modal-container glass" style="max-width: 460px">
         <div class="modal-header">
           <h3 class="modal-title">Nova meta</h3>
@@ -1233,39 +1087,68 @@
             <button type="button" id="cancel-goal-btn" class="btn-secondary">
               Cancelar
             </button>
-            <button type="submit" class="btn-primary">Salvar meta</button>
+            <button type="submit" id="save-goal-btn" class="btn-primary">
+              Salvar meta
+            </button>
           </div>
         </form>
       </div>
     </div>
 
-        <!-- MODAL: APORTAR EM META -->
-    <div id="goal-deposit-modal" class="modal-overlay">
+    <!-- ==========================================
+         7. MODAL: APORTAR EM META (ÚNICO)
+         ========================================== -->
+    <div id="goal-deposit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="goal-deposit-title">
       <div class="modal-container glass" style="max-width: 500px">
-        <div class="modal-header">
+        <div class="modal-header modal-header-row">
           <h3 class="modal-title" id="goal-deposit-title">Aportar em Meta</h3>
+          <button
+            type="button"
+            id="cancel-deposit-btn"
+            class="close-modal-btn"
+            aria-label="Fechar modal de aportes"
+          >
+            <i class="ri-close-line"></i>
+          </button>
         </div>
-        
-        <div class="modal-body" style="padding: 20px 24px 0;">
+
+        <div class="modal-body" style="padding: 20px 24px 0; max-height: 80vh; overflow-y: auto">
           <div id="goal-deposit-info" class="goal-deposit-info"></div>
 
           <form id="goal-deposit-form">
             <input type="hidden" id="deposit-goal-id" />
             <input type="hidden" id="deposit-contribution-id" />
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
               <div class="form-group">
                 <label for="deposit-amount" class="form-label">Valor (R$)</label>
-                <input type="number" id="deposit-amount" class="form-input" step="0.01" min="0.01" required />
+                <input
+                  type="number"
+                  id="deposit-amount"
+                  class="form-input"
+                  step="0.01"
+                  min="0.01"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="deposit-date" class="form-label">Data</label>
-                <input type="date" id="deposit-date" class="form-input" required />
+                <input
+                  type="date"
+                  id="deposit-date"
+                  class="form-input"
+                  required
+                />
               </div>
             </div>
 
-            <div class="modal-footer" style="padding-top: 12px;">
-              <button type="button" id="cancel-deposit-edit-btn" class="btn-secondary" style="display: none;">
+            <div class="modal-footer" style="padding-top: 12px">
+              <button
+                type="button"
+                id="cancel-deposit-edit-btn"
+                class="btn-secondary"
+                style="display: none"
+              >
                 Cancelar Edição
               </button>
               <button type="submit" id="save-deposit-btn" class="btn-primary">
@@ -1275,10 +1158,162 @@
           </form>
 
           <div class="goal-history-section">
-            <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted);">Histórico de Aportes</h4>
+            <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted)">
+              Histórico de Aportes
+            </h4>
             <div id="goal-contributions-list" class="goal-contributions-list">
               <!-- Inserido dinamicamente via JS -->
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         8. MODAL: ESCOPO DE EXCLUSÃO DE RECORRENTE (ÚNICO)
+         ========================================== -->
+    <div id="recurrence-delete-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Excluir transação recorrente">
+      <div class="modal-container glass" style="max-width: 480px">
+        <div class="modal-header">
+          <h3 class="modal-title">Transação recorrente</h3>
+        </div>
+
+        <div class="modal-body" style="padding: 18px 24px 8px">
+          <p
+            style="
+              margin-bottom: 16px;
+              color: var(--text-muted);
+              font-size: 14px;
+              line-height: 1.5;
+            "
+          >
+            Esta transação faz parte de uma série recorrente. Escolha o que
+            deseja fazer:
+          </p>
+
+          <label class="recurrence-delete-option">
+            <input
+              type="radio"
+              name="recurrence-delete-scope"
+              value="single"
+              checked
+            />
+            <span>
+              <strong>Excluir apenas esta ocorrência</strong>
+              <small>As próximas continuarão sendo geradas normalmente.</small>
+            </span>
+          </label>
+
+          <label class="recurrence-delete-option">
+            <input type="radio" name="recurrence-delete-scope" value="future" />
+            <span>
+              <strong>Excluir esta e todas as futuras</strong>
+              <small>A recorrência será encerrada a partir desta data.</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            id="cancel-recurrence-delete"
+            class="btn-secondary"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            id="confirm-recurrence-delete"
+            class="btn-primary"
+          >
+            <i class="ri-delete-bin-line"></i> Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         9. MODAL: NOVA CONTA BANCÁRIA
+         ========================================== -->
+    <div id="account-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Nova conta bancária">
+      <div class="modal-container glass" style="max-width: 440px">
+        <div class="modal-header">
+          <h3 class="modal-title">Nova conta</h3>
+        </div>
+        <form id="account-form">
+          <div class="form-group">
+            <label for="account-name" class="form-label">Nome da conta</label>
+            <input
+              type="text"
+              id="account-name"
+              class="form-input"
+              placeholder="Ex: C6 Bank, Poupança, Corretora..."
+              maxlength="32"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="account-icon" class="form-label">Tipo</label>
+            <select id="account-icon" class="form-input">
+              <option value="ri-bank-line">Banco</option>
+              <option value="ri-wallet-3-line">Carteira / Dinheiro</option>
+              <option value="ri-smartphone-line">Carteira Digital</option>
+              <option value="ri-bank-card-line">Cartão / Conta</option>
+              <option value="ri-safe-2-line">Investimento / Poupança</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="account-balance" class="form-label">Saldo atual (R$)</label>
+            <input
+              type="number"
+              id="account-balance"
+              class="form-input"
+              step="0.01"
+              value="0"
+            />
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-account-btn" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" id="save-account-btn" class="btn-primary">
+              Adicionar conta
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         10. MODAL: EXPORTAR CSV
+         ========================================== -->
+    <div id="export-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Exportar CSV">
+      <div class="modal-container glass" style="max-width: 440px">
+        <div class="modal-header modal-header-row">
+          <h3 class="modal-title">Exportar dados (CSV)</h3>
+          <button
+            type="button"
+            id="cancel-export-btn"
+            class="close-modal-btn"
+            aria-label="Fechar modal de exportação"
+          >
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+        <div class="modal-body export-options-body">
+          <p class="text-muted" style="font-size: 13px; margin-bottom: 14px">
+            Escolha quais lançamentos deseja baixar para Excel ou Google Sheets:
+          </p>
+          <div class="export-actions-stack">
+            <button type="button" id="btn-export-month" class="btn-primary">
+              <i class="ri-calendar-check-line"></i> Exportar mês selecionado
+            </button>
+            <button type="button" id="btn-export-all" class="btn-secondary">
+              <i class="ri-database-2-line"></i> Exportar todas as transações
+            </button>
+            <button type="button" id="btn-export-notes" class="btn-secondary">
+              <i class="ri-sticky-note-line"></i> Exportar anotações
+            </button>
           </div>
         </div>
       </div>

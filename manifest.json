@@ -1,7 +1,7 @@
 {
-  "name": "Finanças Premium",
-  "short_name": "Finanças",
-  "start_url": "index.html",
+  "name": "Vaulta — Gestão Financeira",
+  "short_name": "Vaulta",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#07152d",
   "theme_color": "#07152d",

@@ -1,8 +1,7 @@
 // insights.js — motor de insights, orçamentos, metas e projeção (100% client-side)
+import { isTransactionInMonth, normalizeTransactionType } from './utils.js';
+import { generateOccurrencesForMonth } from './recurrence.js';
 
-// ---------------------------------------------------------------
-// NORMALIZAÇÃO: aceita Date OU { month, year } como refDate
-// ---------------------------------------------------------------
 function normalizeRefDate(ref) {
     if (!ref) return new Date();
     if (ref instanceof Date) return ref;
@@ -10,17 +9,6 @@ function normalizeRefDate(ref) {
         return new Date(ref.year, ref.month, 1);
     }
     return new Date();
-}
-
-function normType(t) {
-    const n = String(t.type || '').toLowerCase().trim();
-    return (n === 'income' || n === 'receita') ? 'income' : 'expense';
-}
-
-function inMonth(dateStr, year, month) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.getFullYear() === year && d.getMonth() === month;
 }
 
 function sum(arr, key = 'amount') {
@@ -38,12 +26,12 @@ export function generateInsights(transactions, refDate = new Date()) {
 
     const prev = new Date(year, month - 1, 1);
 
-    const curExp = transactions.filter(t =>
-        normType(t) === 'expense' && inMonth(t.date, year, month)
+    const curExp = transactions.filter((t) =>
+        normalizeTransactionType(t.type) === 'expense' && isTransactionInMonth(t, year, month)
     );
-    const prevExp = transactions.filter(t =>
-        normType(t) === 'expense' &&
-        inMonth(t.date, prev.getFullYear(), prev.getMonth())
+    const prevExp = transactions.filter((t) =>
+        normalizeTransactionType(t.type) === 'expense' &&
+        isTransactionInMonth(t, prev.getFullYear(), prev.getMonth())
     );
 
     const curTotal = sum(curExp);
@@ -57,14 +45,14 @@ export function generateInsights(transactions, refDate = new Date()) {
                 type: diff > 0 ? 'warning' : 'success',
                 icon: diff > 0 ? 'ri-arrow-up-line' : 'ri-arrow-down-line',
                 title: diff > 0 ? 'Gastos aumentaram' : 'Gastos diminuíram',
-                message: `${Math.abs(diff).toFixed(0)}% ${diff > 0 ? 'a mais' : 'a menos'} que no mês anterior.`
+                message: `${Math.abs(diff).toFixed(0)}% ${diff > 0 ? 'a mais' : 'a menos'} que no mês anterior.`,
             });
         }
     }
 
     // 2. Maior categoria
     const byCat = {};
-    curExp.forEach(t => {
+    curExp.forEach((t) => {
         const c = t.category || 'Outros';
         byCat[c] = (byCat[c] || 0) + (parseFloat(t.amount) || 0);
     });
@@ -74,25 +62,28 @@ export function generateInsights(transactions, refDate = new Date()) {
             type: 'info',
             icon: 'ri-pie-chart-line',
             title: 'Maior categoria',
-            message: `${topCat[0]}: R$ ${topCat[1].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            message: `${topCat[0]}: R$ ${topCat[1].toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         });
     }
 
     // 3. Maior despesa individual
-    const biggest = curExp.reduce((max, t) =>
-        (parseFloat(t.amount) || 0) > (parseFloat(max?.amount) || 0) ? t : max, null);
+    const biggest = curExp.reduce(
+        (max, t) => ((parseFloat(t.amount) || 0) > (parseFloat(max?.amount) || 0) ? t : max),
+        null
+    );
     if (biggest) {
         insights.push({
             type: 'warning',
             icon: 'ri-alert-line',
             title: 'Maior despesa',
-            message: `${biggest.description} — R$ ${(parseFloat(biggest.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            message: `${biggest.description} — R$ ${(parseFloat(biggest.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         });
     }
 
     // 4. Taxa de poupança
-    const incomeThisMonth = transactions
-        .filter(t => normType(t) === 'income' && inMonth(t.date, year, month));
+    const incomeThisMonth = transactions.filter(
+        (t) => normalizeTransactionType(t.type) === 'income' && isTransactionInMonth(t, year, month)
+    );
     const income = sum(incomeThisMonth);
 
     if (income > 0) {
@@ -101,7 +92,9 @@ export function generateInsights(transactions, refDate = new Date()) {
             type: rate >= 20 ? 'success' : rate >= 0 ? 'info' : 'warning',
             icon: 'ri-wallet-line',
             title: 'Taxa de poupança',
-            message: `${rate.toFixed(0)}% da renda sobrou este mês.`
+            message: rate >= 0
+                ? `${rate.toFixed(0)}% da renda sobrou este mês.`
+                : `Despesas superaram a renda em ${Math.abs(rate).toFixed(0)}% este mês.`,
         });
     }
 
@@ -117,17 +110,18 @@ export function generateBudgetStatus(budgets, transactions, refDate = new Date()
     const month = ref.getMonth();
 
     const spending = {};
-    transactions.forEach(t => {
-        if (normType(t) !== 'expense') return;
-        if (!inMonth(t.date, year, month)) return;
+    transactions.forEach((t) => {
+        if (normalizeTransactionType(t.type) !== 'expense') return;
+        if (!isTransactionInMonth(t, year, month)) return;
         const c = t.category || 'Outros';
         spending[c] = (spending[c] || 0) + (parseFloat(t.amount) || 0);
     });
 
     return budgets
-        .map(b => {
+        .map((b) => {
             const spent = spending[b.category] || 0;
-            const pct = b.amount > 0 ? (spent / b.amount) * 100 : 0;
+            const amount = Number(b.amount) || 0;
+            const pct = amount > 0 ? (spent / amount) * 100 : (spent > 0 ? 100 : 0);
             const status = pct >= 100 ? 'danger' : pct >= 80 ? 'warning' : 'ok';
             return { ...b, spent, percentage: pct, status };
         })
@@ -137,42 +131,113 @@ export function generateBudgetStatus(budgets, transactions, refDate = new Date()
 // ---------------------------------------------------------------
 // PROJEÇÃO — fluxo de caixa dos próximos N meses
 // ---------------------------------------------------------------
-export function projectCashFlow(transactions, monthsAhead = 3, refDate = new Date()) {
+/**
+ * Projeta o saldo dos próximos `monthsAhead` meses levando em conta:
+ * - Média histórica considerando APENAS meses que tiveram movimentação (até 3 meses anteriores + mês atual se não houver anteriores)
+ * - Saldo inicial real das contas bancárias (se informado e > 0), ou saldo líquido acumulado até o mês de referência
+ * - Lançamentos já agendados e recorrências programadas para os meses futuros (evitando dupla contagem)
+ */
+export function projectCashFlow(transactions, monthsAhead = 3, refDate = new Date(), options = {}) {
     const ref = normalizeRefDate(refDate);
+    const list = Array.isArray(transactions) ? transactions : [];
 
-    const baseMonths = [];
+    // Avalia os últimos 3 meses (e inclui o mês atual se não houver histórico anterior)
+    const candidateMonths = [];
     for (let i = 1; i <= 3; i++) {
-        baseMonths.push(new Date(ref.getFullYear(), ref.getMonth() - i, 1));
+        candidateMonths.push(new Date(ref.getFullYear(), ref.getMonth() - i, 1));
     }
 
-    const monthTotals = baseMonths.map(d => {
-        const inM = transactions.filter(t => inMonth(t.date, d.getFullYear(), d.getMonth()));
-        return {
-            inc: sum(inM.filter(t => normType(t) === 'income')),
-            exp: sum(inM.filter(t => normType(t) === 'expense'))
-        };
-    });
+    const activeMonthTotals = candidateMonths
+        .map((d) => {
+            const inM = list.filter((t) => isTransactionInMonth(t, d.getFullYear(), d.getMonth()));
+            if (inM.length === 0) return null;
+            return {
+                inc: sum(inM.filter((t) => normalizeTransactionType(t.type) === 'income')),
+                exp: sum(inM.filter((t) => normalizeTransactionType(t.type) === 'expense')),
+            };
+        })
+        .filter(Boolean);
 
-    const avgInc = monthTotals.length
-        ? monthTotals.reduce((s, m) => s + m.inc, 0) / monthTotals.length
+    // Fallback: se não há dados nos 3 meses anteriores, usa o próprio mês de referência
+    if (activeMonthTotals.length === 0) {
+        const curMonthTx = list.filter((t) => isTransactionInMonth(t, ref.getFullYear(), ref.getMonth()));
+        if (curMonthTx.length > 0) {
+            activeMonthTotals.push({
+                inc: sum(curMonthTx.filter((t) => normalizeTransactionType(t.type) === 'income')),
+                exp: sum(curMonthTx.filter((t) => normalizeTransactionType(t.type) === 'expense')),
+            });
+        }
+    }
+
+    const avgInc = activeMonthTotals.length
+        ? activeMonthTotals.reduce((s, m) => s + m.inc, 0) / activeMonthTotals.length
         : 0;
-    const avgExp = monthTotals.length
-        ? monthTotals.reduce((s, m) => s + m.exp, 0) / monthTotals.length
+    const avgExp = activeMonthTotals.length
+        ? activeMonthTotals.reduce((s, m) => s + m.exp, 0) / activeMonthTotals.length
         : 0;
 
-    let balance = sum(transactions.filter(t => normType(t) === 'income'))
-                - sum(transactions.filter(t => normType(t) === 'expense'));
+    // Saldo inicial: prefere saldo informado nas contas bancárias quando disponível
+    const refEndKey = `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, '0')}-31`;
+    const txUpToRef = list.filter((t) => t.date && String(t.date).slice(0, 10) <= refEndKey);
+    const historicalBalance =
+        sum(txUpToRef.filter((t) => normalizeTransactionType(t.type) === 'income')) -
+        sum(txUpToRef.filter((t) => normalizeTransactionType(t.type) === 'expense'));
+
+    const hasRealBankBalance =
+        typeof options.currentBankBalance === 'number' &&
+        Number.isFinite(options.currentBankBalance) &&
+        options.currentBankBalance > 0;
+
+    let balance = hasRealBankBalance ? options.currentBankBalance : historicalBalance;
+
+    const recurringTemplates = list.filter((t) => t.recurrence && !t.parent_id);
 
     const labels = [];
     const data = [];
-    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
     for (let i = 1; i <= monthsAhead; i++) {
         const d = new Date(ref.getFullYear(), ref.getMonth() + i, 1);
-        labels.push(`${meses[d.getMonth()]}/${String(d.getFullYear()).slice(-2)}`);
-        balance += (avgInc - avgExp);
-        data.push(balance);
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        labels.push(`${meses[m]}/${String(y).slice(-2)}`);
+
+        // Transações já registradas no mês futuro
+        const existingFuture = list.filter((t) => isTransactionInMonth(t, y, m));
+        const existingKeys = new Set(
+            existingFuture.filter((t) => t.parent_id).map((t) => `${t.parent_id}:${String(t.date).slice(0, 10)}`)
+        );
+
+        let scheduledInc = sum(existingFuture.filter((t) => normalizeTransactionType(t.type) === 'income'));
+        let scheduledExp = sum(existingFuture.filter((t) => normalizeTransactionType(t.type) === 'expense'));
+
+        // Soma ocorrências recorrentes previstas ainda não materializadas
+        for (const tpl of recurringTemplates) {
+            const occurrences = generateOccurrencesForMonth(tpl, y, m);
+            for (const occ of occurrences) {
+                if (existingKeys.has(`${tpl.id}:${occ.date}`)) continue;
+                const amt = parseFloat(tpl.amount) || 0;
+                if (normalizeTransactionType(tpl.type) === 'income') {
+                    scheduledInc += amt;
+                } else {
+                    scheduledExp += amt;
+                }
+            }
+        }
+
+        // Usa o maior entre previsto agendado e média histórica para não subestimar gastos variáveis
+        const projectedInc = Math.max(scheduledInc, avgInc);
+        const projectedExp = Math.max(scheduledExp, avgExp);
+
+        balance += projectedInc - projectedExp;
+        data.push(Math.round(balance * 100) / 100);
     }
 
-    return { labels, data, avgIncome: avgInc, avgExpense: avgExp };
+    return {
+        labels,
+        data,
+        avgIncome: avgInc,
+        avgExpense: avgExp,
+        usedRealAccounts: hasRealBankBalance,
+    };
 }

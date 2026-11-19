@@ -1,1182 +1,1245 @@
 import {
-  fetchTransactions,
-  insertTransaction,
-  fetchNotes,
-  insertNote,
-  removeNote,
-  loginComEmail,
-  logout,
-  supabase,
-  replicarTransacoesParaProximoMes,
-  materializeRecurrences,
-  fetchBudgets,
-  upsertBudget,
-  removeBudget,
-  fetchGoals,
-  insertGoal,
-  updateGoal,
-  removeGoal,
-  // Novas importações de Aportes:
-  fetchGoalContributions,
-  insertGoalContribution,
-  updateGoalContribution,
-  removeGoalContribution,
-  recalculateGoalTotal
-} from "./db.js";
+    fetchAccounts,
+    fetchBudgets,
+    fetchGoalContributions,
+    fetchGoals,
+    fetchNotes,
+    fetchTransactions,
+    insertGoal,
+    insertGoalContribution,
+    insertNote,
+    insertTransaction,
+    isDemoMode,
+    loginComEmail,
+    logout,
+    materializeRecurrences,
+    recalculateGoalTotal,
+    removeBudget,
+    removeGoal,
+    removeGoalContribution,
+    removeNote,
+    replicarTransacoesParaProximoMes,
+    saveAccounts,
+    setDemoMode,
+    supabase,
+    updateGoalContribution,
+    updateTransaction,
+    upsertBudget,
+} from './db.js';
 
 import {
-  showLoginScreen,
-  showDashboardScreen,
-  updateDashboardUI,
-  showToast,
-  showConfirmToast,
-  playSuccessSound,
-  playUiSelectionSound,
-  playUiUnselectionSound,
-  playDeleteSound,
-  isSoundEnabled,
-  setSoundEnabled,
-  initTheme,
-  toggleTheme,
-  openModal,
-  closeModal,
-  filterAndRenderTransactions,
-  updateCategoryDropdown,
-  setSort,
-  changeSelectedMonth,
-  updateMonthDisplay,
-  debounce,
-  refreshMonthlyBudgetDashboard,
-  getCurrentSelection,
-  bindDeleteDelegation,
-  renderBudgets,
-  renderGoals,
-  renderInsights,
-  renderProjection,
-  updateInsights,
-} from "./ui.js";
+    bindMonthlyAccountsDelegation,
+    bindTransactionDelegation,
+    changeSelectedMonth,
+    closeModal,
+    debounce,
+    filterAndRenderTransactions,
+    getAllTransactions,
+    getCurrentSelection,
+    getFilteredTransactionsForSelectedMonth,
+    getMonthlyAccounts,
+    initTheme,
+    isSoundEnabled,
+    openModal,
+    playDeleteSound,
+    playSuccessSound,
+    playUiSelectionSound,
+    playUiUnselectionSound,
+    refreshMonthlyBudgetDashboard,
+    renderBudgets,
+    renderGoals,
+    renderProjection,
+    setDashboardLoading,
+    setMonthlyAccounts,
+    setSoundEnabled,
+    setSort,
+    showConfirmToast,
+    showDashboardScreen,
+    showLoginScreen,
+    showToast,
+    toggleTheme,
+    updateCategoryDropdown,
+    updateDashboardUI,
+    updateInsights,
+    updateMonthDisplay,
+} from './ui.js';
 
 import {
-  renderFiiAllocationChart,
-  updateFiiAllocationChartTheme,
-} from "./chart-manager.js";
-
+    checkDueDates,
+    getNotificationPermission,
+    requestNotificationPermission,
+} from './notifications.js';
+import { exportNotesCSV, exportTransactionsCSV } from './export.js';
 import {
-  requestNotificationPermission,
-  getNotificationPermission,
-  checkDueDates,
-} from "./notifications.js";
-import { exportTransactionsCSV } from "./export.js";
+    escapeHTML,
+    formatCurrency,
+    formatDateISO,
+    getMonthKey,
+    getNextMonthDateString,
+    isTransactionInMonth,
+    parseAmount,
+} from './utils.js';
 
-// Estado do usuário atual
+// Estado da aplicação
 let currentAppUser = null;
 let currentBudgets = [];
 let currentGoals = [];
 let currentNotesCache = [];
+
+// =====================================================================
+// PROTEÇÃO CONTRA DOUBLE-SUBMIT
+// =====================================================================
+
+async function withSubmitLock(button, fn, loadingText = 'Salvando...') {
+    if (!button) return await fn();
+    if (button.dataset.submitting === 'true') return;
+
+    const originalHTML = button.innerHTML;
+    button.dataset.submitting = 'true';
+    button.disabled = true;
+    button.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> ${escapeHTML(loadingText)}`;
+
+    try {
+        return await fn();
+    } finally {
+        button.dataset.submitting = 'false';
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+    }
+}
+
+// =====================================================================
+// AVATAR EDITOR
+// =====================================================================
 
 const AVATAR_MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const AVATAR_MAX_SAVED_BYTES = 100 * 1024;
 const avatarEditorState = { image: null, sourceUrl: null };
 
 function getAvatarStorageKey(user = currentAppUser) {
-  return user?.id ? `vaulta-avatar-${user.id}` : "vaulta-avatar-guest";
+    return user?.id ? `vaulta-avatar-${user.id}` : 'vaulta-avatar-guest';
 }
 
 function applySavedAvatar(user = currentAppUser) {
-  const avatar = localStorage.getItem(getAvatarStorageKey(user));
-  if (avatar) document.getElementById("user-avatar").src = avatar;
+    const avatar = localStorage.getItem(getAvatarStorageKey(user));
+    const el = document.getElementById('user-avatar');
+    if (avatar && el) el.src = avatar;
 }
 
 function setAvatarEditorStatus(message, isError = false) {
-  const status = document.getElementById("avatar-editor-status");
-  if (!status) return;
-  status.textContent = message;
-  status.classList.toggle("error", isError);
+    const status = document.getElementById('avatar-editor-status');
+    if (!status) return;
+    status.textContent = message;
+    status.classList.toggle('error', isError);
 }
 
 function updateAvatarPreview() {
-  const preview = document.getElementById("avatar-crop-preview");
-  const zoom = Number(document.getElementById("avatar-zoom")?.value || 1);
-  const x = Number(document.getElementById("avatar-x")?.value || 50);
-  const y = Number(document.getElementById("avatar-y")?.value || 50);
-  const image = avatarEditorState.image;
+    const preview = document.getElementById('avatar-crop-preview');
+    const zoom = Number(document.getElementById('avatar-zoom')?.value || 1);
+    const x = Number(document.getElementById('avatar-x')?.value || 50);
+    const y = Number(document.getElementById('avatar-y')?.value || 50);
+    const image = avatarEditorState.image;
 
-  if (!preview || !image || !avatarEditorState.sourceUrl) return;
+    if (!preview || !image || !avatarEditorState.sourceUrl) return;
 
-  const coverScale = Math.max(
-    256 / image.naturalWidth,
-    256 / image.naturalHeight,
-  );
-  const width = image.naturalWidth * coverScale * zoom;
-  const height = image.naturalHeight * coverScale * zoom;
-  preview.style.backgroundImage = `url("${avatarEditorState.sourceUrl}")`;
-  preview.style.backgroundSize = `${(width / 256) * 100}% ${(height / 256) * 100}%`;
-  preview.style.backgroundPosition = `${x}% ${y}%`;
+    const coverScale = Math.max(256 / image.naturalWidth, 256 / image.naturalHeight);
+    const width = image.naturalWidth * coverScale * zoom;
+    const height = image.naturalHeight * coverScale * zoom;
+    preview.style.backgroundImage = `url("${avatarEditorState.sourceUrl}")`;
+    preview.style.backgroundSize = `${(width / 256) * 100}% ${(height / 256) * 100}%`;
+    preview.style.backgroundPosition = `${x}% ${y}%`;
 }
 
 function loadAvatarImage(sourceUrl) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () =>
-      reject(new Error("Não foi possível abrir esta imagem."));
-    image.src = sourceUrl;
-  });
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Não foi possível abrir esta imagem.'));
+        image.src = sourceUrl;
+    });
 }
 
 async function setAvatarEditorImage(sourceUrl) {
-  try {
-    const image = await loadAvatarImage(sourceUrl);
-    if (avatarEditorState.sourceUrl?.startsWith("blob:"))
-      URL.revokeObjectURL(avatarEditorState.sourceUrl);
-    avatarEditorState.image = image;
-    avatarEditorState.sourceUrl = sourceUrl;
-    document.getElementById("avatar-zoom").value = "1";
-    document.getElementById("avatar-x").value = "50";
-    document.getElementById("avatar-y").value = "50";
-    updateAvatarPreview();
-    setAvatarEditorStatus(
-      "Imagem pronta. Ajuste o enquadramento antes de salvar.",
-    );
-  } catch (error) {
-    setAvatarEditorStatus(error.message, true);
-  }
+    try {
+        const image = await loadAvatarImage(sourceUrl);
+        if (avatarEditorState.sourceUrl?.startsWith('blob:')) {
+            URL.revokeObjectURL(avatarEditorState.sourceUrl);
+        }
+        avatarEditorState.image = image;
+        avatarEditorState.sourceUrl = sourceUrl;
+        document.getElementById('avatar-zoom').value = '1';
+        document.getElementById('avatar-x').value = '50';
+        document.getElementById('avatar-y').value = '50';
+        updateAvatarPreview();
+        setAvatarEditorStatus('Imagem pronta. Ajuste o enquadramento antes de salvar.');
+    } catch (error) {
+        setAvatarEditorStatus(error.message, true);
+    }
 }
 
 function cropAvatarToDataUrl() {
-  const image = avatarEditorState.image;
-  if (!image) throw new Error("Escolha uma imagem antes de salvar.");
+    const image = avatarEditorState.image;
+    if (!image) throw new Error('Escolha uma imagem antes de salvar.');
 
-  const zoom = Number(document.getElementById("avatar-zoom").value);
-  const x = Number(document.getElementById("avatar-x").value) / 100;
-  const y = Number(document.getElementById("avatar-y").value) / 100;
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  const coverScale =
-    Math.max(size / image.naturalWidth, size / image.naturalHeight) * zoom;
-  const width = image.naturalWidth * coverScale;
-  const height = image.naturalHeight * coverScale;
-  context.drawImage(
-    image,
-    (size - width) * x,
-    (size - height) * y,
-    width,
-    height,
-  );
+    const zoom = Number(document.getElementById('avatar-zoom').value);
+    const x = Number(document.getElementById('avatar-x').value) / 100;
+    const y = Number(document.getElementById('avatar-y').value) / 100;
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    const coverScale = Math.max(size / image.naturalWidth, size / image.naturalHeight) * zoom;
+    const width = image.naturalWidth * coverScale;
+    const height = image.naturalHeight * coverScale;
+    context.drawImage(image, (size - width) * x, (size - height) * y, width, height);
 
-  let quality = 0.82;
-  let dataUrl = canvas.toDataURL("image/jpeg", quality);
-  while (dataUrl.length > AVATAR_MAX_SAVED_BYTES && quality > 0.4) {
-    quality -= 0.1;
-    dataUrl = canvas.toDataURL("image/jpeg", quality);
-  }
-  if (dataUrl.length > AVATAR_MAX_SAVED_BYTES) {
-    throw new Error("A imagem continua grande demais. Escolha outra imagem.");
-  }
-  return dataUrl;
+    let quality = 0.82;
+    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+    while (dataUrl.length > AVATAR_MAX_SAVED_BYTES && quality > 0.4) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
+    if (dataUrl.length > AVATAR_MAX_SAVED_BYTES) {
+        throw new Error('A imagem continua grande demais. Escolha outra imagem.');
+    }
+    return dataUrl;
 }
 
 function resetAvatarEditor() {
-  if (avatarEditorState.sourceUrl?.startsWith("blob:"))
-    URL.revokeObjectURL(avatarEditorState.sourceUrl);
-  avatarEditorState.image = null;
-  avatarEditorState.sourceUrl = null;
-  const preview = document.getElementById("avatar-crop-preview");
-  if (preview) preview.style.backgroundImage = "";
-  document.getElementById("avatar-url-input").value = "";
-  document.getElementById("avatar-file-input").value = "";
-  document.getElementById("avatar-zoom").value = "1";
-  document.getElementById("avatar-x").value = "50";
-  document.getElementById("avatar-y").value = "50";
-  setAvatarEditorStatus(
-    "Carregue uma imagem para começar. Arquivos de até 8 MB.",
-  );
+    if (avatarEditorState.sourceUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarEditorState.sourceUrl);
+    }
+    avatarEditorState.image = null;
+    avatarEditorState.sourceUrl = null;
+    const preview = document.getElementById('avatar-crop-preview');
+    if (preview) preview.style.backgroundImage = '';
+    const urlInput = document.getElementById('avatar-url-input');
+    if (urlInput) urlInput.value = '';
+    const fileInput = document.getElementById('avatar-file-input');
+    if (fileInput) fileInput.value = '';
+    const zoom = document.getElementById('avatar-zoom');
+    if (zoom) zoom.value = '1';
+    const x = document.getElementById('avatar-x');
+    if (x) x.value = '50';
+    const y = document.getElementById('avatar-y');
+    if (y) y.value = '50';
+    setAvatarEditorStatus('Carregue uma imagem para começar. Arquivos de até 8 MB.');
 }
 
 function openAvatarEditor() {
-  resetAvatarEditor();
-  document.getElementById("avatar-crop-modal")?.classList.add("active");
+    resetAvatarEditor();
+    document.getElementById('avatar-crop-modal')?.classList.add('active');
 }
 
 function closeAvatarEditor() {
-  document.getElementById("avatar-crop-modal")?.classList.remove("active");
-  resetAvatarEditor();
+    document.getElementById('avatar-crop-modal')?.classList.remove('active');
+    resetAvatarEditor();
 }
 
-// Remove versões antigas do Service Worker
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(
-      registrations.map((registration) => registration.unregister()),
-    );
-    if (registrations.length) {
-      console.info("Service Worker antigo removido.");
-    }
-  });
+// =====================================================================
+// PWA — REGISTRO SEGURO DO SERVICE WORKER
+// =====================================================================
+
+if ('serviceWorker' in navigator && (window.isSecureContext || window.location.hostname === 'localhost')) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+            console.warn('Service Worker não pôde ser registrado:', err);
+        });
+    });
 }
+
+// =====================================================================
+// MUDANÇA DE MÊS (substitui o antigo setInterval de 400ms)
+// =====================================================================
 
 window.addEventListener('month-changed', async (e) => {
     const { month, year } = e.detail;
+    setDashboardLoading(true);
     try {
-        await materializeRecurrences(year, month, null); // só o mês alvo
-        window.allTransactions = await fetchTransactions();
-        updateDashboardUI(window.allTransactions);
-        refreshMonthlyBudgetDashboard();
+        const created = await materializeRecurrences(year, month, null);
+        const transactions = created.length > 0 ? await fetchTransactions() : getAllTransactions();
 
-        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        const monthKey = getMonthKey(year, month);
         currentBudgets = await fetchBudgets(monthKey);
-        renderBudgets(currentBudgets, window.allTransactions, { month, year });
+
+        updateDashboardUI(transactions);
+        renderBudgets(currentBudgets, transactions, { month, year });
     } catch (err) {
-        console.error('Erro ao materializar recorrências:', err);
-    }
-});
-
-// =====================================================================
-// INICIALIZAÇÃO
-// =====================================================================
-
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("login-form");
-  const btnVisitante = document.getElementById("btn-login-visitante");
-
-  loginForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("user-email")?.value.trim();
-    const password = document.getElementById("user-pass")?.value;
-
-    if (!email || !password) {
-      showToast("Por favor, preencha e-mail e senha.", "error");
-      return;
-    }
-
-    try {
-      await loginComEmail(email, password);
-    } catch (err) {
-      console.error(err);
-      const message = String(err?.message || "").toLowerCase();
-      const isNetworkError =
-        message.includes("failed to fetch") || message.includes("network");
-      showToast(
-        isNetworkError
-          ? "Não foi possível conectar ao Supabase. Verifique sua internet ou bloqueadores de conteúdo."
-          : "E-mail ou senha incorretos.",
-        "error",
-      );
-    }
-  });
-
-  document
-    .getElementById("trans-recurrence")
-    ?.addEventListener("change", (e) => {
-      const group = document.getElementById("recurrence-end-group");
-      if (group) group.style.display = e.target.value ? "grid" : "none";
-    });
-
-  document.getElementById("export-btn")?.addEventListener("click", () => {
-    const list = window.allTransactions || [];
-    if (!list.length) {
-      showToast("Nada para exportar.", "error");
-      return;
-    }
-    const ok = exportTransactionsCSV(list);
-    if (ok) {
-      playSuccessSound();
-      showToast("CSV exportado.", "success");
-    }
-  });
-
-  const notifyBtn = document.getElementById("notify-toggle");
-  async function refreshNotifyButton() {
-    if (!notifyBtn) return;
-    const perm = getNotificationPermission();
-    notifyBtn.classList.toggle("active", perm === "granted");
-    notifyBtn.title =
-      perm === "granted"
-        ? "Notificações ativadas"
-        : "Ativar notificações de vencimento";
-  }
-  refreshNotifyButton();
-
-  notifyBtn?.addEventListener("click", async () => {
-    if (getNotificationPermission() === "granted") {
-      showToast("Notificações já estão ativas.", "success");
-      return;
-    }
-    const result = await requestNotificationPermission();
-    await refreshNotifyButton();
-    if (result === "granted") {
-      showToast("Você será avisado sobre contas a vencer.", "success");
-      playSuccessSound();
-      checkDueDates(window.allTransactions || []);
-    } else {
-      showToast("Permissão negada pelo navegador.", "error");
-    }
-  });
-
-  // ---- Orçamentos ----
-  const budgetModal = document.getElementById("budget-modal");
-  document
-    .getElementById("open-budget-modal-btn")
-    ?.addEventListener("click", () => {
-      updateCategoryDropdown("expense"); // popula o select de orçamento
-      budgetModal?.classList.add("active");
-      playUiSelectionSound();
-    });
-  document
-    .getElementById("cancel-budget-btn")
-    ?.addEventListener("click", () => {
-      budgetModal?.classList.remove("active");
-      playUiUnselectionSound();
-    });
-  budgetModal?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) budgetModal.classList.remove("active");
-  });
-
-  document
-    .getElementById("budget-form")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const category = document.getElementById("budget-category").value;
-      const amount = parseFloat(document.getElementById("budget-amount").value);
-      if (!category || !Number.isFinite(amount) || amount < 0) {
-        showToast("Preencha os campos do orçamento.", "error");
-        return;
-      }
-      const { month, year } = getCurrentSelection();
-      const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
-      try {
-        await upsertBudget(category, amount, monthKey);
-        budgetModal?.classList.remove("active");
-        document.getElementById("budget-form").reset();
-        showToast("Orçamento salvo.", "success");
-        playSuccessSound();
-        currentBudgets = await fetchBudgets(monthKey);
-        renderBudgets(currentBudgets, window.allTransactions || [], {
-          month,
-          year,
-        });
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao salvar orçamento.", "error");
-      }
-    });
-
-  document
-    .getElementById("budgets-grid")
-    ?.addEventListener("click", async (e) => {
-      const btn = e.target.closest(".budget-remove");
-      if (!btn) return;
-      const id = btn.dataset.id;
-      if (!id) return;
-      try {
-        await removeBudget(id);
-        currentBudgets = currentBudgets.filter(
-          (b) => String(b.id) !== String(id),
-        );
-        const { month, year } = getCurrentSelection();
-        renderBudgets(currentBudgets, window.allTransactions || [], {
-          month,
-          year,
-        });
-        playDeleteSound();
-        showToast("Orçamento removido.", "success");
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao remover orçamento.", "error");
-      }
-    });
-
-  // ==========================================
-  // METAS E APORTES
-  // ==========================================
-  const goalModal = document.getElementById("goal-modal");
-  const goalDepositModal = document.getElementById("goal-deposit-modal");
-  
-  // Função para renderizar a lista de aportes dentro do modal
-  const renderContributionsList = (contributions) => {
-    const listEl = document.getElementById("goal-contributions-list");
-    if (!listEl) return;
-
-    if (contributions.length === 0) {
-      listEl.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 10px;">Nenhum aporte registrado ainda.</div>`;
-      return;
-    }
-
-    listEl.innerHTML = contributions.map(c => `
-      <div class="contribution-item">
-        <div class="contribution-info">
-          <span class="contribution-date">${new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR")}</span>
-          <strong class="contribution-amount">R$ ${Number(c.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-        </div>
-        <div class="contribution-actions">
-          <button type="button" class="btn-icon edit-contribution" data-id="${c.id}" data-amount="${c.amount}" data-date="${c.date}" title="Editar">
-            <i class="ri-pencil-line"></i>
-          </button>
-          <button type="button" class="btn-icon delete-contribution" data-id="${c.id}" title="Excluir">
-            <i class="ri-delete-bin-line"></i>
-          </button>
-        </div>
-      </div>
-    `).join("");
-  };
-
-  // Abrir modal de Nova Meta
-  document.getElementById("open-goal-modal-btn")?.addEventListener("click", () => {
-    goalModal?.classList.add("active");
-    playUiSelectionSound();
-  });
-
-  // Fechar modal de Nova Meta
-  document.getElementById("cancel-goal-btn")?.addEventListener("click", () => {
-    goalModal?.classList.remove("active");
-    playUiUnselectionSound();
-  });
-  
-  goalModal?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) goalModal.classList.remove("active");
-  });
-
-  // Submit do form de Nova Meta
-  document.getElementById("goal-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("goal-name").value.trim();
-    const target = parseFloat(document.getElementById("goal-target").value);
-    const current = parseFloat(document.getElementById("goal-current").value) || 0;
-    const deadline = document.getElementById("goal-deadline").value || null;
-
-    if (!name || !Number.isFinite(target) || target <= 0) {
-      showToast("Preencha nome e valor alvo.", "error");
-      return;
-    }
-
-    try {
-      const newGoal = await insertGoal({ name, target_amount: target, current_amount: 0, deadline });
-      
-      // Se o usuário já tem um valor guardado, criamos um aporte inicial
-      if (current > 0 && newGoal) {
-         await insertGoalContribution(newGoal.id, current, new Date().toISOString().split('T')[0]);
-         await recalculateGoalTotal(newGoal.id);
-      }
-
-      goalModal?.classList.remove("active");
-      document.getElementById("goal-form").reset();
-      showToast("Meta criada.", "success");
-      playSuccessSound();
-      currentGoals = await fetchGoals();
-      renderGoals(currentGoals);
-    } catch (err) {
-      console.error(err);
-      showToast("Erro ao criar meta.", "error");
-    }
-  });
-
-  // Cliques nos cards de Meta (Aportar / Excluir)
-  document.getElementById("goals-grid")?.addEventListener("click", async (e) => {
-    const addBtn = e.target.closest(".goal-add-btn");
-    const removeBtn = e.target.closest(".goal-remove-btn");
-
-    if (addBtn) {
-      const id = addBtn.dataset.id;
-      const goal = currentGoals.find((g) => String(g.id) === String(id));
-      if (!goal) return;
-
-      // Reseta o form
-      document.getElementById("goal-deposit-form").reset();
-      document.getElementById("deposit-goal-id").value = id;
-      document.getElementById("deposit-contribution-id").value = "";
-      document.getElementById("deposit-date").value = new Date().toISOString().split('T')[0];
-      document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
-      document.getElementById("cancel-deposit-edit-btn").style.display = "none";
-      document.getElementById("goal-deposit-title").textContent = `Aportar em "${goal.name}"`;
-
-      // Cálculo inteligente no Modal
-      const target = Number(goal.target_amount || 0);
-      const current = Number(goal.current_amount || 0);
-      const remaining = target - current;
-      let infoHtml = "";
-
-      if (goal.deadline && remaining > 0) {
-        const deadlineDate = new Date(goal.deadline + "T12:00:00");
-        const today = new Date();
-        let monthsDiff = (deadlineDate.getFullYear() - today.getFullYear()) * 12 + (deadlineDate.getMonth() - today.getMonth());
-        
-        if (monthsDiff > 0) {
-          const monthsToSave = monthsDiff + 1;
-          const monthlyNeeded = remaining / monthsToSave;
-          infoHtml = `<span>Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>. Guarde <strong>R$ ${monthlyNeeded.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>/mês para chegar no prazo.</span>`;
-          document.getElementById("deposit-amount").value = monthlyNeeded.toFixed(2);
-        } else {
-          infoHtml = `<span>Prazo muito próximo. Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>.</span>`;
-          document.getElementById("deposit-amount").value = remaining.toFixed(2);
-        }
-      } else if (remaining > 0) {
-         infoHtml = `<span>Sem prazo definido. Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>.</span>`;
-      } else {
-         infoHtml = `<span>Parabéns! Você já atingiu esta meta. 🎉</span>`;
-      }
-      document.getElementById("goal-deposit-info").innerHTML = infoHtml;
-
-      // Busca e renderiza o histórico de aportes
-      try {
-        const contributions = await fetchGoalContributions(id);
-        renderContributionsList(contributions);
-      } catch (err) {
-        console.error(err);
-      }
-
-      goalDepositModal?.classList.add("active");
-      playUiSelectionSound();
-      setTimeout(() => document.getElementById("deposit-amount")?.select(), 100);
-      return;
-    }
-
-    if (removeBtn) {
-      const id = removeBtn.dataset.id;
-      const ok = await showConfirmToast("Excluir esta meta e todo o seu histórico?", { confirmLabel: "Excluir" });
-      if (!ok) return;
-      try {
-        await removeGoal(id);
-        playDeleteSound();
-        currentGoals = await fetchGoals();
-        renderGoals(currentGoals);
-        showToast("Meta removida.", "success");
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao remover meta.", "error");
-      }
-    }
-  });
-
-  // ------------------------------------------
-  // MODAL DE APORTE (Salvar/Editar)
-  // ------------------------------------------
-  const closeDepositModal = () => {
-    goalDepositModal?.classList.remove("active");
-    playUiUnselectionSound();
-  };
-
-  document.getElementById("cancel-deposit-btn")?.addEventListener("click", closeDepositModal);
-  document.getElementById("cancel-deposit-edit-btn")?.addEventListener("click", () => {
-    document.getElementById("goal-deposit-form").reset();
-    document.getElementById("deposit-contribution-id").value = "";
-    document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
-    document.getElementById("cancel-deposit-edit-btn").style.display = "none";
-  });
-
-  goalDepositModal?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeDepositModal();
-  });
-
-  // Salvar ou Atualizar Aporte
-  document.getElementById("goal-deposit-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const goalId = document.getElementById("deposit-goal-id").value;
-    const contributionId = document.getElementById("deposit-contribution-id").value;
-    const amount = parseFloat(document.getElementById("deposit-amount").value);
-    const date = document.getElementById("deposit-date").value;
-
-    if (!goalId || !Number.isFinite(amount) || amount <= 0 || !date) {
-      showToast("Informe um valor e data válidos.", "error");
-      return;
-    }
-
-    try {
-      if (contributionId) {
-        // Está editando um aporte existente
-        await updateGoalContribution(contributionId, amount, date);
-        showToast("Aporte atualizado!", "success");
-      } else {
-        // É um novo aporte
-        await insertGoalContribution(goalId, amount, date);
-        showToast("Aporte realizado com sucesso!", "success");
-      }
-
-      playSuccessSound();
-      
-      // Recalcula o total da meta e atualiza a tela
-      await recalculateGoalTotal(goalId);
-      currentGoals = await fetchGoals();
-      renderGoals(currentGoals);
-
-      // Atualiza a lista de histórico no modal
-      const contributions = await fetchGoalContributions(goalId);
-      renderContributionsList(contributions);
-
-      // Reseta o form para novo aporte, mas mantém o modal aberto
-      document.getElementById("goal-deposit-form").reset();
-      document.getElementById("deposit-contribution-id").value = "";
-      document.getElementById("deposit-date").value = new Date().toISOString().split('T')[0];
-      document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
-      document.getElementById("cancel-deposit-edit-btn").style.display = "none";
-
-      // Atualiza o texto de ajuda no topo
-      const updatedGoal = currentGoals.find(g => String(g.id) === String(goalId));
-      if(updatedGoal) {
-        const remaining = Number(updatedGoal.target_amount) - Number(updatedGoal.current_amount);
-        document.getElementById("goal-deposit-info").innerHTML = `<span>Faltam <strong>R$ ${remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> para atingir a meta.</span>`;
-      }
-
-    } catch (err) {
-      console.error(err);
-      showToast("Erro ao salvar aporte.", "error");
-    }
-  });
-
-  // Ações de Editar e Excluir dentro da lista do modal
-  document.getElementById("goal-contributions-list")?.addEventListener("click", async (e) => {
-    const editBtn = e.target.closest(".edit-contribution");
-    const deleteBtn = e.target.closest(".delete-contribution");
-    const goalId = document.getElementById("deposit-goal-id").value;
-
-    if (editBtn) {
-      const { id, amount, date } = editBtn.dataset;
-      document.getElementById("deposit-contribution-id").value = id;
-      document.getElementById("deposit-amount").value = amount;
-      document.getElementById("deposit-date").value = date;
-      document.getElementById("save-deposit-btn").textContent = "Salvar Alteração";
-      document.getElementById("cancel-deposit-edit-btn").style.display = "flex";
-      document.getElementById("deposit-amount").focus();
-      return;
-    }
-
-    if (deleteBtn) {
-      const id = deleteBtn.dataset.id;
-      const ok = await showConfirmToast("Excluir este aporte?", { confirmLabel: "Excluir" });
-      if (!ok) return;
-
-      try {
-        await removeGoalContribution(id);
-        playDeleteSound();
-        showToast("Aporte excluído.", "success");
-
-        await recalculateGoalTotal(goalId);
-        currentGoals = await fetchGoals();
-        renderGoals(currentGoals);
-
-        const contributions = await fetchGoalContributions(goalId);
-        renderContributionsList(contributions);
-        
-        // Limpa o form caso o usuário estivesse editando o item que acabou de ser excluído
-        if (document.getElementById("deposit-contribution-id").value === id) {
-           document.getElementById("goal-deposit-form").reset();
-           document.getElementById("deposit-contribution-id").value = "";
-           document.getElementById("save-deposit-btn").textContent = "Salvar Aporte";
-           document.getElementById("cancel-deposit-edit-btn").style.display = "none";
-        }
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao excluir aporte.", "error");
-      }
-    }
-  });
-
-  // ==========================================
-  // FIM METAS
-  // ==========================================
-
-  btnVisitante?.addEventListener("click", () => {
-    currentAppUser = {
-      email: "demo@demo.com",
-      user_metadata: { full_name: "Visitante" },
-    };
-    showDashboardScreen(currentAppUser, true);
-    applySavedAvatar(currentAppUser);
-    updateDashboardUI([]);
-    loadFiiData();
-  });
-
-  // ---- Som ----
-  const soundToggleBtn = document.getElementById("sound-toggle");
-  soundToggleBtn?.addEventListener("click", () => {
-    const nextEnabled = !isSoundEnabled();
-    setSoundEnabled(nextEnabled);
-  });
-  setSoundEnabled(isSoundEnabled());
-
-  // ---- Saldos bancários (com debounce) ----
-  const savedBankBalances = JSON.parse(
-    localStorage.getItem("monthly-bank-balances") || "[]",
-  );
-  const monthlyBankInputs = [
-    ...document.querySelectorAll(".monthly-account-input"),
-  ];
-  const debouncedBankRefresh = debounce(refreshMonthlyBudgetDashboard, 200);
-
-  monthlyBankInputs.forEach((input, index) => {
-    const value = Number.parseFloat(
-      String(savedBankBalances[index] ?? "0").replace(",", "."),
-    );
-    input.value = Number.isFinite(value) && value >= 0 ? String(value) : "";
-
-    input.addEventListener("focus", () => {
-      const currentValue = String(input.value).trim().replace(",", ".");
-      if (currentValue !== "" && Number.parseFloat(currentValue) === 0) {
-        input.value = "";
-      }
-    });
-
-    input.addEventListener("input", () => {
-      const isEmpty = String(input.value).trim() === "";
-      input.value = isEmpty
-        ? ""
-        : String(input.value)
-            .replace(/[^\d,.-]/g, "")
-            .replace(",", ".");
-      debouncedBankRefresh();
-    });
-  });
-
-  // ---- Seletor de mês ----
-  updateMonthDisplay();
-
-  document
-    .getElementById("btn-prev-month")
-    ?.addEventListener("click", () => changeSelectedMonth(-1));
-  document
-    .getElementById("btn-next-month")
-    ?.addEventListener("click", () => changeSelectedMonth(1));
-  document
-    .getElementById("btn-prev-month-list")
-    ?.addEventListener("click", () => changeSelectedMonth(-1));
-  document
-    .getElementById("btn-next-month-list")
-    ?.addEventListener("click", () => changeSelectedMonth(1));
-
-  // ---- Filtros de data manuais ----
-  const startInput = document.getElementById("filter-start-date");
-  const endInput = document.getElementById("filter-end-date");
-  if (startInput && endInput) {
-    startInput.addEventListener("change", filterAndRenderTransactions);
-    endInput.addEventListener("change", filterAndRenderTransactions);
-  }
-
-  // ---- Ordenação da tabela ----
-  document.querySelectorAll("th.sortable").forEach((th) => {
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => {
-      try {
-        setSort(th.dataset.key);
-      } catch (err) {
-        console.error("Erro ao ordenar:", err);
-      }
-    });
-  });
-
-  // ---- Delegação de delete (uma vez só) ----
-  bindDeleteDelegation();
-
-  // ---- Replicar no próximo mês ----
-  const btnReplicar = document.getElementById("btn-copy-next-month");
-  btnReplicar?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    const { month, year } = getCurrentSelection();
-
-    if (!window.allTransactions || window.allTransactions.length === 0) {
-      showToast("Nenhum lançamento carregado para copiar.", "error");
-      return;
-    }
-
-    const transacoesDoMes = window.allTransactions.filter((t) => {
-      if (!t.due_date) return false;
-      const [y, m] = t.due_date.split("-");
-      return parseInt(m, 10) - 1 === month && parseInt(y, 10) === year;
-    });
-
-    if (transacoesDoMes.length === 0) {
-      showToast("Não há lançamentos nesta aba para replicar.", "error");
-      return;
-    }
-
-    let proximoMesHumano = month + 2;
-    let anoAlvo = year;
-
-    if (proximoMesHumano > 12) {
-      proximoMesHumano = 1;
-      anoAlvo += 1;
-    }
-
-    const nomesMeses = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-    ];
-
-    const mesAlvoNome = nomesMeses[proximoMesHumano - 1];
-
-    const confirmacao = await showConfirmToast(
-      `Deseja replicar ${transacoesDoMes.length} lançamento(s) de ${nomesMeses[month]} para ${mesAlvoNome} de ${anoAlvo}?`,
-      { confirmLabel: "Replicar", iconClass: "ri-file-copy-2-line" },
-    );
-    if (!confirmacao) return;
-
-    const transacoesReplicadas = transacoesDoMes.map((t) => {
-      const parts = t.due_date.split("-");
-      const diaOriginal = parts[2] ? parts[2].padStart(2, "0") : "10";
-      const mesString = String(proximoMesHumano).padStart(2, "0");
-      const anoString = String(anoAlvo);
-      const novaDataFinal = `${anoString}-${mesString}-${diaOriginal}`;
-
-      return {
-        description: t.description,
-        amount: t.amount,
-        category: t.category,
-        type: t.type || "expense",
-        paid_status: "pending",
-        due_date: novaDataFinal,
-        created_at: `${novaDataFinal}T12:00:00.000Z`,
-        date: novaDataFinal,
-      };
-    });
-
-    try {
-      btnReplicar.disabled = true;
-      btnReplicar.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> Replicando...`;
-
-      await replicarTransacoesParaProximoMes(transacoesReplicadas);
-
-      showToast(`Sucesso! Lançamentos replicados em ${mesAlvoNome}.`, "success");
-
-      window.allTransactions = await fetchTransactions();
-      updateDashboardUI(window.allTransactions);
-    } catch (err) {
-      console.error(err);
-      showToast("Erro ao replicar transações.", "error");
+        console.error('Erro ao atualizar dados do mês:', err);
     } finally {
-      btnReplicar.disabled = false;
-      btnReplicar.innerHTML = `<i class="ri-file-copy-2-line"></i> Replicar no Próx. Mês`;
+        setDashboardLoading(false);
     }
-  });
-
-  // ---- Logout ----
-  document.getElementById("logout-btn")?.addEventListener("click", async () => {
-    await logout();
-  });
-
-  // ---- Tema ----
-  document.getElementById("theme-toggle")?.addEventListener("click", () => {
-    toggleTheme();
-    const isDark = document.documentElement.classList.contains("dark");
-    updateFiiAllocationChartTheme(isDark);
-  });
-
-  // ---- Modal de transação ----
-  document.getElementById("open-add-modal-btn")?.addEventListener("click", () => {
-      playUiSelectionSound();
-      openModal(false);
-  });
-
-  const closeTransactionModalWithSound = () => {
-    playUiUnselectionSound();
-    closeModal();
-  };
-
-  document.getElementById("close-modal-btn")?.addEventListener("click", closeTransactionModalWithSound);
-  document.getElementById("cancel-modal-btn")?.addEventListener("click", closeModal);
-  document.getElementById("transaction-modal")?.addEventListener("click", (event) => {
-      if (event.target === event.currentTarget) {
-        closeTransactionModalWithSound();
-      }
-  });
-
-  // ---- Modal de avatar ----
-  const avatarModal = document.getElementById("avatar-crop-modal");
-  const closeAvatarModalWithSound = () => {
-    playUiUnselectionSound();
-    closeAvatarEditor();
-  };
-  document.getElementById("avatar-close-btn")?.addEventListener("click", closeAvatarModalWithSound);
-  document.getElementById("avatar-cancel-btn")?.addEventListener("click", closeAvatarModalWithSound);
-  avatarModal?.addEventListener("click", (event) => {
-    if (event.target === event.currentTarget) closeAvatarModalWithSound();
-  });
-
-  document.getElementById("avatar-load-btn")?.addEventListener("click", async () => {
-      const url = document.getElementById("avatar-url-input").value.trim();
-      if (!/^https?:\/\//i.test(url)) {
-        setAvatarEditorStatus("Use um link que comece com http:// ou https://.", true);
-        return;
-      }
-      await setAvatarEditorImage(url);
-  });
-
-  document.getElementById("avatar-paste-btn")?.addEventListener("click", async () => {
-      try {
-        const url = await navigator.clipboard.readText();
-        document.getElementById("avatar-url-input").value = url;
-        setAvatarEditorStatus("Link colado. Clique em Carregar para continuar.");
-      } catch {
-        setAvatarEditorStatus("Não foi possível ler a área de transferência.", true);
-      }
-  });
-
-  document.getElementById("avatar-file-input")?.addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-        setAvatarEditorStatus("Escolha uma imagem PNG, JPEG ou WebP.", true);
-        return;
-      }
-      if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
-        setAvatarEditorStatus("A imagem ultrapassa o limite de 8 MB.", true);
-        return;
-      }
-      await setAvatarEditorImage(URL.createObjectURL(file));
-  });
-
-  ["avatar-zoom", "avatar-x", "avatar-y"].forEach((id) => {
-    document.getElementById(id)?.addEventListener("input", updateAvatarPreview);
-  });
-
-  document.getElementById("avatar-save-btn")?.addEventListener("click", () => {
-    try {
-      const avatar = cropAvatarToDataUrl();
-      localStorage.setItem(getAvatarStorageKey(), avatar);
-      applySavedAvatar();
-      showToast("Foto atualizada neste dispositivo.", "success");
-      playSuccessSound();
-      closeAvatarEditor();
-    } catch (error) {
-      setAvatarEditorStatus(error.message, true);
-    }
-  });
-
-  // ---- Abas ----
-  const tabButtons = document.querySelectorAll(".sidebar-tab");
-  tabButtons.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const selectedTab = tab.dataset.tab;
-      if (selectedTab) {
-        playUiSelectionSound();
-        activateDashboardTab(selectedTab);
-      }
-    });
-  });
-
-  // ---- Busca e filtros (com debounce) ----
-  document.getElementById("search-input")?.addEventListener("input", debounce(filterAndRenderTransactions, 180));
-  document.getElementById("filter-select")?.addEventListener("change", filterAndRenderTransactions);
-  document.getElementById("status-filter")?.addEventListener("change", filterAndRenderTransactions);
-  document.getElementById("sort-by-mobile")?.addEventListener("change", (e) => {
-    setSort(e.target.value);
-  });
-
-  // ---- Notas ----
-  document.getElementById("note-form")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const contentEl = document.getElementById("note-content");
-      const content = contentEl?.value.trim();
-      if (!content) {
-        showToast("Digite uma anotação antes de salvar.", "error");
-        return;
-      }
-
-      try {
-        await insertNote({ content });
-        if (contentEl) contentEl.value = "";
-        showToast("Anotação salva!", "success");
-        playSuccessSound();
-        await loadDashboardData();
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao salvar nota: " + err.message, "error");
-      }
-  });
-
-  document.getElementById("notes-list")?.addEventListener("click", async (event) => {
-      const deleteButton = event.target.closest(".note-delete-btn");
-      if (!deleteButton) return;
-
-      const noteId = deleteButton.dataset.id;
-      if (!noteId) return;
-
-      const confirmacao = await showConfirmToast("Deseja excluir esta anotação?", { confirmLabel: "Excluir", iconClass: "ri-delete-bin-line" });
-      if (!confirmacao) return;
-
-      try {
-        await removeNote(noteId);
-        playDeleteSound();
-        showToast("Anotação excluída.", "success");
-        await loadDashboardData();
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao excluir a anotação.", "error");
-      }
-  });
-
-  // ---- FIIs ----
-  const fiiForm = document.getElementById("fii-form");
-  fiiForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const ticker = normalizeFiiTicker(document.getElementById("fii-ticker")?.value);
-    const name = document.getElementById("fii-name")?.value.trim();
-    const quantity = parseInt(document.getElementById("fii-quantity")?.value, 10) || 0;
-    const averagePrice = parseFloat(document.getElementById("fii-average-price")?.value) || 0;
-    const currentPrice = parseFloat(document.getElementById("fii-current-price")?.value) || 0;
-    const dividends = parseFloat(document.getElementById("fii-dividends")?.value) || 0;
-
-    if (!ticker || !name || quantity < 0 || averagePrice < 0 || currentPrice < 0 || dividends < 0) {
-      showToast("Preencha corretamente todos os campos do FII.", "error");
-      return;
-    }
-
-    const holdings = loadFiiHoldings(currentAppUser);
-    const existingIndex = holdings.findIndex((item) => normalizeFiiTicker(item.ticker) === ticker);
-    const newHolding = { ticker, name, quantity, averagePrice, currentPrice, dividends };
-
-    if (existingIndex >= 0) {
-      holdings[existingIndex] = newHolding;
-      showToast("FII atualizado com sucesso!", "success");
-    } else {
-      holdings.push(newHolding);
-      showToast("FII salvo com sucesso!", "success");
-    }
-
-    playSuccessSound();
-    saveFiiHoldings(currentAppUser, holdings);
-    updateFiiUI(holdings);
-    resetFiiForm();
-  });
-
-  // ---- Alternância Receita/Despesa ----
-  const btnExpense = document.getElementById("btn-type-expense");
-  const btnIncome = document.getElementById("btn-type-income");
-  const transTypeInput = document.getElementById("trans-type");
-
-  btnExpense?.addEventListener("click", () => {
-    btnExpense.classList.add("active");
-    btnIncome.classList.remove("active");
-    if (transTypeInput) transTypeInput.value = "expense";
-    updateCategoryDropdown("expense");
-  });
-
-  btnIncome?.addEventListener("click", () => {
-    btnIncome.classList.add("active");
-    btnExpense.classList.remove("active");
-    if (transTypeInput) transTypeInput.value = "income";
-    updateCategoryDropdown("income");
-  });
-
-  document.getElementById("trans-category")?.addEventListener("change", (e) => {
-    const customInput = document.getElementById("trans-custom-category");
-    if (!customInput) return;
-
-    if (e.target.value === "Outros") {
-      customInput.style.display = "block";
-      customInput.required = true;
-    } else {
-      customInput.style.display = "none";
-      customInput.required = false;
-      customInput.value = "";
-    }
-  });
-
-  // ---- Submit do form (criação/edição) ----
-  document.getElementById("transaction-form")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const editId = form.dataset.editId;
-
-      const rawAmount = document.getElementById("trans-amount").value;
-      const cleanAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, "")) || 0;
-
-      const fallbackType = document.getElementById("btn-type-income")?.classList.contains("active") ? "income" : "expense";
-      const finalType = transTypeInput ? transTypeInput.value : fallbackType;
-
-      let finalCategory = document.getElementById("trans-category").value;
-      if (finalCategory === "Outros") {
-        const customValue = document.getElementById("trans-custom-category").value.trim();
-        if (customValue) finalCategory = customValue;
-      }
-
-      const transactionData = {
-        description: document.getElementById("trans-desc").value,
-        amount: cleanAmount,
-        category: finalCategory,
-        date: document.getElementById("trans-date").value,
-        type: finalType,
-        paid_status: document.getElementById("trans-paid-status").value,
-        due_date: document.getElementById("trans-due-date").value || null,
-        recurrence: document.getElementById("trans-recurrence").value || null,
-        recurrence_end: document.getElementById("trans-recurrence-end").value || null,
-      };
-
-      try {
-        if (editId) {
-          const { error } = await supabase.from("transactions").update(transactionData).eq("id", editId);
-          if (error) throw error;
-          showToast("Transação atualizada!", "success");
-        } else {
-          await insertTransaction(transactionData);
-          showToast("Lançamento realizado!", "success");
-        }
-
-        playSuccessSound();
-        closeModal();
-        await loadDashboardData();
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao processar: " + err.message, "error");
-      }
-  });
 });
 
-// Recarrega orçamentos quando o mês muda
-let lastMonthKey = '';
-async function watchMonthChanges() {
-    const { month, year } = getCurrentSelection();
-    const key = `${year}-${month}`;
-    if (key === lastMonthKey) return;
-    lastMonthKey = key;
+// =====================================================================
+// INICIALIZAÇÃO DOM
+// =====================================================================
 
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const btnVisitante = document.getElementById('btn-login-visitante');
+
+    // ---- Login Real ----
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('user-email')?.value.trim();
+        const password = document.getElementById('user-pass')?.value;
+
+        if (!email || !password) {
+            showToast('Por favor, preencha e-mail e senha.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btn-login-real');
+        await withSubmitLock(btn, async () => {
+            try {
+                await loginComEmail(email, password);
+            } catch (err) {
+                console.error(err);
+                const message = String(err?.message || '').toLowerCase();
+                const isNetworkError = message.includes('failed to fetch') || message.includes('network');
+                showToast(
+                    isNetworkError
+                        ? 'Não foi possível conectar ao Supabase. Verifique sua internet ou bloqueadores de conteúdo.'
+                        : 'E-mail ou senha incorretos.',
+                    'error'
+                );
+            }
+        }, 'Entrando...');
+    });
+
+    // ---- Modo Visitante (100% funcional localmente!) ----
+    btnVisitante?.addEventListener('click', async () => {
+        setDemoMode(true);
+        currentAppUser = {
+            id: 'demo-user',
+            email: 'demo@demo.com',
+            user_metadata: { full_name: 'Visitante' },
+        };
+        showDashboardScreen(currentAppUser, true);
+        applySavedAvatar(currentAppUser);
+        await loadDashboardData();
+        showToast('Modo Visitante ativado com dados locais.', 'success');
+    });
+
+    // ---- Recorrência no modal de transação ----
+    document.getElementById('trans-recurrence')?.addEventListener('change', (e) => {
+        const group = document.getElementById('recurrence-end-group');
+        if (group) group.style.display = e.target.value ? 'grid' : 'none';
+    });
+
+    // ---- Exportação CSV (Modal com escolha de escopo) ----
+    const exportModal = document.getElementById('export-modal');
+    const closeExportModal = () => {
+        exportModal?.classList.remove('active');
+        playUiUnselectionSound();
+    };
+
+    document.getElementById('export-btn')?.addEventListener('click', () => {
+        playUiSelectionSound();
+        exportModal?.classList.add('active');
+    });
+    document.getElementById('cancel-export-btn')?.addEventListener('click', closeExportModal);
+    exportModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeExportModal();
+    });
+
+    document.getElementById('btn-export-month')?.addEventListener('click', () => {
+        const monthList = getFilteredTransactionsForSelectedMonth();
+        if (!monthList.length) {
+            showToast('Não há transações no mês selecionado.', 'error');
+            return;
+        }
+        const { year, month } = getCurrentSelection();
+        const filename = `vaulta-transacoes-${getMonthKey(year, month)}.csv`;
+        if (exportTransactionsCSV(monthList, filename)) {
+            playSuccessSound();
+            showToast('CSV do mês exportado.', 'success');
+            exportModal?.classList.remove('active');
+        }
+    });
+
+    document.getElementById('btn-export-all')?.addEventListener('click', () => {
+        const list = getAllTransactions();
+        if (!list.length) {
+            showToast('Nada para exportar.', 'error');
+            return;
+        }
+        if (exportTransactionsCSV(list, `vaulta-transacoes-completo-${formatDateISO(new Date())}.csv`)) {
+            playSuccessSound();
+            showToast('CSV completo exportado.', 'success');
+            exportModal?.classList.remove('active');
+        }
+    });
+
+    document.getElementById('btn-export-notes')?.addEventListener('click', () => {
+        if (!currentNotesCache.length) {
+            showToast('Não há anotações para exportar.', 'error');
+            return;
+        }
+        if (exportNotesCSV(currentNotesCache, `vaulta-notas-${formatDateISO(new Date())}.csv`)) {
+            playSuccessSound();
+            showToast('Anotações exportadas em CSV.', 'success');
+            exportModal?.classList.remove('active');
+        }
+    });
+
+    // ---- Notificações ----
+    const notifyBtn = document.getElementById('notify-toggle');
+    function refreshNotifyButton() {
+        if (!notifyBtn) return;
+        const perm = getNotificationPermission();
+        notifyBtn.classList.toggle('active', perm === 'granted');
+        notifyBtn.title = perm === 'granted' ? 'Notificações ativadas' : 'Ativar notificações de vencimento';
+    }
+    refreshNotifyButton();
+
+    notifyBtn?.addEventListener('click', async () => {
+        if (getNotificationPermission() === 'granted') {
+            showToast('Notificações já estão ativas.', 'success');
+            return;
+        }
+        const result = await requestNotificationPermission();
+        refreshNotifyButton();
+        if (result === 'granted') {
+            showToast('Você será avisado sobre contas a vencer.', 'success');
+            playSuccessSound();
+            checkDueDates(getAllTransactions());
+        } else {
+            showToast('Permissão negada pelo navegador.', 'error');
+        }
+    });
+
+    // ---- Orçamentos (inclui categoria personalizada) ----
+    const budgetModal = document.getElementById('budget-modal');
+    const budgetCategorySelect = document.getElementById('budget-category');
+    const budgetCustomInput = document.getElementById('budget-custom-category');
+
+    budgetCategorySelect?.addEventListener('change', (e) => {
+        if (!budgetCustomInput) return;
+        const isOther = e.target.value === 'Outros';
+        budgetCustomInput.style.display = isOther ? 'block' : 'none';
+        budgetCustomInput.required = isOther;
+        if (!isOther) budgetCustomInput.value = '';
+    });
+
+    const closeBudgetModal = () => {
+        budgetModal?.classList.remove('active');
+        if (budgetCustomInput) {
+            budgetCustomInput.style.display = 'none';
+            budgetCustomInput.required = false;
+            budgetCustomInput.value = '';
+        }
+        playUiUnselectionSound();
+    };
+
+    document.getElementById('open-budget-modal-btn')?.addEventListener('click', () => {
+        updateCategoryDropdown('expense');
+        if (budgetCustomInput) {
+            budgetCustomInput.style.display = 'none';
+            budgetCustomInput.required = false;
+            budgetCustomInput.value = '';
+        }
+        budgetModal?.classList.add('active');
+        playUiSelectionSound();
+    });
+    document.getElementById('cancel-budget-btn')?.addEventListener('click', closeBudgetModal);
+    budgetModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeBudgetModal();
+    });
+
+    document.getElementById('budget-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let category = budgetCategorySelect?.value || '';
+        if (category === 'Outros') {
+            const customVal = budgetCustomInput?.value.trim();
+            if (customVal) category = customVal;
+        }
+        const amount = parseAmount(document.getElementById('budget-amount')?.value);
+        if (!category || !Number.isFinite(amount) || amount <= 0) {
+            showToast('Preencha uma categoria e um limite maior que zero.', 'error');
+            return;
+        }
+
+        const { month, year } = getCurrentSelection();
+        const monthKey = getMonthKey(year, month);
+        const btn = document.getElementById('save-budget-btn');
+
+        await withSubmitLock(btn, async () => {
+            try {
+                await upsertBudget(category, amount, monthKey);
+                budgetModal?.classList.remove('active');
+                document.getElementById('budget-form')?.reset();
+                if (budgetCustomInput) {
+                    budgetCustomInput.style.display = 'none';
+                    budgetCustomInput.required = false;
+                }
+                showToast('Orçamento salvo.', 'success');
+                playSuccessSound();
+                currentBudgets = await fetchBudgets(monthKey);
+                renderBudgets(currentBudgets, getAllTransactions(), { month, year });
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao salvar orçamento.', 'error');
+            }
+        });
+    });
+
+    document.getElementById('budgets-grid')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.budget-remove');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        if (!id) return;
+        try {
+            await removeBudget(id);
+            currentBudgets = currentBudgets.filter((b) => String(b.id) !== String(id));
+            const { month, year } = getCurrentSelection();
+            renderBudgets(currentBudgets, getAllTransactions(), { month, year });
+            playDeleteSound();
+            showToast('Orçamento removido.', 'success');
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao remover orçamento.', 'error');
+        }
+    });
+
+    // ==========================================
+    // METAS E APORTES
+    // ==========================================
+    const goalModal = document.getElementById('goal-modal');
+    const goalDepositModal = document.getElementById('goal-deposit-modal');
+
+    const renderContributionsList = (contributions) => {
+        const listEl = document.getElementById('goal-contributions-list');
+        if (!listEl) return;
+
+        if (!contributions || contributions.length === 0) {
+            listEl.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 10px;">Nenhum aporte registrado ainda.</div>`;
+            return;
+        }
+
+        listEl.innerHTML = contributions
+            .map((c) => `
+                <div class="contribution-item">
+                    <div class="contribution-info">
+                        <span class="contribution-date">${new Date(`${String(c.date).slice(0, 10)}T12:00:00`).toLocaleDateString('pt-BR')}</span>
+                        <strong class="contribution-amount">${formatCurrency(c.amount)}</strong>
+                    </div>
+                    <div class="contribution-actions">
+                        <button type="button" class="btn-icon edit-contribution" data-id="${escapeHTML(c.id)}" data-amount="${escapeHTML(c.amount)}" data-date="${escapeHTML(String(c.date).slice(0, 10))}" title="Editar">
+                            <i class="ri-pencil-line"></i>
+                        </button>
+                        <button type="button" class="btn-icon delete-contribution" data-id="${escapeHTML(c.id)}" title="Excluir">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </div>
+            `)
+            .join('');
+    };
+
+    const updateDepositInfoBanner = (goal) => {
+        const infoEl = document.getElementById('goal-deposit-info');
+        if (!infoEl || !goal) return;
+
+        const target = Number(goal.target_amount || 0);
+        const current = Number(goal.current_amount || 0);
+        const remaining = target - current;
+
+        if (remaining <= 0) {
+            infoEl.innerHTML = `<span>Parabéns! Você já atingiu esta meta. 🎉</span>`;
+            return;
+        }
+
+        if (goal.deadline) {
+            const deadlineDate = new Date(`${String(goal.deadline).slice(0, 10)}T12:00:00`);
+            const today = new Date();
+            const monthsDiff =
+                (deadlineDate.getFullYear() - today.getFullYear()) * 12 +
+                (deadlineDate.getMonth() - today.getMonth());
+
+            if (monthsDiff > 0) {
+                const monthlyNeeded = remaining / (monthsDiff + 1);
+                infoEl.innerHTML = `<span>Faltam <strong>${formatCurrency(remaining)}</strong>. Guarde <strong>${formatCurrency(monthlyNeeded)}</strong>/mês para chegar no prazo.</span>`;
+                return monthlyNeeded;
+            }
+            infoEl.innerHTML = `<span>Prazo muito próximo. Faltam <strong>${formatCurrency(remaining)}</strong>.</span>`;
+            return remaining;
+        }
+
+        infoEl.innerHTML = `<span>Sem prazo definido. Faltam <strong>${formatCurrency(remaining)}</strong>.</span>`;
+        return null;
+    };
+
+    document.getElementById('open-goal-modal-btn')?.addEventListener('click', () => {
+        goalModal?.classList.add('active');
+        playUiSelectionSound();
+    });
+
+    document.getElementById('cancel-goal-btn')?.addEventListener('click', () => {
+        goalModal?.classList.remove('active');
+        playUiUnselectionSound();
+    });
+
+    goalModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) goalModal.classList.remove('active');
+    });
+
+    document.getElementById('goal-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('goal-name').value.trim();
+        const target = parseAmount(document.getElementById('goal-target').value);
+        const current = parseAmount(document.getElementById('goal-current').value);
+        const deadline = document.getElementById('goal-deadline').value || null;
+
+        if (!name || !Number.isFinite(target) || target <= 0) {
+            showToast('Preencha nome e valor alvo.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('save-goal-btn');
+        await withSubmitLock(btn, async () => {
+            try {
+                const newGoal = await insertGoal({ name, target_amount: target, current_amount: 0, deadline });
+
+                if (current > 0 && newGoal) {
+                    await insertGoalContribution(newGoal.id, current, formatDateISO(new Date()));
+                    await recalculateGoalTotal(newGoal.id);
+                }
+
+                goalModal?.classList.remove('active');
+                document.getElementById('goal-form').reset();
+                showToast('Meta criada.', 'success');
+                playSuccessSound();
+                currentGoals = await fetchGoals();
+                renderGoals(currentGoals);
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao criar meta.', 'error');
+            }
+        });
+    });
+
+    document.getElementById('goals-grid')?.addEventListener('click', async (e) => {
+        const addBtn = e.target.closest('.goal-add-btn');
+        const removeBtn = e.target.closest('.goal-remove-btn');
+
+        if (addBtn) {
+            const id = addBtn.dataset.id;
+            const goal = currentGoals.find((g) => String(g.id) === String(id));
+            if (!goal) return;
+
+            document.getElementById('goal-deposit-form').reset();
+            document.getElementById('deposit-goal-id').value = id;
+            document.getElementById('deposit-contribution-id').value = '';
+            document.getElementById('deposit-date').value = formatDateISO(new Date());
+            document.getElementById('save-deposit-btn').textContent = 'Salvar Aporte';
+            document.getElementById('cancel-deposit-edit-btn').style.display = 'none';
+            document.getElementById('goal-deposit-title').textContent = `Aportar em "${goal.name}"`;
+
+            const suggested = updateDepositInfoBanner(goal);
+            if (typeof suggested === 'number' && suggested > 0) {
+                document.getElementById('deposit-amount').value = suggested.toFixed(2);
+            }
+
+            try {
+                const contributions = await fetchGoalContributions(id);
+                renderContributionsList(contributions);
+            } catch (err) {
+                console.error(err);
+            }
+
+            goalDepositModal?.classList.add('active');
+            playUiSelectionSound();
+            setTimeout(() => document.getElementById('deposit-amount')?.select(), 100);
+            return;
+        }
+
+        if (removeBtn) {
+            const id = removeBtn.dataset.id;
+            const ok = await showConfirmToast('Excluir esta meta e todo o seu histórico?', {
+                confirmLabel: 'Excluir',
+                iconClass: 'ri-delete-bin-line',
+            });
+            if (!ok) return;
+            try {
+                await removeGoal(id);
+                playDeleteSound();
+                currentGoals = await fetchGoals();
+                renderGoals(currentGoals);
+                showToast('Meta removida.', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao remover meta.', 'error');
+            }
+        }
+    });
+
+    const closeDepositModal = () => {
+        goalDepositModal?.classList.remove('active');
+        playUiUnselectionSound();
+    };
+
+    document.getElementById('cancel-deposit-btn')?.addEventListener('click', closeDepositModal);
+    document.getElementById('cancel-deposit-edit-btn')?.addEventListener('click', () => {
+        document.getElementById('goal-deposit-form').reset();
+        document.getElementById('deposit-contribution-id').value = '';
+        document.getElementById('deposit-date').value = formatDateISO(new Date());
+        document.getElementById('save-deposit-btn').textContent = 'Salvar Aporte';
+        document.getElementById('cancel-deposit-edit-btn').style.display = 'none';
+    });
+
+    goalDepositModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeDepositModal();
+    });
+
+    document.getElementById('goal-deposit-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const goalId = document.getElementById('deposit-goal-id').value;
+        const contributionId = document.getElementById('deposit-contribution-id').value;
+        const amount = parseAmount(document.getElementById('deposit-amount').value);
+        const date = document.getElementById('deposit-date').value;
+
+        if (!goalId || !Number.isFinite(amount) || amount <= 0 || !date) {
+            showToast('Informe um valor e data válidos.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('save-deposit-btn');
+        await withSubmitLock(btn, async () => {
+            try {
+                if (contributionId) {
+                    await updateGoalContribution(contributionId, amount, date);
+                    showToast('Aporte atualizado!', 'success');
+                } else {
+                    await insertGoalContribution(goalId, amount, date);
+                    showToast('Aporte realizado com sucesso!', 'success');
+                }
+
+                playSuccessSound();
+                await recalculateGoalTotal(goalId);
+                currentGoals = await fetchGoals();
+                renderGoals(currentGoals);
+
+                const contributions = await fetchGoalContributions(goalId);
+                renderContributionsList(contributions);
+
+                document.getElementById('goal-deposit-form').reset();
+                document.getElementById('deposit-contribution-id').value = '';
+                document.getElementById('deposit-date').value = formatDateISO(new Date());
+                document.getElementById('cancel-deposit-edit-btn').style.display = 'none';
+
+                const updatedGoal = currentGoals.find((g) => String(g.id) === String(goalId));
+                updateDepositInfoBanner(updatedGoal);
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao salvar aporte.', 'error');
+            }
+        });
+        // Restaura rótulo padrão após lock
+        if (btn && !document.getElementById('deposit-contribution-id').value) {
+            btn.textContent = 'Salvar Aporte';
+        }
+    });
+
+    document.getElementById('goal-contributions-list')?.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-contribution');
+        const deleteBtn = e.target.closest('.delete-contribution');
+        const goalId = document.getElementById('deposit-goal-id').value;
+
+        if (editBtn) {
+            const { id, amount, date } = editBtn.dataset;
+            document.getElementById('deposit-contribution-id').value = id;
+            document.getElementById('deposit-amount').value = amount;
+            document.getElementById('deposit-date').value = date;
+            document.getElementById('save-deposit-btn').textContent = 'Salvar Alteração';
+            document.getElementById('cancel-deposit-edit-btn').style.display = 'flex';
+            document.getElementById('deposit-amount').focus();
+            return;
+        }
+
+        if (deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            const ok = await showConfirmToast('Excluir este aporte?', {
+                confirmLabel: 'Excluir',
+                iconClass: 'ri-delete-bin-line',
+            });
+            if (!ok) return;
+
+            try {
+                await removeGoalContribution(id);
+                playDeleteSound();
+                showToast('Aporte excluído.', 'success');
+
+                await recalculateGoalTotal(goalId);
+                currentGoals = await fetchGoals();
+                renderGoals(currentGoals);
+
+                const contributions = await fetchGoalContributions(goalId);
+                renderContributionsList(contributions);
+
+                const updatedGoal = currentGoals.find((g) => String(g.id) === String(goalId));
+                updateDepositInfoBanner(updatedGoal);
+
+                if (document.getElementById('deposit-contribution-id').value === id) {
+                    document.getElementById('goal-deposit-form').reset();
+                    document.getElementById('deposit-contribution-id').value = '';
+                    document.getElementById('deposit-date').value = formatDateISO(new Date());
+                    document.getElementById('save-deposit-btn').textContent = 'Salvar Aporte';
+                    document.getElementById('cancel-deposit-edit-btn').style.display = 'none';
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao excluir aporte.', 'error');
+            }
+        }
+    });
+
+    // ---- Contas Bancárias (Controle Mensal dinâmico + sincronizado) ----
+    const accountModal = document.getElementById('account-modal');
+    const closeAccountModal = () => {
+        accountModal?.classList.remove('active');
+        playUiUnselectionSound();
+    };
+
+    document.getElementById('open-account-modal-btn')?.addEventListener('click', () => {
+        document.getElementById('account-form')?.reset();
+        accountModal?.classList.add('active');
+        playUiSelectionSound();
+        setTimeout(() => document.getElementById('account-name')?.focus(), 80);
+    });
+    document.getElementById('cancel-account-btn')?.addEventListener('click', closeAccountModal);
+    accountModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeAccountModal();
+    });
+
+    document.getElementById('account-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('account-name').value.trim().toUpperCase();
+        const icon = document.getElementById('account-icon').value || 'ri-bank-line';
+        const balance = parseAmount(document.getElementById('account-balance').value);
+
+        if (!name) {
+            showToast('Informe o nome da conta.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('save-account-btn');
+        await withSubmitLock(btn, async () => {
+            const accounts = getMonthlyAccounts();
+            accounts.push({
+                id: `acc-${Date.now()}`,
+                name,
+                icon,
+                balance,
+            });
+            const saved = await saveAccounts(accounts);
+            setMonthlyAccounts(saved, persistAccounts);
+            renderProjection(getAllTransactions());
+            accountModal?.classList.remove('active');
+            document.getElementById('account-form').reset();
+            playSuccessSound();
+            showToast(`Conta "${name}" adicionada.`, 'success');
+        });
+    });
+
+    bindMonthlyAccountsDelegation(async (accountId) => {
+        const accounts = getMonthlyAccounts();
+        if (accounts.length <= 1) {
+            showToast('Mantenha pelo menos uma conta cadastrada.', 'error');
+            return;
+        }
+        const target = accounts.find((a) => String(a.id) === String(accountId));
+        const ok = await showConfirmToast(`Remover a conta "${target?.name || ''}"?`, {
+            confirmLabel: 'Remover',
+            iconClass: 'ri-delete-bin-line',
+        });
+        if (!ok) return;
+
+        const next = accounts.filter((a) => String(a.id) !== String(accountId));
+        const saved = await saveAccounts(next);
+        setMonthlyAccounts(saved, persistAccounts);
+        renderProjection(getAllTransactions());
+        playDeleteSound();
+        showToast('Conta removida.', 'success');
+    });
+
+    // ---- Som ----
+    document.getElementById('sound-toggle')?.addEventListener('click', () => {
+        setSoundEnabled(!isSoundEnabled());
+    });
+    setSoundEnabled(isSoundEnabled());
+
+    // ---- Seletor de mês ----
+    updateMonthDisplay();
+    document.getElementById('btn-prev-month')?.addEventListener('click', () => changeSelectedMonth(-1));
+    document.getElementById('btn-next-month')?.addEventListener('click', () => changeSelectedMonth(1));
+    document.getElementById('btn-prev-month-list')?.addEventListener('click', () => changeSelectedMonth(-1));
+    document.getElementById('btn-next-month-list')?.addEventListener('click', () => changeSelectedMonth(1));
+
+    // ---- Ordenação da tabela ----
+    document.querySelectorAll('th.sortable').forEach((th) => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => setSort(th.dataset.key));
+    });
+
+    // ---- Delegação de eventos na tabela/cards (Editar, Toggle Status, Excluir) ----
+    bindTransactionDelegation();
+
+    // ---- Replicar no próximo mês (com datas seguras!) ----
+    const btnReplicar = document.getElementById('btn-copy-next-month');
+    btnReplicar?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const { month, year } = getCurrentSelection();
+        const allTx = getAllTransactions();
+
+        if (!allTx.length) {
+            showToast('Nenhum lançamento carregado para copiar.', 'error');
+            return;
+        }
+
+        const transacoesDoMes = allTx.filter((t) => isTransactionInMonth(t, year, month));
+        if (transacoesDoMes.length === 0) {
+            showToast('Não há lançamentos neste mês para replicar.', 'error');
+            return;
+        }
+
+        const nextDateObj = new Date(year, month + 1, 1);
+        const anoAlvo = nextDateObj.getFullYear();
+        const mesAlvoIdx = nextDateObj.getMonth();
+
+        const nomesMeses = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+        ];
+        const mesAlvoNome = nomesMeses[mesAlvoIdx];
+
+        const confirmacao = await showConfirmToast(
+            `Deseja replicar ${transacoesDoMes.length} lançamento(s) de ${nomesMeses[month]} para ${mesAlvoNome} de ${anoAlvo}?`,
+            { confirmLabel: 'Replicar', iconClass: 'ri-file-copy-2-line' }
+        );
+        if (!confirmacao) return;
+
+        const transacoesReplicadas = transacoesDoMes.map((t) => {
+            const nextDate = getNextMonthDateString(t.date, anoAlvo, mesAlvoIdx);
+            const nextDue = t.due_date ? getNextMonthDateString(t.due_date, anoAlvo, mesAlvoIdx) : null;
+
+            return {
+                description: t.description,
+                amount: t.amount,
+                category: t.category,
+                type: t.type || 'expense',
+                paid_status: 'pending',
+                due_date: nextDue,
+                created_at: `${nextDate}T12:00:00.000Z`,
+                date: nextDate,
+            };
+        });
+
+        await withSubmitLock(btnReplicar, async () => {
+            try {
+                await replicarTransacoesParaProximoMes(transacoesReplicadas);
+                playSuccessSound();
+                showToast(`Sucesso! Lançamentos replicados em ${mesAlvoNome}.`, 'success');
+                const fresh = await fetchTransactions();
+                updateDashboardUI(fresh);
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao replicar transações.', 'error');
+            }
+        }, 'Replicando...');
+    });
+
+    // ---- Logout ----
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        await logout();
+    });
+
+    // ---- Tema ----
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        toggleTheme();
+    });
+
+    // ---- Modal de transação ----
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => {
+        playUiSelectionSound();
+        openModal(false);
+    });
+
+    const closeTransactionModalWithSound = () => {
+        playUiUnselectionSound();
+        closeModal();
+    };
+
+    document.getElementById('cancel-modal-btn')?.addEventListener('click', closeTransactionModalWithSound);
+    document.getElementById('transaction-modal')?.addEventListener('click', (event) => {
+        if (event.target === event.currentTarget) closeTransactionModalWithSound();
+    });
+
+    // ---- Modal de avatar ----
+    const avatarModal = document.getElementById('avatar-crop-modal');
+    const closeAvatarModalWithSound = () => {
+        playUiUnselectionSound();
+        closeAvatarEditor();
+    };
+    document.getElementById('avatar-close-btn')?.addEventListener('click', closeAvatarModalWithSound);
+    document.getElementById('avatar-cancel-btn')?.addEventListener('click', closeAvatarModalWithSound);
+    avatarModal?.addEventListener('click', (event) => {
+        if (event.target === event.currentTarget) closeAvatarModalWithSound();
+    });
+
+    document.getElementById('avatar-load-btn')?.addEventListener('click', async () => {
+        const url = document.getElementById('avatar-url-input').value.trim();
+        if (!/^https?:\/\//i.test(url)) {
+            setAvatarEditorStatus('Use um link que comece com http:// ou https://.', true);
+            return;
+        }
+        await setAvatarEditorImage(url);
+    });
+
+    document.getElementById('avatar-paste-btn')?.addEventListener('click', async () => {
+        try {
+            const url = await navigator.clipboard.readText();
+            document.getElementById('avatar-url-input').value = url;
+            setAvatarEditorStatus('Link colado. Clique em Carregar para continuar.');
+        } catch {
+            setAvatarEditorStatus('Não foi possível ler a área de transferência.', true);
+        }
+    });
+
+    document.getElementById('avatar-file-input')?.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setAvatarEditorStatus('Escolha uma imagem PNG, JPEG ou WebP.', true);
+            return;
+        }
+        if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
+            setAvatarEditorStatus('A imagem ultrapassa o limite de 8 MB.', true);
+            return;
+        }
+        await setAvatarEditorImage(URL.createObjectURL(file));
+    });
+
+    ['avatar-zoom', 'avatar-x', 'avatar-y'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('input', updateAvatarPreview);
+    });
+
+    document.getElementById('avatar-save-btn')?.addEventListener('click', () => {
+        try {
+            const avatar = cropAvatarToDataUrl();
+            localStorage.setItem(getAvatarStorageKey(), avatar);
+            applySavedAvatar();
+            showToast('Foto atualizada neste dispositivo.', 'success');
+            playSuccessSound();
+            closeAvatarEditor();
+        } catch (error) {
+            setAvatarEditorStatus(error.message, true);
+        }
+    });
+
+    // ---- Abas ----
+    document.querySelectorAll('.sidebar-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const selectedTab = tab.dataset.tab;
+            if (selectedTab) {
+                playUiSelectionSound();
+                activateDashboardTab(selectedTab);
+            }
+        });
+    });
+
+    // ---- Busca e filtros (com debounce) ----
+    document.getElementById('search-input')?.addEventListener('input', debounce(filterAndRenderTransactions, 180));
+    document.getElementById('filter-select')?.addEventListener('change', filterAndRenderTransactions);
+    document.getElementById('status-filter')?.addEventListener('change', filterAndRenderTransactions);
+    document.getElementById('sort-by-mobile')?.addEventListener('change', (e) => setSort(e.target.value));
+
+    // ---- Notas ----
+    document.getElementById('note-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contentEl = document.getElementById('note-content');
+        const content = contentEl?.value.trim();
+        if (!content) {
+            showToast('Digite uma anotação antes de salvar.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('save-note-btn');
+        await withSubmitLock(btn, async () => {
+            try {
+                await insertNote({ content });
+                if (contentEl) contentEl.value = '';
+                showToast('Anotação salva!', 'success');
+                playSuccessSound();
+                currentNotesCache = await fetchNotes();
+                renderNotes(currentNotesCache);
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao salvar nota: ' + err.message, 'error');
+            }
+        });
+    });
+
+    document.getElementById('notes-list')?.addEventListener('click', async (event) => {
+        const deleteButton = event.target.closest('.note-delete-btn');
+        if (!deleteButton) return;
+
+        const noteId = deleteButton.dataset.id;
+        if (!noteId) return;
+
+        const confirmacao = await showConfirmToast('Deseja excluir esta anotação?', {
+            confirmLabel: 'Excluir',
+            iconClass: 'ri-delete-bin-line',
+        });
+        if (!confirmacao) return;
+
+        try {
+            await removeNote(noteId);
+            playDeleteSound();
+            showToast('Anotação excluída.', 'success');
+            currentNotesCache = await fetchNotes();
+            renderNotes(currentNotesCache);
+        } catch (err) {
+            console.error(err);
+            showToast('Erro ao excluir a anotação.', 'error');
+        }
+    });
+
+    // ---- Alternância Receita/Despesa ----
+    const btnExpense = document.getElementById('btn-type-expense');
+    const btnIncome = document.getElementById('btn-type-income');
+    const transTypeInput = document.getElementById('trans-type');
+
+    btnExpense?.addEventListener('click', () => {
+        btnExpense.classList.add('active');
+        btnIncome.classList.remove('active');
+        if (transTypeInput) transTypeInput.value = 'expense';
+        updateCategoryDropdown('expense');
+    });
+
+    btnIncome?.addEventListener('click', () => {
+        btnIncome.classList.add('active');
+        btnExpense.classList.remove('active');
+        if (transTypeInput) transTypeInput.value = 'income';
+        updateCategoryDropdown('income');
+    });
+
+    document.getElementById('trans-category')?.addEventListener('change', (e) => {
+        const customInput = document.getElementById('trans-custom-category');
+        if (!customInput) return;
+
+        const isOther = e.target.value === 'Outros';
+        customInput.style.display = isOther ? 'block' : 'none';
+        customInput.required = isOther;
+        if (!isOther) customInput.value = '';
+    });
+
+    // ---- Submit do form de transação (criação/edição com lock) ----
+    document.getElementById('transaction-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const editId = form.dataset.editId;
+
+        const cleanAmount = parseAmount(document.getElementById('trans-amount').value);
+        if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
+            showToast('Informe um valor maior que zero.', 'error');
+            return;
+        }
+
+        const fallbackType = document.getElementById('btn-type-income')?.classList.contains('active')
+            ? 'income'
+            : 'expense';
+        const finalType = transTypeInput ? transTypeInput.value : fallbackType;
+
+        let finalCategory = document.getElementById('trans-category').value;
+        if (finalCategory === 'Outros') {
+            const customValue = document.getElementById('trans-custom-category').value.trim();
+            if (customValue) finalCategory = customValue;
+        }
+
+        const transactionData = {
+            description: document.getElementById('trans-desc').value.trim(),
+            amount: cleanAmount,
+            category: finalCategory,
+            date: document.getElementById('trans-date').value,
+            type: finalType,
+            paid_status: document.getElementById('trans-paid-status').value,
+            due_date: document.getElementById('trans-due-date').value || null,
+            recurrence: document.getElementById('trans-recurrence').value || null,
+            recurrence_end: document.getElementById('trans-recurrence-end').value || null,
+        };
+
+        const btn = document.getElementById('save-transaction-btn');
+        await withSubmitLock(btn, async () => {
+            try {
+                if (editId) {
+                    await updateTransaction(editId, transactionData);
+                    showToast('Transação atualizada!', 'success');
+                } else {
+                    await insertTransaction(transactionData);
+                    showToast('Lançamento realizado!', 'success');
+                }
+
+                playSuccessSound();
+                closeModal();
+                await loadDashboardData();
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao processar: ' + err.message, 'error');
+            }
+        });
+    });
+});
+
+// =====================================================================
+// SINCRONIZAÇÃO DE CONTAS
+// =====================================================================
+
+async function persistAccounts(accounts) {
     try {
-        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-        currentBudgets = await fetchBudgets(monthKey);
-        renderBudgets(currentBudgets, window.allTransactions || [], { month, year });
+        await saveAccounts(accounts);
     } catch (err) {
-        console.error('Erro ao recarregar orçamentos:', err);
+        console.error('Erro ao persistir contas:', err);
     }
 }
-
-setInterval(watchMonthChanges, 400);
 
 // =====================================================================
 // EVENTOS GLOBAIS
 // =====================================================================
 
-window.addEventListener('transactions-updated', async () => {
+window.addEventListener('transactions-updated', () => {
     updateMonthDisplay();
-    updateDashboardUI(window.allTransactions || []);
+    const tx = getAllTransactions();
+    updateDashboardUI(tx);
     refreshMonthlyBudgetDashboard();
 
-    // Re-renderiza orçamentos com os dados novos
     const { month, year } = getCurrentSelection();
-    renderBudgets(currentBudgets, window.allTransactions || [], { month, year });
+    renderBudgets(currentBudgets, tx, { month, year });
 });
 
-// Inicialização
 initTheme();
 
 supabase.auth.onAuthStateChange((event, session) => {
-  if (session) {
-    currentAppUser = session.user;
-    showDashboardScreen(session.user, false);
-    applySavedAvatar(session.user);
-    loadDashboardData();
-    loadFiiData();
-  } else {
-    showLoginScreen();
-  }
+    if (isDemoMode()) return;
+
+    if (session) {
+        currentAppUser = session.user;
+        showDashboardScreen(session.user, false);
+        applySavedAvatar(session.user);
+        loadDashboardData();
+    } else {
+        showLoginScreen();
+    }
 });
 
-document.getElementById("user-avatar")?.addEventListener("click", () => {
-  playUiSelectionSound();
-  openAvatarEditor();
+document.getElementById('user-avatar')?.addEventListener('click', () => {
+    playUiSelectionSound();
+    openAvatarEditor();
 });
 
 // =====================================================================
@@ -1184,84 +1247,102 @@ document.getElementById("user-avatar")?.addEventListener("click", () => {
 // =====================================================================
 
 function activateDashboardTab(tabId) {
-    document.querySelectorAll('.tab-page').forEach(page => {
+    document.querySelectorAll('.tab-page').forEach((page) => {
         page.classList.toggle('active', page.id === `tab-${tabId}`);
     });
-    document.querySelectorAll('.sidebar-tab').forEach(button => {
+    document.querySelectorAll('.sidebar-tab').forEach((button) => {
         button.classList.toggle('active', button.dataset.tab === tabId);
     });
 
-        if (tabId === 'overview') {
-        filterAndRenderTransactions();
+    if (tabId === 'overview') {
+        const tx = getAllTransactions();
         const selection = getCurrentSelection();
-        renderBudgets(currentBudgets, window.allTransactions || [], selection);
+        filterAndRenderTransactions();
+        renderBudgets(currentBudgets, tx, selection);
         renderGoals(currentGoals);
-        updateInsights(window.allTransactions || [], selection);
-        renderProjection(window.allTransactions || [], selection);
+        updateInsights(tx, selection);
+        renderProjection(tx, selection);
     }
     if (tabId === 'monthly') {
         refreshMonthlyBudgetDashboard();
     }
 }
 
-activateDashboardTab("overview");
+activateDashboardTab('overview');
 
 // =====================================================================
-// ATALHOS
+// ATALHOS DE TECLADO (Escape fecha qualquer modal ativo; F1 abre novo lançamento)
 // =====================================================================
 
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    const modal = document.getElementById("transaction-modal");
-    if (modal?.classList.contains("active")) {
-      closeModal();
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        if (document.getElementById('transaction-modal')?.classList.contains('active')) {
+            closeModal();
+            return;
+        }
+        if (document.getElementById('avatar-crop-modal')?.classList.contains('active')) {
+            closeAvatarEditor();
+            return;
+        }
+        // Fecha qualquer outro modal aberto (exceto o de recorrência, que tem seu próprio listener com Promise)
+        const openModalEl = document.querySelector(
+            '.modal-overlay.active:not(#recurrence-delete-modal)'
+        );
+        if (openModalEl) {
+            openModalEl.classList.remove('active');
+            playUiUnselectionSound();
+        }
+        return;
     }
-    return;
-  }
 
-  if (event.key === "F1") {
-    event.preventDefault();
-    if (!document.getElementById("transaction-modal")?.classList.contains("active")) {
-      playUiSelectionSound();
-      openModal(false);
+    if (event.key === 'F1') {
+        const dashboardVisible = document.getElementById('dashboard-screen')?.style.display !== 'none';
+        if (!dashboardVisible) return;
+        event.preventDefault();
+        if (!document.getElementById('transaction-modal')?.classList.contains('active')) {
+            playUiSelectionSound();
+            openModal(false);
+        }
     }
-  }
 });
 
 // =====================================================================
-// DADOS DO DASHBOARD
+// CARREGAMENTO DE DADOS DO DASHBOARD
 // =====================================================================
 
 async function loadDashboardData() {
+    setDashboardLoading(true);
     try {
         const { month, year } = getCurrentSelection();
 
-        // Materializa desde a última vez que o usuário logou (ou desde o mês anterior)
-        const lastSeen = localStorage.getItem('vaulta-last-materialized');
-        let sinceDate = null;
+        const lastSeenKey = isDemoMode() ? 'vaulta-last-materialized-demo' : 'vaulta-last-materialized';
+        const lastSeen = localStorage.getItem(lastSeenKey);
+        let sinceDate;
         if (lastSeen) {
             const [ly, lm] = lastSeen.split('-').map(Number);
             sinceDate = new Date(ly, lm - 1, 1);
         } else {
-            sinceDate = new Date(year, month - 1, 1); // mês anterior
+            sinceDate = new Date(year, month - 1, 1);
         }
 
         await materializeRecurrences(year, month, sinceDate);
 
-        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-        localStorage.setItem('vaulta-last-materialized', monthKey);
+        const monthKey = getMonthKey(year, month);
+        localStorage.setItem(lastSeenKey, monthKey);
 
-        const [transactions, notes, budgets, goals] = await Promise.all([
+        const [transactions, notes, budgets, goals, accounts] = await Promise.all([
             fetchTransactions(),
             fetchNotes(),
             fetchBudgets(monthKey),
             fetchGoals(),
+            fetchAccounts(),
         ]);
 
         currentBudgets = budgets;
         currentGoals = goals;
         currentNotesCache = notes;
 
+        setMonthlyAccounts(accounts, persistAccounts);
         updateDashboardUI(transactions);
         renderNotes(notes);
         renderBudgets(currentBudgets, transactions, { month, year });
@@ -1269,178 +1350,45 @@ async function loadDashboardData() {
 
         checkDueDates(transactions);
     } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+        console.error('Erro ao carregar dados:', err);
         const message = String(err?.message || '').toLowerCase();
         showToast(
             message.includes('failed to fetch') || message.includes('network')
-                ? "Conectado, mas os dados não puderam ser carregados."
-                : "Não foi possível carregar os dados do painel.",
-            "error"
+                ? 'Conectado, mas os dados não puderam ser carregados.'
+                : 'Não foi possível carregar os dados do painel.',
+            'error'
         );
+    } finally {
+        setDashboardLoading(false);
     }
 }
 
 function renderNotes(notes) {
-  const notesList = document.getElementById("notes-list");
-  if (!notesList) return;
+    const notesList = document.getElementById('notes-list');
+    if (!notesList) return;
 
-  if (!notes || notes.length === 0) {
-    notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação registrada. Use o formulário ao lado para salvar uma nota.</div>`;
-    return;
-  }
+    if (!notes || notes.length === 0) {
+        notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação registrada. Use o formulário ao lado para salvar uma nota.</div>`;
+        return;
+    }
 
-  notesList.innerHTML = notes
-    .map((note) => {
-      const createdAt = note.created_at
-        ? new Date(note.created_at).toLocaleString("pt-BR", {
-            dateStyle: "short",
-            timeStyle: "short",
-          })
-        : "";
-      return `
-            <div class="note-card glass">
-                <div class="note-card-content">${sanitizeText(note.content)}</div>
-                <div class="note-card-footer">
-                    <span class="note-meta">${createdAt}</span>
-                    <button type="button" class="btn-secondary note-delete-btn" data-id="${note.id}"><i class="ri-delete-bin-line"></i> Excluir</button>
+    notesList.innerHTML = notes
+        .map((note) => {
+            const createdAt = note.created_at
+                ? new Date(note.created_at).toLocaleString('pt-BR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                })
+                : '';
+            return `
+                <div class="note-card glass">
+                    <div class="note-card-content">${escapeHTML(note.content)}</div>
+                    <div class="note-card-footer">
+                        <span class="note-meta">${escapeHTML(createdAt)}</span>
+                        <button type="button" class="btn-secondary note-delete-btn" data-id="${escapeHTML(note.id)}"><i class="ri-delete-bin-line"></i> Excluir</button>
+                    </div>
                 </div>
-            </div>
-        `;
-    })
-    .join("");
-}
-
-// =====================================================================
-// FIIs
-// =====================================================================
-
-function normalizeFiiTicker(value) {
-  return String(value || "").trim().toUpperCase();
-}
-
-function loadFiiHoldings(user) {
-  try {
-    const storageKey = user?.email ? `fii-holdings:${user.email}` : "fii-holdings:anon";
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return [];
-    const holdings = JSON.parse(raw);
-    return Array.isArray(holdings) ? holdings : [];
-  } catch (err) {
-    console.error("Erro ao carregar holdings de FIIs:", err);
-    return [];
-  }
-}
-
-function saveFiiHoldings(user, holdings) {
-  try {
-    const storageKey = user?.email ? `fii-holdings:${user.email}` : "fii-holdings:anon";
-    localStorage.setItem(storageKey, JSON.stringify(holdings));
-  } catch (err) {
-    console.error("Erro ao salvar holdings de FIIs:", err);
-  }
-}
-
-function formatFiiCurrency(value) {
-  return Number(value || 0).toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function updateFiiUI(holdings) {
-  const totalValue = holdings.reduce(
-    (sum, item) => sum + Number(item.currentPrice || 0) * Number(item.quantity || 0),
-    0,
-  );
-  const totalDividends = holdings.reduce(
-    (sum, item) => sum + Number(item.dividends || 0),
-    0,
-  );
-  const averageYield = totalValue > 0 ? (totalDividends / totalValue) * 100 : 0;
-
-  const totalValueEl = document.getElementById("fii-total-value");
-  const monthlyDividendsEl = document.getElementById("fii-monthly-dividends");
-  const averageYieldEl = document.getElementById("fii-average-yield");
-  const countEl = document.getElementById("fii-count");
-  const tbody = document.getElementById("fii-holdings-tbody");
-  const emptyState = document.getElementById("fii-empty-state");
-
-  if (totalValueEl) totalValueEl.textContent = `R$ ${formatFiiCurrency(totalValue)}`;
-  if (monthlyDividendsEl) monthlyDividendsEl.textContent = `R$ ${formatFiiCurrency(totalDividends)}`;
-  if (averageYieldEl) averageYieldEl.textContent = `${averageYield.toFixed(2)}%`;
-  if (countEl) countEl.textContent = String(holdings.length);
-
-  if (!tbody) return;
-
-  if (holdings.length === 0) {
-    tbody.innerHTML = "";
-    if (emptyState) emptyState.style.display = "block";
-    renderFiiAllocationChart([]);
-    return;
-  }
-
-  if (emptyState) emptyState.style.display = "none";
-
-  tbody.innerHTML = holdings
-    .map((item) => {
-      const totalItem = Number(item.currentPrice || 0) * Number(item.quantity || 0);
-      return `
-            <tr class="animate-fade">
-                <td>${sanitizeText(item.name)} (${sanitizeText(item.ticker)})</td>
-                <td>${Number(item.quantity || 0).toLocaleString("pt-BR")}</td>
-                <td>R$ ${formatFiiCurrency(item.averagePrice)}</td>
-                <td>R$ ${formatFiiCurrency(item.currentPrice)}</td>
-                <td>R$ ${formatFiiCurrency(totalItem)}</td>
-                <td>R$ ${formatFiiCurrency(item.dividends)}</td>
-                <td><button type="button" class="btn-secondary btn-edit-fii" data-ticker="${sanitizeText(item.ticker)}">Editar</button></td>
-            </tr>
-        `;
-    })
-    .join("");
-
-  setupFiiEditButtons();
-  renderFiiAllocationChart(holdings);
-}
-
-function setupFiiEditButtons() {
-  document.querySelectorAll(".btn-edit-fii").forEach((btn) => {
-    btn.removeEventListener("click", handleFiiEditClick);
-    btn.addEventListener("click", handleFiiEditClick);
-  });
-}
-
-function handleFiiEditClick(event) {
-  const ticker = normalizeFiiTicker(event.currentTarget.dataset.ticker);
-  const holdings = loadFiiHoldings(currentAppUser);
-  const holding = holdings.find((item) => normalizeFiiTicker(item.ticker) === ticker);
-  if (!holding) return;
-
-  document.getElementById("fii-ticker").value = holding.ticker;
-  document.getElementById("fii-name").value = holding.name;
-  document.getElementById("fii-quantity").value = holding.quantity;
-  document.getElementById("fii-average-price").value = holding.averagePrice;
-  document.getElementById("fii-current-price").value = holding.currentPrice;
-  document.getElementById("fii-dividends").value = holding.dividends;
-}
-
-function resetFiiForm() {
-  const fiiForm = document.getElementById("fii-form");
-  if (fiiForm) fiiForm.reset();
-}
-
-function loadFiiData() {
-  const holdings = loadFiiHoldings(currentAppUser);
-  updateFiiUI(holdings);
-}
-
-function sanitizeText(value) {
-  return String(value || "").replace(/[&<>"']/g, (char) => {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    }[char];
-  });
+            `;
+        })
+        .join('');
 }
