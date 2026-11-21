@@ -369,15 +369,15 @@
 
 }
 
-/* Interface Vaulta — ajustes exclusivos para telas pequenas */
+/* Interface F.S. LTDA — ajustes exclusivos para telas pequenas */
 @media (max-width: 900px) {
   body { background: radial-gradient(circle at 85% 0, #267bd5 0, transparent 29%), #07152d; }
   #dashboard-screen { padding: 10px 10px 92px; }
   .dashboard-main { padding: 0 !important; }
   header.glass { min-height: 62px; margin: 0 0 12px !important; padding: 10px 12px !important; border-radius: 18px; align-items: center !important; }
-  .header-brand-icon { width: 36px; height: 36px; border-radius: 12px; font-size: 17px; }
-  .header-kicker { display: none; }
-  .header-brand h2 { font-size: 22px; }
+  .header-brand-icon { width: 38px; height: 38px; border-radius: 12px; font-size: 17px; }
+  .header-subtitle { font-size: 10.5px; }
+  .header-brand h2 { font-size: 19px; }
   .theme-toggle { width: 36px; height: 36px; }
   .user-profile { padding: 2px; background: transparent; }
   .user-info, .logout-btn { display: none; }

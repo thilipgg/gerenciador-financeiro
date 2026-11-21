@@ -241,3 +241,92 @@ export function projectCashFlow(transactions, monthsAhead = 3, refDate = new Dat
         usedRealAccounts: hasRealBankBalance,
     };
 }
+
+// ---------------------------------------------------------------
+// LIMITE DIÁRIO E SEMANAL ATÉ O PRÓXIMO PAGAMENTO
+// ---------------------------------------------------------------
+function formatShortDayMonth(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${d}/${m}`;
+}
+
+export function calculatePaydayAllowance({
+    totalBankBalance = 0,
+    pendingExpenses = 0,
+    payday = 5,
+    useAfterPending = false,
+    referenceDate = new Date(),
+} = {}) {
+    const safePayday = Math.min(28, Math.max(1, parseInt(payday, 10) || 5));
+    const ref = referenceDate instanceof Date ? referenceDate : new Date();
+    const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+
+    let nextPayday;
+    let prevPayday;
+    if (today.getDate() < safePayday) {
+        nextPayday = new Date(today.getFullYear(), today.getMonth(), safePayday);
+        prevPayday = new Date(today.getFullYear(), today.getMonth() - 1, safePayday);
+    } else {
+        nextPayday = new Date(today.getFullYear(), today.getMonth() + 1, safePayday);
+        prevPayday = new Date(today.getFullYear(), today.getMonth(), safePayday);
+    }
+
+    const MS_PER_DAY = 86400000;
+    const daysUntilPayday = Math.max(1, Math.round((nextPayday.getTime() - today.getTime()) / MS_PER_DAY));
+    const cycleTotalDays = Math.max(1, Math.round((nextPayday.getTime() - prevPayday.getTime()) / MS_PER_DAY));
+    const cycleElapsedDays = Math.max(0, Math.min(cycleTotalDays, cycleTotalDays - daysUntilPayday));
+    const cycleElapsedPct = Math.round((cycleElapsedDays / cycleTotalDays) * 100);
+
+    const bank = Number(totalBankBalance) || 0;
+    const pending = Math.max(0, Number(pendingExpenses) || 0);
+    const baseAmount = useAfterPending ? bank - pending : bank;
+    const safeBase = Math.max(0, baseAmount);
+    const isDeficit = baseAmount < 0;
+
+    const dailyAllowance = safeBase / daysUntilPayday;
+    const weeklyAllowance = daysUntilPayday <= 7 ? safeBase : dailyAllowance * 7;
+    const weeksRemaining = daysUntilPayday / 7;
+
+    // Distribui os dias restantes em blocos de até 7 dias até a véspera do pagamento
+    const weeklySlices = [];
+    let offset = 0;
+    let sliceIndex = 1;
+    while (offset < daysUntilPayday) {
+        const chunkDays = Math.min(7, daysUntilPayday - offset);
+        const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+        const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset + chunkDays - 1);
+        const amount = (safeBase / daysUntilPayday) * chunkDays;
+
+        weeklySlices.push({
+            index: sliceIndex,
+            label: chunkDays === 7 ? `Semana ${sliceIndex}` : (sliceIndex === 1 ? 'Período atual' : `Reta final`),
+            rangeLabel: chunkDays === 1
+                ? formatShortDayMonth(start)
+                : `${formatShortDayMonth(start)} a ${formatShortDayMonth(end)}`,
+            days: chunkDays,
+            amount,
+        });
+
+        offset += chunkDays;
+        sliceIndex++;
+    }
+
+    return {
+        payday: safePayday,
+        nextPayday,
+        nextPaydayShort: formatShortDayMonth(nextPayday),
+        nextPaydayFull: nextPayday.toLocaleDateString('pt-BR'),
+        prevPaydayShort: formatShortDayMonth(prevPayday),
+        daysUntilPayday,
+        cycleTotalDays,
+        cycleElapsedPct,
+        baseAmount,
+        safeBase,
+        isDeficit,
+        dailyAllowance,
+        weeklyAllowance,
+        weeksRemaining,
+        weeklySlices,
+    };
+}

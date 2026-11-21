@@ -52,7 +52,7 @@ export function checkDueDates(transactions) {
     localStorage.setItem(STORAGE_KEY, todayKey);
 
     try {
-        new Notification('Vaulta — Contas a vencer', {
+        new Notification('F.S. LTDA — Contas a vencer', {
             body: parts.join(' '),
             icon: 'android-icon.png',
             badge: 'android-icon.png',

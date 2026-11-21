@@ -6,6 +6,7 @@ import {
 } from './db.js';
 import { renderCharts, renderProjectionChart } from './chart-manager.js';
 import {
+    calculatePaydayAllowance,
     generateBudgetStatus,
     generateInsights,
     projectCashFlow,
@@ -338,6 +339,140 @@ export function bindMonthlyAccountsDelegation(onRemoveAccount) {
         if (!id || typeof onRemoveAccount !== 'function') return;
         await onRemoveAccount(id);
     });
+
+    bindPaydayAllowanceControls();
+}
+
+const PAYDAY_DAY_KEY = 'vaulta-payday-day';
+const PAYDAY_MODE_KEY = 'vaulta-payday-mode';
+
+function getPaydayPreferences() {
+    const savedDay = parseInt(localStorage.getItem(PAYDAY_DAY_KEY) || '5', 10);
+    const payday = Number.isFinite(savedDay) ? Math.min(28, Math.max(1, savedDay)) : 5;
+    const mode = localStorage.getItem(PAYDAY_MODE_KEY) === 'after-pending' ? 'after-pending' : 'accounts';
+    return { payday, mode };
+}
+
+let paydayControlsBound = false;
+function bindPaydayAllowanceControls() {
+    if (paydayControlsBound) return;
+    paydayControlsBound = true;
+
+    const dayInput = document.getElementById('payday-day-input');
+    const modeSwitch = document.querySelector('.payday-mode-switch');
+    const { payday, mode } = getPaydayPreferences();
+
+    if (dayInput) {
+        dayInput.value = String(payday);
+        dayInput.addEventListener('change', () => {
+            const parsed = Math.min(28, Math.max(1, parseInt(dayInput.value, 10) || 5));
+            dayInput.value = String(parsed);
+            localStorage.setItem(PAYDAY_DAY_KEY, String(parsed));
+            refreshMonthlyBudgetDashboard();
+        });
+    }
+
+    if (modeSwitch) {
+        modeSwitch.querySelectorAll('.payday-mode-btn').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        modeSwitch.addEventListener('click', (e) => {
+            const btn = e.target.closest('.payday-mode-btn');
+            if (!btn) return;
+            const nextMode = btn.dataset.mode === 'after-pending' ? 'after-pending' : 'accounts';
+            localStorage.setItem(PAYDAY_MODE_KEY, nextMode);
+            modeSwitch.querySelectorAll('.payday-mode-btn').forEach((b) => {
+                b.classList.toggle('active', b.dataset.mode === nextMode);
+            });
+            playUiSelectionSound();
+            refreshMonthlyBudgetDashboard();
+        });
+    }
+}
+
+function renderPaydayAllowance(bankTotal, pendingThisMonth) {
+    const panel = document.getElementById('payday-allowance-panel');
+    if (!panel) return;
+
+    const { payday, mode } = getPaydayPreferences();
+    const useAfterPending = mode === 'after-pending';
+
+    const info = calculatePaydayAllowance({
+        totalBankBalance: bankTotal,
+        pendingExpenses: pendingThisMonth,
+        payday,
+        useAfterPending,
+    });
+
+    const badgeEl = document.getElementById('payday-countdown-badge');
+    const captionEl = document.getElementById('payday-base-caption');
+    const dailyEl = document.getElementById('val-daily-allowance');
+    const dailyHintEl = document.getElementById('hint-daily-allowance');
+    const weeklyEl = document.getElementById('val-weekly-allowance');
+    const weeklyHintEl = document.getElementById('hint-weekly-allowance');
+    const cycleRangeEl = document.getElementById('payday-cycle-range');
+    const cyclePctEl = document.getElementById('payday-cycle-pct');
+    const cycleFillEl = document.getElementById('payday-cycle-fill');
+    const weeksGridEl = document.getElementById('payday-weeks-breakdown');
+
+    const daysLabel = info.daysUntilPayday === 1 ? 'Falta 1 dia' : `Faltam ${info.daysUntilPayday} dias`;
+    if (badgeEl) badgeEl.textContent = `${daysLabel} • ${info.nextPaydayShort}`;
+
+    if (captionEl) {
+        if (info.isDeficit) {
+            captionEl.innerHTML = `<span class="payday-alert-text">Saldo insuficiente (${formatSignedCurrency(info.baseAmount)}). Evite novos gastos até o próximo pagamento.</span>`;
+        } else if (useAfterPending) {
+            captionEl.textContent = `Base: ${formatSignedCurrency(info.baseAmount)} (total em contas menos ${formatCurrency(pendingThisMonth)} pendentes).`;
+        } else {
+            captionEl.textContent = `Base: ${formatSignedCurrency(info.baseAmount)} somados nas suas contas até ${info.nextPaydayFull}.`;
+        }
+    }
+
+    if (dailyEl) {
+        dailyEl.textContent = formatCurrency(info.dailyAllowance);
+        dailyEl.classList.toggle('is-deficit', info.isDeficit || info.safeBase === 0);
+    }
+    if (dailyHintEl) {
+        dailyHintEl.textContent = `para cada um dos próximos ${info.daysUntilPayday} ${info.daysUntilPayday === 1 ? 'dia' : 'dias'}`;
+    }
+
+    if (weeklyEl) {
+        weeklyEl.textContent = formatCurrency(info.weeklyAllowance);
+        weeklyEl.classList.toggle('is-deficit', info.isDeficit || info.safeBase === 0);
+    }
+    if (weeklyHintEl) {
+        weeklyHintEl.textContent = info.daysUntilPayday <= 7
+            ? `limite total para os últimos ${info.daysUntilPayday} ${info.daysUntilPayday === 1 ? 'dia' : 'dias'}`
+            : `ritmo de 7 dias (${info.weeksRemaining.toFixed(1).replace('.', ',')} semanas restantes)`;
+    }
+
+    if (cycleRangeEl) {
+        cycleRangeEl.textContent = `Ciclo do pagamento: ${info.prevPaydayShort} → ${info.nextPaydayShort}`;
+    }
+    if (cyclePctEl) {
+        cyclePctEl.textContent = `${info.cycleElapsedPct}% percorrido`;
+    }
+    if (cycleFillEl) {
+        cycleFillEl.style.width = `${info.cycleElapsedPct}%`;
+    }
+
+    if (weeksGridEl) {
+        weeksGridEl.innerHTML = info.weeklySlices
+            .map(
+                (s) => `
+                    <div class="payday-week-pill">
+                        <div class="payday-week-top">
+                            <span class="payday-week-title">${escapeHTML(s.label)}</span>
+                            <span class="payday-week-days">${s.days} ${s.days === 1 ? 'dia' : 'dias'}</span>
+                        </div>
+                        <span class="payday-week-range">${escapeHTML(s.rangeLabel)}</span>
+                        <strong class="payday-week-amount">${formatCurrency(s.amount)}</strong>
+                    </div>
+                `
+            )
+            .join('');
+    }
 }
 
 export function refreshMonthlyBudgetDashboard() {
@@ -371,6 +506,8 @@ export function refreshMonthlyBudgetDashboard() {
     finalValueEl.textContent = formatSignedCurrency(finalBalance);
     finalValueEl.classList.toggle('valor-negativo', finalBalance < 0);
     finalValueEl.classList.toggle('valor-positivo', finalBalance >= 0);
+
+    renderPaydayAllowance(bankTotal, pendingThisMonth);
 }
 
 // =====================================================================
@@ -1254,6 +1391,9 @@ export function updateMonthDisplay() {
 
     const displayList = document.getElementById('current-month-display-list');
     if (displayList) displayList.textContent = textoFinal;
+
+    const displayMonthly = document.getElementById('current-month-display-monthly');
+    if (displayMonthly) displayMonthly.textContent = textoFinal;
 }
 
 // =====================================================================

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" id="theme-color-meta" content="#07152d" />
-    <title>Vaulta - Seu Painel de Controle Financeiro</title>
+    <title>F.S. LTDA - Seu Painel de Controle Financeiro</title>
     <meta
       name="description"
       content="Controle suas finanças pessoais com um painel interativo de alto desempenho, gráficos de despesas detalhados e sincronização na nuvem com Supabase."
@@ -16,11 +16,12 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="Vaulta" />
+    <meta name="apple-mobile-web-app-title" content="F.S. LTDA" />
 
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2" />
+    <link rel="icon" type="image/svg+xml" href="./media/logo-fs.svg?v=2" />
+    <link rel="icon" type="image/png" sizes="192x192" href="android-icon.png?v=2" />
+    <link rel="manifest" href="manifest.json?v=2" />
 
     <link
       href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
@@ -40,9 +41,11 @@
     <main id="login-screen" style="display: flex">
       <div class="login-card glass">
         <div class="login-header">
-          <div class="login-icon"><i class="ri-wallet-3-fill"></i></div>
-          <h1>Vaulta</h1>
-          <p>Acesse sua conta para continuar</p>
+          <div class="login-icon brand-logo-wrap">
+            <img src="./media/logo-fs.svg" alt="Logo F.S. LTDA" class="brand-logo-svg" />
+          </div>
+          <h1>F.S. LTDA</h1>
+          <p>Seu gestor financeiro online</p>
         </div>
 
         <form id="login-form" class="login-options">
@@ -91,12 +94,12 @@
       <div class="dashboard-shell">
         <aside class="dashboard-sidebar glass">
           <div class="sidebar-brand">
-            <div class="header-brand-icon">
-              <i class="ri-bar-chart-box-line"></i>
+            <div class="header-brand-icon brand-logo-wrap">
+              <img src="./media/logo-fs.svg" alt="Logo F.S. LTDA" class="brand-logo-svg" />
             </div>
             <div class="sidebar-brand-title">
               <h3>Painel</h3>
-              <span>Selecione uma área para navegar</span>
+              <span>Seu gestor financeiro online</span>
             </div>
           </div>
 
@@ -137,15 +140,17 @@
           <!-- Header Principal -->
           <header class="glass animate-fade">
             <div class="header-brand">
-              <div class="header-brand-icon">
-                <i class="ri-stack-line"></i>
+              <div class="header-brand-icon brand-logo-wrap">
+                <img src="./media/logo-fs.svg" alt="Logo F.S. LTDA" class="brand-logo-svg" />
               </div>
-              <div>
-                <span class="header-kicker">Sua central financeira</span>
-                <h2>Vaulta</h2>
-                <span id="demo-badge" class="demo-badge" style="display: none"
-                  >Modo Visitante</span
-                >
+              <div class="header-brand-text">
+                <div class="header-brand-row">
+                  <h2>F.S. LTDA</h2>
+                  <span id="demo-badge" class="demo-badge" style="display: none"
+                    >Modo Visitante</span
+                  >
+                </div>
+                <span class="header-subtitle">Seu gestor financeiro online</span>
               </div>
             </div>
 
@@ -677,6 +682,43 @@
 
             <!-- ========== ABA 3: CONTROLE MENSAL ========== -->
             <section id="tab-monthly" class="tab-page">
+              <div
+                class="month-selector-container glass animate-fade"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 12px 20px;
+                  margin-bottom: 20px;
+                  border-radius: 12px;
+                "
+              >
+                <button
+                  type="button"
+                  id="btn-prev-month-monthly"
+                  class="btn-secondary"
+                  title="Mês Anterior"
+                  aria-label="Mês anterior"
+                >
+                  <i class="ri-arrow-left-s-line"></i>
+                </button>
+                <h3
+                  id="current-month-display-monthly"
+                  style="margin: 0; min-width: 160px; text-align: center"
+                >
+                  Carregando...
+                </h3>
+                <button
+                  type="button"
+                  id="btn-next-month-monthly"
+                  class="btn-secondary"
+                  title="Próximo Mês"
+                  aria-label="Próximo mês"
+                >
+                  <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+
               <div class="section-header monthly-header">
                 <div>
                   <h3>Controle Mensal</h3>
@@ -728,6 +770,88 @@
                       <strong class="span-valor">R$ 0,00</strong>
                     </div>
                   </div>
+                </div>
+
+                <!-- ========== CONTROLE DIÁRIO E SEMANAL ATÉ O PAGAMENTO ========== -->
+                <div id="payday-allowance-panel" class="payday-panel glass">
+                  <div class="payday-header">
+                    <div class="payday-title-group">
+                      <div class="payday-title-row">
+                        <h4><i class="ri-calendar-todo-line"></i> Quanto posso gastar até o pagamento</h4>
+                        <span id="payday-countdown-badge" class="payday-countdown-badge">Faltam -- dias</span>
+                      </div>
+                      <p id="payday-base-caption" class="text-muted">
+                        Cálculo automático com base no saldo somado das suas contas.
+                      </p>
+                    </div>
+
+                    <div class="payday-controls">
+                      <label class="payday-day-picker" for="payday-day-input" title="Dia do próximo pagamento">
+                        <span>Dia pagto</span>
+                        <input
+                          id="payday-day-input"
+                          type="number"
+                          min="1"
+                          max="28"
+                          value="5"
+                          inputmode="numeric"
+                        />
+                      </label>
+
+                      <div class="payday-mode-switch" role="group" aria-label="Base de cálculo do limite">
+                        <button
+                          type="button"
+                          class="payday-mode-btn active"
+                          data-mode="accounts"
+                        >
+                          Saldo em contas
+                        </button>
+                        <button
+                          type="button"
+                          class="payday-mode-btn"
+                          data-mode="after-pending"
+                        >
+                          Após pendências
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="payday-metrics-grid">
+                    <div class="payday-metric-card payday-metric-daily">
+                      <div class="payday-metric-icon">
+                        <i class="ri-sun-line"></i>
+                      </div>
+                      <div class="payday-metric-body">
+                        <span class="payday-metric-label">Limite por dia</span>
+                        <strong id="val-daily-allowance" class="payday-metric-value">R$ 0,00</strong>
+                        <span id="hint-daily-allowance" class="payday-metric-hint">por dia até o dia 05</span>
+                      </div>
+                    </div>
+
+                    <div class="payday-metric-card payday-metric-weekly">
+                      <div class="payday-metric-icon">
+                        <i class="ri-calendar-2-line"></i>
+                      </div>
+                      <div class="payday-metric-body">
+                        <span class="payday-metric-label">Limite por semana</span>
+                        <strong id="val-weekly-allowance" class="payday-metric-value">R$ 0,00</strong>
+                        <span id="hint-weekly-allowance" class="payday-metric-hint">média para 7 dias</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="payday-cycle-wrap">
+                    <div class="payday-cycle-meta">
+                      <span id="payday-cycle-range">Ciclo: -- → --</span>
+                      <span id="payday-cycle-pct">0% do ciclo</span>
+                    </div>
+                    <div class="payday-cycle-bar">
+                      <div id="payday-cycle-fill" class="payday-cycle-fill" style="width: 0%"></div>
+                    </div>
+                  </div>
+
+                  <div id="payday-weeks-breakdown" class="payday-weeks-grid"></div>
                 </div>
 
                 <div class="monthly-accounts-panel glass">

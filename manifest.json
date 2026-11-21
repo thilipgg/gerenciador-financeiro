@@ -1,20 +1,32 @@
 {
-  "name": "Vaulta — Gestão Financeira",
-  "short_name": "Vaulta",
+  "id": "./",
+  "name": "F.S. LTDA — Seu gestor financeiro online",
+  "short_name": "F.S. LTDA",
+  "description": "Seu gestor financeiro online com controle de lançamentos, orçamentos, metas e limite até o pagamento.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#07152d",
   "theme_color": "#07152d",
   "icons": [
     {
-      "src": "android-icon.png",
+      "src": "android-icon.png?v=2",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-512.png?v=2",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

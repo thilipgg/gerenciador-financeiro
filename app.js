@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const { year, month } = getCurrentSelection();
-        const filename = `vaulta-transacoes-${getMonthKey(year, month)}.csv`;
+        const filename = `fs-ltda-transacoes-${getMonthKey(year, month)}.csv`;
         if (exportTransactionsCSV(monthList, filename)) {
             playSuccessSound();
             showToast('CSV do mês exportado.', 'success');
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Nada para exportar.', 'error');
             return;
         }
-        if (exportTransactionsCSV(list, `vaulta-transacoes-completo-${formatDateISO(new Date())}.csv`)) {
+        if (exportTransactionsCSV(list, `fs-ltda-transacoes-completo-${formatDateISO(new Date())}.csv`)) {
             playSuccessSound();
             showToast('CSV completo exportado.', 'success');
             exportModal?.classList.remove('active');
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Não há anotações para exportar.', 'error');
             return;
         }
-        if (exportNotesCSV(currentNotesCache, `vaulta-notas-${formatDateISO(new Date())}.csv`)) {
+        if (exportNotesCSV(currentNotesCache, `fs-ltda-notas-${formatDateISO(new Date())}.csv`)) {
             playSuccessSound();
             showToast('Anotações exportadas em CSV.', 'success');
             exportModal?.classList.remove('active');
@@ -878,6 +878,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-next-month')?.addEventListener('click', () => changeSelectedMonth(1));
     document.getElementById('btn-prev-month-list')?.addEventListener('click', () => changeSelectedMonth(-1));
     document.getElementById('btn-next-month-list')?.addEventListener('click', () => changeSelectedMonth(1));
+    document.getElementById('btn-prev-month-monthly')?.addEventListener('click', () => changeSelectedMonth(-1));
+    document.getElementById('btn-next-month-monthly')?.addEventListener('click', () => changeSelectedMonth(1));
 
     // ---- Ordenação da tabela ----
     document.querySelectorAll('th.sortable').forEach((th) => {

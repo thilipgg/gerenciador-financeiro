@@ -54,7 +54,7 @@ export function exportTransactionsCSV(transactions, filename) {
     if (!transactions || transactions.length === 0) return false;
 
     const csv = buildTransactionsCSV(transactions);
-    const defaultName = `vaulta-transacoes-${new Date().toISOString().slice(0, 10)}.csv`;
+    const defaultName = `fs-ltda-transacoes-${new Date().toISOString().slice(0, 10)}.csv`;
     triggerCSVDownload(csv, filename || defaultName);
     return true;
 }
@@ -67,6 +67,6 @@ export function exportNotesCSV(notes, filename) {
         n.content || '',
     ]);
     const csv = [header, ...rows].map((r) => r.map(escapeCSV).join(';')).join('\r\n');
-    triggerCSVDownload(csv, filename || 'vaulta-notas.csv');
+    triggerCSVDownload(csv, filename || 'fs-ltda-notas.csv');
     return true;
 }
