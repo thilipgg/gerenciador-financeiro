@@ -120,6 +120,10 @@
               <i class="ri-calendar-line"></i>
               Controle Mensal
             </button>
+            <button type="button" class="sidebar-tab" data-tab="notes">
+              <i class="ri-sticky-note-line"></i>
+              Anotações
+            </button>
           </nav>
 
           <div class="sidebar-footer">
@@ -248,55 +252,66 @@
               <i class="ri-calendar-line"></i>
               <span>Mensal</span>
             </button>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-tab="notes"
+              aria-controls="tab-notes"
+            >
+              <i class="ri-sticky-note-line"></i>
+              <span>Notas</span>
+            </button>
           </div>
 
           <div class="dashboard-page-content">
             <!-- ========== ABA 1: VISÃO GERAL ========== -->
             <section id="tab-overview" class="tab-page active">
-              <div
-                class="month-selector-container glass animate-fade"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  padding: 12px 20px;
-                  margin-bottom: 20px;
-                  border-radius: 12px;
-                "
-              >
-                <button
-                  type="button"
-                  id="btn-prev-month"
-                  class="btn-secondary"
-                  title="Mês Anterior"
-                  aria-label="Mês anterior"
+              <div class="overview-top-bar">
+                <div
+                  class="month-selector-container glass animate-fade"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 12px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 12px;
+                  "
                 >
-                  <i class="ri-arrow-left-s-line"></i>
-                </button>
-                <h3
-                  id="current-month-display"
-                  style="margin: 0; min-width: 160px; text-align: center"
-                >
-                  Carregando...
-                </h3>
-                <button
-                  type="button"
-                  id="btn-next-month"
-                  class="btn-secondary"
-                  title="Próximo Mês"
-                  aria-label="Próximo mês"
-                >
-                  <i class="ri-arrow-right-s-line"></i>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    id="btn-prev-month"
+                    class="btn-secondary"
+                    title="Mês Anterior"
+                    aria-label="Mês anterior"
+                  >
+                    <i class="ri-arrow-left-s-line"></i>
+                  </button>
+                  <h3
+                    id="current-month-display"
+                    style="margin: 0; min-width: 160px; text-align: center"
+                  >
+                    Carregando...
+                  </h3>
+                  <button
+                    type="button"
+                    id="btn-next-month"
+                    class="btn-secondary"
+                    title="Próximo Mês"
+                    aria-label="Próximo mês"
+                  >
+                    <i class="ri-arrow-right-s-line"></i>
+                  </button>
+                </div>
 
-              <div class="section-header">
-                <div>
-                  <h3>Visão Geral</h3>
-                  <p class="text-muted">
-                    Resumo rápido das finanças, principais indicadores e
-                    evolução.
-                  </p>
+                <div class="section-header overview-header">
+                  <div>
+                    <h3>Visão Geral</h3>
+                    <p class="text-muted">
+                      Resumo rápido das finanças, principais indicadores e
+                      evolução.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -478,50 +493,6 @@
                     style="height: 240px !important"
                   >
                     <canvas id="projectionChart"></canvas>
-                  </div>
-                </div>
-              </section>
-
-              <!-- ========== ANOTAÇÕES ========== -->
-              <section class="notes-section animate-fade">
-                <div class="section-header">
-                  <div>
-                    <h3>Anotações</h3>
-                    <p class="text-muted">
-                      Registre observações financeiras e salve diretamente na sua conta.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="notes-grid">
-                  <div class="notes-input-card glass">
-                    <h4 style="margin-bottom: 10px">Nova anotação</h4>
-                    <form id="note-form">
-                      <textarea
-                        id="note-content"
-                        class="note-textarea"
-                        placeholder="Escreva sua anotação aqui..."
-                        rows="7"
-                        required
-                      ></textarea>
-                      <div class="notes-actions">
-                        <button type="submit" id="save-note-btn" class="btn-primary">
-                          Salvar Anotação
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  <div class="notes-list-card glass">
-                    <div class="section-header" style="margin-bottom: 14px">
-                      <div>
-                        <h4>Últimas notas</h4>
-                        <p class="text-muted">
-                          Suas notas salvas aparecem aqui com data de registro.
-                        </p>
-                      </div>
-                    </div>
-                    <div id="notes-list" class="notes-list"></div>
                   </div>
                 </div>
               </section>
@@ -875,6 +846,63 @@
                   </div>
                 </div>
               </div>
+            </section>
+
+            <!-- ========== ABA 4: ANOTAÇÕES ========== -->
+            <section id="tab-notes" class="tab-page">
+              <section class="notes-section notes-tab-section animate-fade">
+                <div class="section-header notes-tab-header">
+                  <div>
+                    <h3>Anotações</h3>
+                    <p class="text-muted">
+                      Registre, edite e pesquise observações financeiras salvas diretamente na sua conta.
+                    </p>
+                  </div>
+                  <span id="notes-count-badge" class="notes-count-badge">0 salvas</span>
+                </div>
+
+                <div class="notes-grid">
+                  <div class="notes-input-card glass">
+                    <h4 style="margin-bottom: 10px">Nova anotação</h4>
+                    <form id="note-form">
+                      <textarea
+                        id="note-content"
+                        class="note-textarea"
+                        placeholder="Escreva sua anotação aqui..."
+                        rows="4"
+                        required
+                      ></textarea>
+                      <div class="notes-actions">
+                        <button type="submit" id="save-note-btn" class="btn-primary">
+                          <i class="ri-save-line"></i> Salvar Anotação
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div class="notes-list-card glass">
+                    <div class="notes-list-toolbar">
+                      <div>
+                        <h4>Últimas notas</h4>
+                        <p class="text-muted">
+                          Clique em editar para atualizar qualquer anotação salva.
+                        </p>
+                      </div>
+                      <div class="notes-search-wrap">
+                        <i class="ri-search-line"></i>
+                        <input
+                          id="notes-search-input"
+                          type="text"
+                          class="notes-search-input"
+                          placeholder="Buscar nas anotações..."
+                          aria-label="Buscar nas anotações"
+                        />
+                      </div>
+                    </div>
+                    <div id="notes-list" class="notes-list"></div>
+                  </div>
+                </div>
+              </section>
             </section>
           </div>
         </div>

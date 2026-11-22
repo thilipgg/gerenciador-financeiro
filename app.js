@@ -23,6 +23,7 @@ import {
     setDemoMode,
     supabase,
     updateGoalContribution,
+    updateNote,
     updateTransaction,
     upsertBudget,
 } from './db.js';
@@ -85,6 +86,8 @@ let currentAppUser = null;
 let currentBudgets = [];
 let currentGoals = [];
 let currentNotesCache = [];
+let editingNoteId = null;
+let notesSearchTerm = '';
 
 // =====================================================================
 // PROTEÇÃO CONTRA DOUBLE-SUBMIT
@@ -1087,7 +1090,60 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.getElementById('notes-search-input')?.addEventListener('input', (e) => {
+        notesSearchTerm = e.target.value || '';
+        renderNotes(currentNotesCache);
+    });
+
     document.getElementById('notes-list')?.addEventListener('click', async (event) => {
+        const editButton = event.target.closest('.note-edit-btn');
+        if (editButton) {
+            const noteId = editButton.dataset.id;
+            if (!noteId) return;
+            editingNoteId = noteId;
+            renderNotes(currentNotesCache);
+            const editTextarea = document.querySelector(`.note-edit-textarea[data-id="${CSS.escape(noteId)}"]`);
+            if (editTextarea) {
+                editTextarea.focus();
+                editTextarea.setSelectionRange(editTextarea.value.length, editTextarea.value.length);
+            }
+            return;
+        }
+
+        const cancelEditButton = event.target.closest('.note-cancel-edit-btn');
+        if (cancelEditButton) {
+            editingNoteId = null;
+            renderNotes(currentNotesCache);
+            return;
+        }
+
+        const saveEditButton = event.target.closest('.note-save-edit-btn');
+        if (saveEditButton) {
+            const noteId = saveEditButton.dataset.id;
+            if (!noteId) return;
+            const editTextarea = document.querySelector(`.note-edit-textarea[data-id="${CSS.escape(noteId)}"]`);
+            const newContent = editTextarea?.value.trim();
+            if (!newContent) {
+                showToast('A anotação não pode ficar vazia.', 'error');
+                return;
+            }
+
+            await withSubmitLock(saveEditButton, async () => {
+                try {
+                    await updateNote(noteId, newContent);
+                    editingNoteId = null;
+                    showToast('Anotação atualizada!', 'success');
+                    playSuccessSound();
+                    currentNotesCache = await fetchNotes();
+                    renderNotes(currentNotesCache);
+                } catch (err) {
+                    console.error(err);
+                    showToast('Erro ao atualizar nota: ' + err.message, 'error');
+                }
+            });
+            return;
+        }
+
         const deleteButton = event.target.closest('.note-delete-btn');
         if (!deleteButton) return;
 
@@ -1102,6 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await removeNote(noteId);
+            if (String(editingNoteId) === String(noteId)) editingNoteId = null;
             playDeleteSound();
             showToast('Anotação excluída.', 'success');
             currentNotesCache = await fetchNotes();
@@ -1369,25 +1426,59 @@ function renderNotes(notes) {
     const notesList = document.getElementById('notes-list');
     if (!notesList) return;
 
-    if (!notes || notes.length === 0) {
-        notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação registrada. Use o formulário ao lado para salvar uma nota.</div>`;
+    const allNotes = Array.isArray(notes) ? notes : [];
+    const badge = document.getElementById('notes-count-badge');
+    if (badge) {
+        badge.textContent = allNotes.length === 1 ? '1 salva' : `${allNotes.length} salvas`;
+    }
+
+    if (allNotes.length === 0) {
+        notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação registrada. Use o formulário acima para salvar uma nota.</div>`;
         return;
     }
 
-    notesList.innerHTML = notes
+    const query = notesSearchTerm.trim().toLowerCase();
+    const filtered = query
+        ? allNotes.filter((n) => String(n.content || '').toLowerCase().includes(query))
+        : allNotes;
+
+    if (filtered.length === 0) {
+        notesList.innerHTML = `<div class="notes-empty">Nenhuma anotação encontrada para "${escapeHTML(notesSearchTerm.trim())}".</div>`;
+        return;
+    }
+
+    notesList.innerHTML = filtered
         .map((note) => {
+            const safeId = escapeHTML(note.id);
             const createdAt = note.created_at
                 ? new Date(note.created_at).toLocaleString('pt-BR', {
                     dateStyle: 'short',
                     timeStyle: 'short',
                 })
                 : '';
+
+            if (String(editingNoteId) === String(note.id)) {
+                return `
+                    <div class="note-card glass is-editing">
+                        <div class="note-edit-label"><i class="ri-edit-line"></i> Editando anotação</div>
+                        <textarea class="note-textarea note-edit-textarea" data-id="${safeId}" rows="4">${escapeHTML(note.content)}</textarea>
+                        <div class="note-edit-actions">
+                            <button type="button" class="btn-secondary note-cancel-edit-btn">Cancelar</button>
+                            <button type="button" class="btn-primary note-save-edit-btn" data-id="${safeId}"><i class="ri-check-line"></i> Salvar edição</button>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="note-card glass">
                     <div class="note-card-content">${escapeHTML(note.content)}</div>
                     <div class="note-card-footer">
                         <span class="note-meta">${escapeHTML(createdAt)}</span>
-                        <button type="button" class="btn-secondary note-delete-btn" data-id="${escapeHTML(note.id)}"><i class="ri-delete-bin-line"></i> Excluir</button>
+                        <div class="note-card-actions">
+                            <button type="button" class="btn-secondary note-edit-btn" data-id="${safeId}" title="Editar anotação"><i class="ri-edit-line"></i> Editar</button>
+                            <button type="button" class="btn-secondary note-delete-btn" data-id="${safeId}" title="Excluir anotação"><i class="ri-delete-bin-line"></i> Excluir</button>
+                        </div>
                     </div>
                 </div>
             `;

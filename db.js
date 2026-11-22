@@ -732,6 +732,32 @@ export async function insertNote(note) {
     return data[0];
 }
 
+export async function updateNote(id, content) {
+    if (isDemoMode()) {
+        const store = readDemoStore();
+        const idx = store.notes.findIndex((n) => String(n.id) === String(id));
+        if (idx === -1) throw new Error('Anotação não encontrada');
+        store.notes[idx] = {
+            ...store.notes[idx],
+            content,
+        };
+        writeDemoStore(store);
+        return store.notes[idx];
+    }
+
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const { data, error } = await supabase
+        .from('notes')
+        .update({ content })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select();
+    if (error) throw error;
+    return data && data[0] ? data[0] : { id, content };
+}
+
 export async function removeNote(id) {
     if (isDemoMode()) {
         const store = readDemoStore();

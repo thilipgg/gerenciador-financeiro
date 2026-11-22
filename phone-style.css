@@ -654,4 +654,287 @@
     font-size: 12px !important;
     border-radius: 7px !important;
   }
+
+  /* ==========================================================================
+     MODELO B — MÁXIMA DENSIDADE (MOBILE / VISÃO GERAL + ABA ANOTAÇÕES)
+     ========================================================================== */
+  #tab-overview .overview-top-bar {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  #tab-overview .overview-header {
+    margin: 0 !important;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  #tab-overview .overview-header h3 {
+    font-size: 15px !important;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+
+  #tab-overview .month-selector-container {
+    margin: 0 !important;
+    padding: 4px 6px !important;
+    border-radius: 10px !important;
+    gap: 6px;
+    width: auto !important;
+    flex-shrink: 0;
+  }
+
+  #tab-overview .month-selector-container .btn-secondary {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    font-size: 14px !important;
+  }
+
+  #current-month-display {
+    min-width: 0 !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  /* Resumo Visão Geral: Saldo compacto + 3 KPIs em linha (sem espaço vazio) */
+  #tab-overview section.summary-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  #tab-overview .widget-balance.glass {
+    grid-column: 1 / -1 !important;
+    min-height: auto !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    gap: 8px !important;
+  }
+
+  #tab-overview .widget-balance .widget-label {
+    font-size: 10.5px !important;
+    margin-bottom: 0 !important;
+  }
+
+  #tab-overview .widget-balance .widget-value {
+    font-size: 23px !important;
+    line-height: 1.15 !important;
+    margin: 2px 0 !important;
+  }
+
+  #tab-overview .widget-balance .widget-info::after {
+    margin-top: 4px !important;
+    padding: 2px 8px !important;
+    font-size: 9.5px !important;
+  }
+
+  #tab-overview .balance-orb {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 11px !important;
+    font-size: 18px !important;
+    flex-shrink: 0;
+  }
+
+  #tab-overview .widget-income.glass,
+  #tab-overview .widget-expense.glass,
+  #tab-overview .widget-warning.glass {
+    min-height: auto !important;
+    padding: 8px 5px !important;
+    border-radius: 12px !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0 !important;
+  }
+
+  #tab-overview .widget-income .widget-icon,
+  #tab-overview .widget-expense .widget-icon,
+  #tab-overview .widget-warning .widget-icon {
+    display: none !important;
+  }
+
+  #tab-overview .widget-income .widget-info,
+  #tab-overview .widget-expense .widget-info,
+  #tab-overview .widget-warning .widget-info {
+    align-items: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    min-width: 0;
+  }
+
+  #tab-overview .widget-income .widget-label,
+  #tab-overview .widget-expense .widget-label,
+  #tab-overview .widget-warning .widget-label {
+    font-size: 9.5px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  #tab-overview .widget-income .widget-value,
+  #tab-overview .widget-expense .widget-value,
+  #tab-overview .widget-warning .widget-value {
+    font-size: 12.5px !important;
+    line-height: 1.15 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Gráficos e seções secundárias da Visão Geral compactos */
+  #tab-overview section.charts-grid {
+    margin-top: 8px !important;
+    gap: 8px !important;
+  }
+
+  #tab-overview .chart-card.glass {
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  #tab-overview .chart-card-header {
+    margin-bottom: 6px !important;
+  }
+
+  #tab-overview .chart-card-title {
+    font-size: 12.5px !important;
+  }
+
+  #tab-overview .chart-canvas-container {
+    height: 150px !important;
+  }
+
+  #tab-overview .insights-section,
+  #tab-overview .budgets-section,
+  #tab-overview .goals-section {
+    margin-top: 10px !important;
+  }
+
+  #tab-overview .insights-section .section-header,
+  #tab-overview .budgets-section .section-header,
+  #tab-overview .goals-section .section-header {
+    margin: 0 2px 6px !important;
+  }
+
+  #tab-overview .insights-section .section-header h3,
+  #tab-overview .budgets-section .section-header h3,
+  #tab-overview .goals-section .section-header h3 {
+    font-size: 14px !important;
+  }
+
+  #tab-overview .section-header.section-header-actions .btn-primary {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    height: auto !important;
+  }
+
+  /* Aba 4: Anotações compacta no mobile */
+  #tab-notes .notes-tab-section {
+    margin-top: 0 !important;
+  }
+
+  #tab-notes .notes-tab-header {
+    margin: 0 2px 8px !important;
+  }
+
+  #tab-notes .notes-tab-header h3 {
+    font-size: 15px !important;
+    margin: 0 !important;
+  }
+
+  #tab-notes .notes-count-badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+  }
+
+  #tab-notes .notes-grid {
+    gap: 8px !important;
+  }
+
+  #tab-notes .notes-input-card,
+  #tab-notes .notes-list-card {
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  #tab-notes .notes-input-card h4,
+  #tab-notes .notes-list-toolbar h4 {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  #tab-notes .notes-list-toolbar p {
+    display: none;
+  }
+
+  #tab-notes .notes-list-toolbar {
+    margin-bottom: 8px !important;
+    gap: 8px !important;
+  }
+
+  #tab-notes .notes-search-wrap {
+    max-width: none;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  #tab-notes .note-textarea {
+    min-height: 76px !important;
+    padding: 8px 10px !important;
+    font-size: 12.5px !important;
+  }
+
+  #tab-notes .notes-actions {
+    margin-top: 8px;
+  }
+
+  #tab-notes #save-note-btn {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    height: auto !important;
+  }
+
+  #tab-notes .note-card {
+    padding: 10px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  #tab-notes .note-card-content {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  #tab-notes .note-meta {
+    font-size: 10.5px;
+  }
+
+  #tab-notes .note-card-actions {
+    gap: 6px;
+  }
+
+  #tab-notes .note-edit-btn,
+  #tab-notes .note-delete-btn {
+    width: auto !important;
+    padding: 5px 9px !important;
+    font-size: 11px !important;
+    height: auto !important;
+  }
+
+  #tab-notes .note-edit-actions .btn-secondary,
+  #tab-notes .note-edit-actions .btn-primary {
+    width: auto !important;
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+    height: auto !important;
+  }
 }
