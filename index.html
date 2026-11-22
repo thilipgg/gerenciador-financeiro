@@ -682,50 +682,52 @@
 
             <!-- ========== ABA 3: CONTROLE MENSAL ========== -->
             <section id="tab-monthly" class="tab-page">
-              <div
-                class="month-selector-container glass animate-fade"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  padding: 12px 20px;
-                  margin-bottom: 20px;
-                  border-radius: 12px;
-                "
-              >
-                <button
-                  type="button"
-                  id="btn-prev-month-monthly"
-                  class="btn-secondary"
-                  title="Mês Anterior"
-                  aria-label="Mês anterior"
+              <div class="monthly-top-bar">
+                <div
+                  class="month-selector-container glass animate-fade"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 12px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 12px;
+                  "
                 >
-                  <i class="ri-arrow-left-s-line"></i>
-                </button>
-                <h3
-                  id="current-month-display-monthly"
-                  style="margin: 0; min-width: 160px; text-align: center"
-                >
-                  Carregando...
-                </h3>
-                <button
-                  type="button"
-                  id="btn-next-month-monthly"
-                  class="btn-secondary"
-                  title="Próximo Mês"
-                  aria-label="Próximo mês"
-                >
-                  <i class="ri-arrow-right-s-line"></i>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    id="btn-prev-month-monthly"
+                    class="btn-secondary"
+                    title="Mês Anterior"
+                    aria-label="Mês anterior"
+                  >
+                    <i class="ri-arrow-left-s-line"></i>
+                  </button>
+                  <h3
+                    id="current-month-display-monthly"
+                    style="margin: 0; min-width: 160px; text-align: center"
+                  >
+                    Carregando...
+                  </h3>
+                  <button
+                    type="button"
+                    id="btn-next-month-monthly"
+                    class="btn-secondary"
+                    title="Próximo Mês"
+                    aria-label="Próximo mês"
+                  >
+                    <i class="ri-arrow-right-s-line"></i>
+                  </button>
+                </div>
 
-              <div class="section-header monthly-header">
-                <div>
-                  <h3>Controle Mensal</h3>
-                  <p class="text-muted">
-                    Acompanhe o saldo disponível em cada conta e veja quanto
-                    sobra após as despesas pendentes.
-                  </p>
+                <div class="section-header monthly-header">
+                  <div>
+                    <h3>Controle Mensal</h3>
+                    <p class="text-muted">
+                      Acompanhe o saldo disponível em cada conta e veja quanto
+                      sobra após as despesas pendentes.
+                    </p>
+                  </div>
                 </div>
               </div>
               <div class="monthly-dashboard">

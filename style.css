@@ -3593,22 +3593,142 @@ button.tx-status.btn-toggle-status i {
 
 @media (max-width: 900px) {
   .payday-panel {
-    padding: 16px;
-    border-radius: 18px;
+    padding: 10px;
+    border-radius: 14px;
+    gap: 8px;
   }
-  .payday-metrics-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  .payday-header {
+    gap: 6px;
   }
-  .payday-metric-value {
-    font-size: 22px;
+  .payday-title-group {
+    width: 100%;
+    gap: 2px;
+  }
+  .payday-title-row {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .payday-title-row h4 {
+    font-size: 12.5px;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .payday-title-row h4 i {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .payday-countdown-badge {
+    padding: 2px 7px;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  #payday-base-caption {
+    display: none;
+  }
+  #payday-base-caption:has(.payday-alert-text) {
+    display: block;
+    font-size: 10.5px;
+    line-height: 1.25;
   }
   .payday-controls {
     width: 100%;
+    flex-wrap: nowrap;
     justify-content: space-between;
+    gap: 6px;
+  }
+  .payday-day-picker {
+    padding: 3px 7px;
+    font-size: 10.5px;
+    gap: 5px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .payday-day-picker input {
+    width: 32px;
+    font-size: 11.5px;
+    padding: 2px;
+  }
+  .payday-mode-switch {
+    flex: 1;
+    display: flex;
+    padding: 2px;
+    border-radius: 8px;
+  }
+  .payday-mode-btn {
+    flex: 1;
+    padding: 4px 6px;
+    font-size: 10.5px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .payday-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .payday-metric-card {
+    padding: 8px 10px;
+    border-radius: 11px;
+    gap: 0;
+  }
+  .payday-metric-icon {
+    display: none;
+  }
+  .payday-metric-label {
+    font-size: 10px;
+  }
+  .payday-metric-value {
+    font-size: 17px;
+    line-height: 1.15;
+  }
+  .payday-metric-hint {
+    display: none;
+  }
+  .payday-cycle-wrap {
+    gap: 3px;
+  }
+  .payday-cycle-meta {
+    font-size: 10px;
+  }
+  .payday-cycle-bar {
+    height: 5px;
   }
   .payday-weeks-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .payday-week-pill {
+    padding: 6px 8px;
+    border-radius: 9px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .payday-week-top {
+    gap: 4px;
+    min-width: 0;
+  }
+  .payday-week-title {
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .payday-week-days {
+    font-size: 9.5px;
+    padding: 1px 4px;
+    white-space: nowrap;
+  }
+  .payday-week-range {
+    display: none;
+  }
+  .payday-week-amount {
+    font-size: 12px;
+    margin-top: 0;
+    white-space: nowrap;
   }
 }
 

@@ -431,4 +431,227 @@
     color: var(--primary);
     box-shadow: none;
   }
+
+  /* ==========================================================================
+     MODELO B — MÁXIMA DENSIDADE (MOBILE / CONTROLE MENSAL)
+     ========================================================================== */
+  #dashboard-screen {
+    padding: 8px 8px 66px !important;
+  }
+
+  header.glass {
+    min-height: 46px !important;
+    margin: 0 0 8px !important;
+    padding: 6px 10px !important;
+    border-radius: 14px !important;
+    align-items: center !important;
+  }
+
+  .header-brand {
+    gap: 8px !important;
+    min-width: 0;
+  }
+
+  .header-brand-icon {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 9px !important;
+    font-size: 14px !important;
+  }
+
+  .header-brand h2 {
+    font-size: 14px !important;
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+
+  .header-subtitle {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+  }
+
+  .sound-toggle,
+  .theme-toggle {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+  }
+
+  #user-avatar,
+  .user-avatar {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .mobile-tab-bar {
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .mobile-tab-bar .sidebar-tab {
+    padding: 5px 4px !important;
+    border-radius: 10px !important;
+  }
+
+  .mobile-tab-bar .sidebar-tab i {
+    font-size: 17px !important;
+  }
+
+  .mobile-tab-bar .sidebar-tab span {
+    margin-top: 2px !important;
+    font-size: 9px !important;
+  }
+
+  /* Barra unificada: Controle Mensal + Seletor de Mês */
+  #tab-monthly .monthly-top-bar {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  #tab-monthly .monthly-header {
+    margin: 0 !important;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  #tab-monthly .monthly-header h3 {
+    font-size: 15px !important;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+
+  #tab-monthly .month-selector-container {
+    margin: 0 !important;
+    padding: 4px 6px !important;
+    border-radius: 10px !important;
+    gap: 6px;
+    width: auto !important;
+    flex-shrink: 0;
+  }
+
+  #tab-monthly .month-selector-container .btn-secondary {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    font-size: 14px !important;
+  }
+
+  #current-month-display-monthly {
+    min-width: 0 !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  /* Painel Controle Mensal ultra-compacto */
+  #tab-monthly .monthly-dashboard {
+    gap: 8px !important;
+  }
+
+  #tab-monthly .card-calculo {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    border-radius: 14px !important;
+  }
+
+  #tab-monthly .monthly-summary-card {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    padding: 7px 4px !important;
+    border-radius: 10px !important;
+  }
+
+  #tab-monthly .monthly-summary-icon {
+    display: none !important;
+  }
+
+  #tab-monthly .monthly-summary-card > div {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #tab-monthly .monthly-summary-label {
+    font-size: 9.5px !important;
+    margin-bottom: 2px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #tab-monthly .monthly-summary-card .span-valor {
+    font-size: 13px !important;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Saldos das Contas compacto */
+  #tab-monthly .monthly-accounts-panel {
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  #tab-monthly .monthly-panel-heading {
+    margin-bottom: 8px !important;
+    gap: 8px;
+  }
+
+  #tab-monthly .monthly-panel-heading h4 {
+    font-size: 13px !important;
+    margin-bottom: 0 !important;
+  }
+
+  #tab-monthly .monthly-panel-heading p {
+    display: none !important;
+  }
+
+  #tab-monthly #open-account-modal-btn {
+    padding: 5px 9px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    height: auto !important;
+  }
+
+  #tab-monthly .div-saldo {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  #tab-monthly .monthly-account-card {
+    padding: 7px 8px !important;
+    border-radius: 10px !important;
+  }
+
+  #tab-monthly .monthly-account-top {
+    margin-bottom: 4px !important;
+  }
+
+  #tab-monthly .monthly-account-name {
+    font-size: 11px !important;
+    margin-bottom: 0 !important;
+    gap: 4px;
+  }
+
+  #tab-monthly .monthly-account-name i {
+    font-size: 13px !important;
+  }
+
+  #tab-monthly .monthly-account-input {
+    padding: 5px 8px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+    border-radius: 7px !important;
+  }
 }
