@@ -102,6 +102,124 @@ export function generateInsights(transactions, refDate = new Date()) {
 }
 
 // ---------------------------------------------------------------
+// COMPARATIVO MÊS A MÊS POR CONTA / LANÇAMENTO
+// ---------------------------------------------------------------
+const SHORT_MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function normalizeBillKey(description) {
+    return String(description || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+}
+
+export function compareTransactionsMonthOverMonth(transactions, refDate = new Date()) {
+    const ref = normalizeRefDate(refDate);
+    const year = ref.getFullYear();
+    const month = ref.getMonth();
+    const prev = new Date(year, month - 1, 1);
+    const prevYear = prev.getFullYear();
+    const prevMonth = prev.getMonth();
+
+    const list = Array.isArray(transactions) ? transactions : [];
+    const curMap = new Map();
+    const prevMap = new Map();
+
+    for (const t of list) {
+        if (normalizeTransactionType(t.type) !== 'expense') continue;
+        const amount = parseFloat(t.amount) || 0;
+        if (amount <= 0) continue;
+
+        const key = normalizeBillKey(t.description);
+        if (!key) continue;
+
+        if (isTransactionInMonth(t, year, month)) {
+            const existing = curMap.get(key) || {
+                description: String(t.description || '').trim(),
+                category: t.category || 'Outros',
+                amount: 0,
+                count: 0,
+            };
+            existing.amount += amount;
+            existing.count += 1;
+            curMap.set(key, existing);
+        } else if (isTransactionInMonth(t, prevYear, prevMonth)) {
+            const existing = prevMap.get(key) || {
+                description: String(t.description || '').trim(),
+                category: t.category || 'Outros',
+                amount: 0,
+                count: 0,
+            };
+            existing.amount += amount;
+            existing.count += 1;
+            prevMap.set(key, existing);
+        }
+    }
+
+    const items = [];
+    let increasesCount = 0;
+    let decreasesCount = 0;
+    let sameCount = 0;
+    let prevTotalComparable = 0;
+    let curTotalComparable = 0;
+
+    for (const [key, cur] of curMap.entries()) {
+        const prevItem = prevMap.get(key);
+        if (!prevItem || prevItem.amount <= 0) continue;
+
+        const diff = cur.amount - prevItem.amount;
+        const pct = (diff / prevItem.amount) * 100;
+        const direction = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : 'same';
+
+        if (direction === 'up') increasesCount += 1;
+        else if (direction === 'down') decreasesCount += 1;
+        else sameCount += 1;
+
+        prevTotalComparable += prevItem.amount;
+        curTotalComparable += cur.amount;
+
+        items.push({
+            key,
+            description: cur.description || prevItem.description,
+            category: cur.category || prevItem.category || 'Outros',
+            prevAmount: prevItem.amount,
+            curAmount: cur.amount,
+            diff,
+            pct,
+            direction,
+        });
+    }
+
+    const orderWeight = { up: 0, down: 1, same: 2 };
+    items.sort((a, b) => {
+        if (orderWeight[a.direction] !== orderWeight[b.direction]) {
+            return orderWeight[a.direction] - orderWeight[b.direction];
+        }
+        if (a.direction === 'up') return b.pct - a.pct || b.diff - a.diff;
+        if (a.direction === 'down') return a.pct - b.pct || a.diff - b.diff;
+        return b.curAmount - a.curAmount;
+    });
+
+    const netDiff = curTotalComparable - prevTotalComparable;
+    const netPct = prevTotalComparable > 0 ? (netDiff / prevTotalComparable) * 100 : 0;
+
+    return {
+        prevLabel: `${SHORT_MONTHS_PT[prevMonth]}/${String(prevYear).slice(-2)}`,
+        curLabel: `${SHORT_MONTHS_PT[month]}/${String(year).slice(-2)}`,
+        items,
+        increasesCount,
+        decreasesCount,
+        sameCount,
+        prevTotalComparable,
+        curTotalComparable,
+        netDiff,
+        netPct,
+    };
+}
+
+// ---------------------------------------------------------------
 // ORÇAMENTOS — status de cada categoria no mês
 // ---------------------------------------------------------------
 export function generateBudgetStatus(budgets, transactions, refDate = new Date()) {

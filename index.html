@@ -169,6 +169,16 @@
               </button>
 
               <button
+                id="variation-toggle"
+                class="sound-toggle variation-toggle-btn"
+                aria-label="Variação mensal das contas"
+                title="Variação mensal das contas"
+              >
+                <i class="ri-pulse-line"></i>
+                <span id="variation-badge" class="variation-badge" style="display: none">0</span>
+              </button>
+
+              <button
                 id="notify-toggle"
                 class="sound-toggle"
                 aria-label="Ativar notificações"
@@ -1469,6 +1479,56 @@
               <i class="ri-sticky-note-line"></i> Exportar anotações
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         11. MODAL: VARIAÇÃO MENSAL DAS CONTAS
+         ========================================== -->
+    <div id="variation-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="variation-modal-title">
+      <div class="modal-container glass variation-modal-container">
+        <div class="modal-header modal-header-row">
+          <div>
+            <h3 class="modal-title" id="variation-modal-title">
+              <i class="ri-pulse-line"></i> Variação Mensal
+            </h3>
+            <p id="variation-period-caption" class="text-muted variation-period-caption">
+              Comparativo entre meses
+            </p>
+          </div>
+          <button
+            type="button"
+            id="close-variation-btn"
+            class="close-modal-btn"
+            aria-label="Fechar comparativo mensal"
+          >
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+
+        <div class="modal-body variation-modal-body">
+          <div id="variation-summary-strip" class="variation-summary-strip"></div>
+
+          <div class="variation-toolbar">
+            <div class="variation-filter-pills" role="group" aria-label="Filtrar variações">
+              <button type="button" class="variation-filter-btn active" data-filter="all">Todos</button>
+              <button type="button" class="variation-filter-btn" data-filter="up">Aumentaram</button>
+              <button type="button" class="variation-filter-btn" data-filter="down">Diminuíram</button>
+            </div>
+            <div class="variation-search-wrap">
+              <i class="ri-search-line"></i>
+              <input
+                id="variation-search-input"
+                type="text"
+                class="variation-search-input"
+                placeholder="Filtrar conta..."
+                aria-label="Filtrar conta no comparativo"
+              />
+            </div>
+          </div>
+
+          <div id="variation-list" class="variation-list"></div>
         </div>
       </div>
     </div>

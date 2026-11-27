@@ -7,6 +7,7 @@ import {
 import { renderCharts, renderProjectionChart } from './chart-manager.js';
 import {
     calculatePaydayAllowance,
+    compareTransactionsMonthOverMonth,
     generateBudgetStatus,
     generateInsights,
     projectCashFlow,
@@ -1426,9 +1427,126 @@ export function renderInsights(insights) {
         .join('');
 }
 
+export function updateVariationBadge(transactions, refDate = currentDateSelection) {
+    const badge = document.getElementById('variation-badge');
+    const btn = document.getElementById('variation-toggle');
+    if (!badge || !btn) return;
+
+    const report = compareTransactionsMonthOverMonth(transactions, refDate);
+    if (report.increasesCount > 0) {
+        badge.textContent = report.increasesCount > 9 ? '9+' : String(report.increasesCount);
+        badge.style.display = 'inline-flex';
+        btn.title = `${report.increasesCount} ${report.increasesCount === 1 ? 'conta aumentou' : 'contas aumentaram'} de ${report.prevLabel} para ${report.curLabel}`;
+    } else {
+        badge.style.display = 'none';
+        btn.title = `Variação mensal (${report.prevLabel} → ${report.curLabel})`;
+    }
+}
+
+export function renderVariationModal(transactions, refDate = currentDateSelection, options = {}) {
+    const filter = options.filter || 'all';
+    const search = String(options.search || '').trim().toLowerCase();
+
+    const captionEl = document.getElementById('variation-period-caption');
+    const summaryEl = document.getElementById('variation-summary-strip');
+    const listEl = document.getElementById('variation-list');
+    if (!listEl) return;
+
+    const report = compareTransactionsMonthOverMonth(transactions, refDate);
+
+    if (captionEl) {
+        captionEl.textContent = `Comparando despesas recorrentes de ${report.prevLabel} → ${report.curLabel}`;
+    }
+
+    if (summaryEl) {
+        const netSign = report.netDiff > 0 ? '+' : '';
+        const netClass = report.netDiff > 0.005 ? 'is-up' : report.netDiff < -0.005 ? 'is-down' : 'is-same';
+        summaryEl.innerHTML = `
+            <div class="variation-stat-box is-up">
+                <span class="variation-stat-label">Aumentaram</span>
+                <strong class="variation-stat-val">${report.increasesCount}</strong>
+            </div>
+            <div class="variation-stat-box is-down">
+                <span class="variation-stat-label">Diminuíram</span>
+                <strong class="variation-stat-val">${report.decreasesCount}</strong>
+            </div>
+            <div class="variation-stat-box ${netClass}">
+                <span class="variation-stat-label">Saldo comparável</span>
+                <strong class="variation-stat-val">${netSign}${formatSignedCurrency(report.netDiff).replace(/^\+\+/, '+')}</strong>
+            </div>
+        `;
+    }
+
+    let items = report.items;
+    if (filter === 'up') items = items.filter((i) => i.direction === 'up');
+    else if (filter === 'down') items = items.filter((i) => i.direction === 'down');
+
+    if (search) {
+        items = items.filter(
+            (i) =>
+                i.description.toLowerCase().includes(search) ||
+                i.category.toLowerCase().includes(search)
+        );
+    }
+
+    if (items.length === 0) {
+        const emptyMsg = report.items.length === 0
+            ? `Nenhuma despesa com o mesmo nome encontrada em ${report.prevLabel} e ${report.curLabel}.`
+            : 'Nenhuma conta corresponde ao filtro selecionado.';
+        listEl.innerHTML = `<div class="notes-empty">${escapeHTML(emptyMsg)}</div>`;
+        return;
+    }
+
+    listEl.innerHTML = items
+        .map((item) => {
+            const pctAbs = Math.abs(item.pct).toLocaleString('pt-BR', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+            });
+            const pctText =
+                item.direction === 'up'
+                    ? `+${pctAbs}%`
+                    : item.direction === 'down'
+                    ? `-${pctAbs}%`
+                    : '0,0%';
+            const diffText =
+                item.direction === 'same'
+                    ? 'Sem alteração'
+                    : `${item.diff > 0 ? '+' : '-'}${formatCurrency(Math.abs(item.diff))}`;
+            const arrowIcon =
+                item.direction === 'up'
+                    ? 'ri-arrow-up-line'
+                    : item.direction === 'down'
+                    ? 'ri-arrow-down-line'
+                    : 'ri-subtract-line';
+
+            return `
+                <div class="variation-item is-${item.direction}">
+                    <div class="variation-item-info">
+                        <div class="variation-item-title-row">
+                            <span class="variation-item-name">${escapeHTML(item.description)}</span>
+                            <span class="variation-item-cat">${escapeHTML(item.category)}</span>
+                        </div>
+                        <div class="variation-item-values">
+                            <span>${escapeHTML(report.prevLabel)}: <strong>${formatCurrency(item.prevAmount)}</strong></span>
+                            <i class="ri-arrow-right-line"></i>
+                            <span>${escapeHTML(report.curLabel)}: <strong>${formatCurrency(item.curAmount)}</strong></span>
+                        </div>
+                    </div>
+                    <div class="variation-delta is-${item.direction}">
+                        <span class="variation-delta-pct"><i class="${arrowIcon}"></i> ${pctText}</span>
+                        <span class="variation-delta-diff">${diffText}</span>
+                    </div>
+                </div>
+            `;
+        })
+        .join('');
+}
+
 export function updateInsights(transactions, refDate = currentDateSelection) {
     const insights = generateInsights(transactions, refDate);
     renderInsights(insights);
+    updateVariationBadge(transactions, refDate);
 }
 
 // =====================================================================

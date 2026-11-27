@@ -50,6 +50,7 @@ import {
     renderBudgets,
     renderGoals,
     renderProjection,
+    renderVariationModal,
     setDashboardLoading,
     setMonthlyAccounts,
     setSoundEnabled,
@@ -388,6 +389,44 @@ document.addEventListener('DOMContentLoaded', () => {
             exportModal?.classList.remove('active');
         }
     });
+
+    // ---- Variação Mensal (estatística discreta no header) ----
+    const variationModal = document.getElementById('variation-modal');
+    const variationSearchInput = document.getElementById('variation-search-input');
+    let variationFilter = 'all';
+
+    function refreshVariationModal() {
+        renderVariationModal(getAllTransactions(), getCurrentSelection(), {
+            filter: variationFilter,
+            search: variationSearchInput?.value || '',
+        });
+    }
+
+    document.getElementById('variation-toggle')?.addEventListener('click', () => {
+        playUiSelectionSound();
+        refreshVariationModal();
+        variationModal?.classList.add('active');
+    });
+
+    document.getElementById('close-variation-btn')?.addEventListener('click', () => {
+        variationModal?.classList.remove('active');
+    });
+
+    variationModal?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) variationModal.classList.remove('active');
+    });
+
+    document.querySelectorAll('.variation-filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            variationFilter = btn.dataset.filter || 'all';
+            document.querySelectorAll('.variation-filter-btn').forEach((b) => {
+                b.classList.toggle('active', b === btn);
+            });
+            refreshVariationModal();
+        });
+    });
+
+    variationSearchInput?.addEventListener('input', refreshVariationModal);
 
     // ---- Notificações ----
     const notifyBtn = document.getElementById('notify-toggle');
